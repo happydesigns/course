@@ -1,0 +1,12 @@
+node_modules/
+.pnpm-store/
+.nuxt/
+.output/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
