@@ -1,6 +1,38 @@
 # Course Format
 
-A course is a progressive technical tutorial. It contains lessons, steps, file snapshots, actions, code changes, validation hints, and optional assets.
+A course is authored as a `.md` file with MDC syntax, similar to Nuxt UI's blog content. Markdown prose is the source of truth, and fenced code blocks inside `::code-tree-intersection` blocks drive the synchronized file tree and code pane.
+
+The JSON schema remains available as a compatibility and interchange format for tools, but new authored courses should use Markdown.
+
+## Markdown Source
+
+Required frontmatter:
+
+- `title`: Human-readable course title.
+- `description`: Short summary of the course.
+- `version`: Course content version.
+
+Optional frontmatter:
+
+- `category`: Course grouping label.
+- `navigation`: Whether the course should appear in navigation.
+- `metadata`: Generic metadata for authoring or profiles.
+
+Code pane state is declared with MDC:
+
+````mdc
+::code-tree-intersection
+
+```ts [src/main.ts]
+export const appName = "Course starter";
+```
+
+::
+````
+
+Each fenced code block inside `code-tree-intersection` must include normalized relative file metadata in square brackets, such as `[src/main.ts]`.
+
+## JSON Compatibility
 
 ## Course
 

@@ -14,6 +14,7 @@ This repository contains `@happydesigns/course`, a generic toolkit for progressi
 - Prefer small TypeScript modules with clear ownership.
 - Use Zod for runtime schemas and infer TypeScript types from those schemas.
 - Keep Nuxt rendering separate from the core schema and validation package.
+- Author rendered courses as `.md` files with MDC syntax. JSON is compatibility/interchange, not the primary reader source.
 - Keep the core schema generic. Do not add SAP-only fields to `packages/course`.
 - Avoid broad framework/tooling additions unless they directly serve the MVP.
 

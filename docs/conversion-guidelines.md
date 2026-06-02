@@ -15,12 +15,12 @@ Codex and other authoring tools may assist with conversion, but generated course
 ## Suggested Workflow
 
 1. Identify lessons and step boundaries from the source material.
-2. Extract prose without changing technical meaning.
-3. Map file states into `fileSnapshots` and step-level `codeChanges`.
-4. Convert instructions into deterministic `CourseAction` entries.
-5. Add validation hints from source checks, expected outputs, or commands.
-6. Mark uncertainty with `needsReview` and document the reason in prose or metadata.
-7. Run `pnpm validate:examples` or `course validate <path>`.
+2. Extract prose into normal Markdown headings and paragraphs without changing technical meaning.
+3. Put synchronized file states in `::code-tree-intersection` blocks using fenced code metadata like ````ts [src/main.ts]````.
+4. Keep commands as normal fenced code blocks unless they represent a synchronized file state.
+5. Add validation hints in prose near the relevant section.
+6. Mark uncertainty in prose or frontmatter metadata instead of inventing missing content.
+7. Run `pnpm validate:examples` or `course validate <path-to-course.md>`.
 
 ## Runtime Boundary
 

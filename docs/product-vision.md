@@ -10,8 +10,8 @@ The package is deliberately deterministic. It does not integrate AI at runtime a
 
 - A generic Zod-backed course schema.
 - Structured validation with useful error output.
-- A small CLI for validating course JSON files.
-- A minimal Nuxt reader that renders one example course.
+- A small CLI for validating course JSON and Markdown files.
+- A Nuxt Content reader that renders one Markdown/MDC example course.
 - Documentation for the course format and conversion workflow.
 
 ## Out of Scope for the MVP
