@@ -4,6 +4,7 @@ node_modules/
 .output/
 dist/
 coverage/
+.data/
 *.tsbuildinfo
 .DS_Store
 Thumbs.db

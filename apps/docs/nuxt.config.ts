@@ -1,7 +1,21 @@
 export default defineNuxtConfig({
+  modules: ["@nuxt/content", "@nuxt/ui"],
+  css: ["~/assets/css/main.css"],
   devtools: { enabled: false },
   typescript: {
     strict: true
+  },
+  content: {
+    experimental: {
+      nativeSqlite: true
+    },
+    build: {
+      markdown: {
+        highlight: {
+          langs: ["bash", "css", "json", "mdc", "ts", "typescript", "vue"]
+        }
+      }
+    }
   },
   vite: {
     server: {
