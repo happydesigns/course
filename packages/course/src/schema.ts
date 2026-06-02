@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const MetadataSchema = z.record(z.unknown());
+const MetadataSchema = z.record(z.string(), z.unknown());
 
 export const AssetRefSchema = z
   .object({

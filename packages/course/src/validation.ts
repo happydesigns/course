@@ -31,7 +31,7 @@ export function validateCourse(input: unknown): CourseValidationResult {
       issues: parsed.error.issues.map((issue) => ({
         code: "schema",
         message: issue.message,
-        path: issue.path,
+        path: normalizeIssuePath(issue.path),
         details: issue
       }))
     };
@@ -126,6 +126,10 @@ export function formatValidationPath(issuePath: Array<string | number>): string 
     .map((part) => (typeof part === "number" ? `[${part}]` : String(part)))
     .join(".")
     .replaceAll(".[", "[");
+}
+
+function normalizeIssuePath(issuePath: PropertyKey[]): Array<string | number> {
+  return issuePath.map((part) => (typeof part === "symbol" ? part.description ?? part.toString() : part));
 }
 
 function checkActionFileReferences(
