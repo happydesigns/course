@@ -2,7 +2,11 @@
 title: Build a Tiny Progressive Tutorial
 description: A small generic course that demonstrates synchronized Markdown prose, actions, file snapshots, and validation hints.
 version: 0.1.0
+date: 2026-06-02
 category: Tutorial Infrastructure
+authors:
+  - name: Happy Designs
+    to: https://github.com/happydesigns
 navigation: true
 metadata:
   profile: generic

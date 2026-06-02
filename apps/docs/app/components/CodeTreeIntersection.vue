@@ -47,7 +47,7 @@ onBeforeUnmount(() => {
 <template>
   <section
     ref="root"
-    class="my-6 rounded-lg border border-default bg-muted/30 p-3"
+    class="my-8 border-y border-default py-4"
     :data-code-snapshot="assignedSnapshotId"
   >
     <div class="[&>*]:my-0 [&>*+*]:mt-3">
