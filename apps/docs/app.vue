@@ -2,13 +2,87 @@
 import { computed, ref, watch } from "vue";
 import courseJson from "../../examples/basic-course/course.json";
 
-type Course = typeof courseJson;
-type Lesson = Course["lessons"][number];
-type Step = Lesson["steps"][number];
-type FileSnapshot = Course["fileSnapshots"][number];
-type CourseAction = Step["actions"][number];
+interface FileSnapshot {
+  path: string;
+  content: string;
+  language?: string;
+}
 
-const course = courseJson;
+interface CodeChange {
+  file: string;
+  description: string;
+  before?: string;
+  after?: string;
+  diff?: string;
+}
+
+interface ValidationHint {
+  type: string;
+  description: string;
+  command?: string;
+  expected?: string;
+}
+
+type CourseAction =
+  | {
+      type: "edit-file";
+      file: string;
+      description: string;
+      before?: string;
+      after?: string;
+      diff?: string;
+    }
+  | {
+      type: "run-command";
+      command: string;
+      cwd?: string;
+      description?: string;
+    }
+  | {
+      type: "open-url";
+      url: string;
+      description?: string;
+    }
+  | {
+      type: "use-tool";
+      tool: string;
+      description: string;
+      inputs?: Record<string, unknown>;
+    }
+  | {
+      type: "manual";
+      description: string;
+    };
+
+interface Step {
+  id: string;
+  title: string;
+  prose: string;
+  actions: CourseAction[];
+  codeChanges?: CodeChange[];
+  visibleFiles?: string[];
+  validation?: ValidationHint[];
+  needsReview?: boolean;
+}
+
+interface Lesson {
+  id: string;
+  title: string;
+  description?: string;
+  steps: Step[];
+}
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  version: string;
+  lessons: Lesson[];
+  fileSnapshots: FileSnapshot[];
+  metadata?: Record<string, unknown>;
+}
+
+const course = courseJson as Course;
 const flattenedSteps = computed(() =>
   course.lessons.flatMap((lesson) =>
     lesson.steps.map((step) => ({
@@ -39,11 +113,16 @@ const currentFiles = computed<FileSnapshot[]>(() => {
   for (const { step } of flattenedSteps.value.slice(0, selectedIndex.value + 1)) {
     for (const change of step.codeChanges ?? []) {
       const current = files.get(change.file);
-      files.set(change.file, {
+      const nextSnapshot: FileSnapshot = {
         path: change.file,
-        language: current?.language,
         content: change.after ?? current?.content ?? ""
-      });
+      };
+
+      if (current?.language) {
+        nextSnapshot.language = current.language;
+      }
+
+      files.set(change.file, nextSnapshot);
     }
   }
 

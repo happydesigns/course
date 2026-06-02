@@ -9,7 +9,6 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@happydesigns/course": "workspace:*",
     "nuxt": "^3.17.5",
     "vue": "^3.5.16"
   },
