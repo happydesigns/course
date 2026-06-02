@@ -87,7 +87,7 @@ Run the package CLI before publishing the course. Validation is deterministic: i
 ```json [package.json]
 {
   "scripts": {
-    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/basic.md && pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/using-this-tool.md",
+    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/how-to-build-an-ai-chat.md && pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/using-this-tool.md",
     "dev": "pnpm --filter @happydesigns/docs dev"
   }
 }

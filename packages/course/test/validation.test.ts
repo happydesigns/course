@@ -71,13 +71,13 @@ function cloneCourse(): typeof basicCourse {
 
 describe("validateCourseMarkdown", () => {
   it("accepts the basic Markdown course", async () => {
-    const sourceUrl = new URL("../../../apps/docs/content/courses/basic.md", import.meta.url);
+    const sourceUrl = new URL("../../../apps/docs/content/courses/how-to-build-an-ai-chat.md", import.meta.url);
     const source = await readFile(sourceUrl, "utf8");
     const result = await validateCourseMarkdown(source, { filePath: fileURLToPath(sourceUrl) });
 
     expect(result.success).toBe(true);
     expect(result.issues).toHaveLength(0);
-    expect(result.metadata?.title).toBe("Build a Tiny Progressive Tutorial");
+    expect(result.metadata?.title).toBe("Build an AI Chatbot with Nuxt, Nuxt UI, and AI SDK");
     expect(result.snapshots.length).toBeGreaterThan(0);
   });
 

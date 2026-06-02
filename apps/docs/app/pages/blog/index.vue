@@ -37,7 +37,7 @@ function blogPostPath(post: CoursePost): string {
 
 useSeoMeta({
   title: "Course Blog",
-  description: "Markdown courses authored with Nuxt Content, MDC, and synchronized code panes."
+  description: "Markdown courses rendered with Nuxt Content, MDC, Nuxt UI components, and synchronized code panes."
 });
 
 function formatDate(date?: string): string {
@@ -53,7 +53,7 @@ function formatDate(date?: string): string {
   <UMain class="relative flex min-h-screen flex-col">
     <UPageHero
       title="Course Blog"
-      description="Nuxt Content courses rendered as Nuxt UI-style articles with Markdown prose, MDC blocks, and synchronized code snapshots."
+      description="Markdown courses rendered with Nuxt Content, MDC, Nuxt UI components, and synchronized code panes."
       :ui="{ container: 'relative py-10 sm:py-16 lg:py-24' }"
     >
       <div aria-hidden="true" class="absolute inset-0 z-[-1] mx-4 border-x border-default sm:mx-6 lg:mx-8" />

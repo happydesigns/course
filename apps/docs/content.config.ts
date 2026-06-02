@@ -20,6 +20,7 @@ export default defineContentConfig({
         description: z.string().min(1),
         version: z.string().min(1),
         date: z.string().optional(),
+        image: z.string().optional(),
         category: z.string().optional(),
         authors: z.array(authorSchema).optional(),
         navigation: z.boolean().optional(),
