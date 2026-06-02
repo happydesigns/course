@@ -45,7 +45,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section ref="root" class="code-tree-intersection" :data-code-snapshot="assignedSnapshotId">
-    <slot />
+  <section
+    ref="root"
+    class="my-6 rounded-lg border border-default bg-muted/30 p-3"
+    :data-code-snapshot="assignedSnapshotId"
+  >
+    <div class="[&>*]:my-0 [&>*+*]:mt-3">
+      <slot />
+    </div>
   </section>
 </template>

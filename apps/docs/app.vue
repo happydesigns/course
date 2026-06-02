@@ -75,69 +75,110 @@ function scrollToHeading(id: string): void {
 
 <template>
   <UApp>
-    <div v-if="course" class="app-shell">
-      <header class="topbar">
-        <div class="title-block">
-          <p class="eyebrow">{{ course.category ?? "Course" }}</p>
-          <h1>{{ course.title }}</h1>
-          <p>{{ course.description }}</p>
-        </div>
-        <UBadge color="neutral" variant="soft" size="lg">v{{ course.version }}</UBadge>
-      </header>
+    <UMain v-if="course" class="min-h-screen">
+      <UContainer class="py-6 sm:py-8">
+        <UPageHeader :title="course.title" :description="course.description" class="py-6 sm:py-8">
+          <template #headline>
+            <UBadge color="primary" variant="soft">{{ course.category ?? "Course" }}</UBadge>
+          </template>
 
-      <main class="reader-grid">
-        <article class="article-pane">
-          <nav v-if="tocLinks.length" class="section-nav" aria-label="Course sections">
-            <UButton
-              v-for="link in tocLinks"
-              :key="link.id"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              type="button"
-              @click="scrollToHeading(link.id)"
-            >
-              {{ link.text }}
-            </UButton>
-          </nav>
+          <template #links>
+            <UBadge color="neutral" variant="outline" size="lg">v{{ course.version }}</UBadge>
+          </template>
+        </UPageHeader>
 
-          <ContentRenderer :value="course" class="course-prose" />
-        </article>
-
-        <aside class="code-pane" aria-label="Synchronized files">
-          <div class="code-pane-header">
-            <div>
-              <p class="eyebrow">Code state</p>
-              <h2>{{ activeSnapshot?.title ?? "Course files" }}</h2>
-            </div>
-            <UBadge color="primary" variant="soft">{{ activeSnapshot?.files.length ?? 0 }} files</UBadge>
-          </div>
-
-          <div class="code-workspace">
-            <div class="file-tree" aria-label="Visible files">
-              <button
-                v-for="file in activeSnapshot?.files ?? []"
-                :key="file.path"
-                class="file-button"
-                :class="{ active: file.path === activeFile?.path }"
-                type="button"
-                @click="selectedFilePath = file.path"
+        <UPageBody class="mt-6 pb-12">
+          <UPage
+            class="items-start"
+            :ui="{
+              root: 'flex flex-col gap-8 xl:grid xl:grid-cols-[minmax(0,0.9fr)_minmax(34rem,1.1fr)]',
+              center: 'min-w-0 xl:col-auto',
+              right: 'order-last xl:col-auto'
+            }"
+          >
+            <article class="min-w-0">
+              <nav
+                v-if="tocLinks.length"
+                class="sticky top-0 z-10 -mx-1 flex flex-wrap gap-1.5 bg-default/95 py-3 backdrop-blur"
+                aria-label="Course sections"
               >
-                <span>{{ file.path }}</span>
-                <small v-if="file.language">{{ file.language }}</small>
-              </button>
-            </div>
+                <UButton
+                  v-for="link in tocLinks"
+                  :key="link.id"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  @click="scrollToHeading(link.id)"
+                >
+                  {{ link.text }}
+                </UButton>
+              </nav>
 
-            <div class="file-viewer">
-              <div class="file-toolbar">
-                <span>{{ activeFile?.path ?? "No file selected" }}</span>
-                <small v-if="activeFile?.language">{{ activeFile.language }}</small>
-              </div>
-              <pre><code>{{ activeFile?.code ?? "" }}</code></pre>
-            </div>
-          </div>
-        </aside>
-      </main>
-    </div>
+              <ContentRenderer :value="course" class="max-w-none" />
+            </article>
+
+            <template #right>
+              <aside class="sticky top-6 max-h-[calc(100vh-3rem)] min-h-[32rem]" aria-label="Synchronized files">
+                <UCard
+                  variant="subtle"
+                  class="flex h-full min-h-[32rem] flex-col overflow-hidden"
+                  :ui="{
+                    header: 'flex items-start justify-between gap-4 px-4 py-3 sm:px-4',
+                    body: 'flex min-h-0 flex-1 flex-col p-0 sm:p-0'
+                  }"
+                >
+                  <template #header>
+                    <div class="min-w-0">
+                      <p class="mb-1 text-xs font-semibold uppercase text-muted">Code state</p>
+                      <h2 class="truncate text-base font-semibold text-highlighted">
+                        {{ activeSnapshot?.title ?? "Course files" }}
+                      </h2>
+                    </div>
+                    <UBadge color="primary" variant="soft">{{ activeSnapshot?.files.length ?? 0 }} files</UBadge>
+                  </template>
+
+                  <div class="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-[minmax(13rem,0.34fr)_minmax(0,0.66fr)] lg:grid-rows-1">
+                    <UScrollArea class="max-h-56 border-b border-default lg:max-h-none lg:border-b-0 lg:border-r">
+                      <div class="grid gap-1.5 p-2" aria-label="Visible files">
+                        <UButton
+                          v-for="file in activeSnapshot?.files ?? []"
+                          :key="file.path"
+                          color="neutral"
+                          :variant="file.path === activeFile?.path ? 'subtle' : 'ghost'"
+                          block
+                          type="button"
+                          class="justify-start"
+                          :ui="{ base: 'h-auto min-h-12 px-3 py-2' }"
+                          @click="selectedFilePath = file.path"
+                        >
+                          <span class="flex min-w-0 flex-col items-start gap-0.5 text-left">
+                            <span class="w-full truncate text-sm font-medium">{{ file.path }}</span>
+                            <span v-if="file.language" class="text-xs text-muted">{{ file.language }}</span>
+                          </span>
+                        </UButton>
+                      </div>
+                    </UScrollArea>
+
+                    <div class="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)]">
+                      <div class="flex min-h-11 items-center justify-between gap-3 border-b border-default px-4">
+                        <span class="truncate text-sm font-medium text-highlighted">
+                          {{ activeFile?.path ?? "No file selected" }}
+                        </span>
+                        <UBadge v-if="activeFile?.language" color="neutral" variant="soft" size="sm">
+                          {{ activeFile.language }}
+                        </UBadge>
+                      </div>
+
+                      <pre class="m-0 overflow-auto bg-muted/40 p-4 font-mono text-sm/6 text-toned"><code>{{ activeFile?.code ?? "" }}</code></pre>
+                    </div>
+                  </div>
+                </UCard>
+              </aside>
+            </template>
+          </UPage>
+        </UPageBody>
+      </UContainer>
+    </UMain>
   </UApp>
 </template>
