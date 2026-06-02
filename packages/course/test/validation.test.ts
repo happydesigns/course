@@ -1,6 +1,8 @@
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import basicCourse from "../../../examples/basic-course/course.json";
-import { validateCourse } from "../src/index.js";
+import { validateCourse, validateCourseMarkdown } from "../src/index.js";
 
 describe("validateCourse", () => {
   it("accepts the basic example", () => {
@@ -65,4 +67,86 @@ describe("validateCourse", () => {
 
 function cloneCourse(): typeof basicCourse {
   return JSON.parse(JSON.stringify(basicCourse)) as typeof basicCourse;
+}
+
+describe("validateCourseMarkdown", () => {
+  it("accepts the basic Markdown course", async () => {
+    const sourceUrl = new URL("../../../apps/docs/content/courses/basic.md", import.meta.url);
+    const source = await readFile(sourceUrl, "utf8");
+    const result = await validateCourseMarkdown(source, { filePath: fileURLToPath(sourceUrl) });
+
+    expect(result.success).toBe(true);
+    expect(result.issues).toHaveLength(0);
+    expect(result.metadata?.title).toBe("Build a Tiny Progressive Tutorial");
+    expect(result.snapshots.length).toBeGreaterThan(0);
+  });
+
+  it("rejects Markdown without frontmatter", async () => {
+    const result = await validateCourseMarkdown([
+      "## Setup",
+      "",
+      "::code-tree-intersection",
+      "",
+      "```ts [src/main.ts]",
+      "export {};",
+      "```",
+      "",
+      "::"
+    ].join("\n"));
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "frontmatter"
+        })
+      ])
+    );
+  });
+
+  it("rejects invalid code fence paths", async () => {
+    const result = await validateCourseMarkdown(markdownWithCodeFence("ts [../outside.ts]"));
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "file-path"
+        })
+      ])
+    );
+  });
+
+  it("rejects code-tree fences without file metadata", async () => {
+    const result = await validateCourseMarkdown(markdownWithCodeFence("ts"));
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "code-tree"
+        })
+      ])
+    );
+  });
+});
+
+function markdownWithCodeFence(info: string): string {
+  return [
+    "---",
+    "title: Demo",
+    "description: Demo course",
+    "version: 0.1.0",
+    "---",
+    "",
+    "## Setup",
+    "",
+    "::code-tree-intersection",
+    "",
+    `\`\`\`${info}`,
+    "export {};",
+    "```",
+    "",
+    "::"
+  ].join("\n");
 }

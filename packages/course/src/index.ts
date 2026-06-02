@@ -26,6 +26,18 @@ export {
 } from "./validation.js";
 
 export type {
+  CourseMarkdownFile,
+  CourseMarkdownIssue,
+  CourseMarkdownIssueCode,
+  CourseMarkdownMetadata,
+  CourseMarkdownSnapshot,
+  CourseMarkdownValidationOptions,
+  CourseMarkdownValidationResult
+} from "./markdown.js";
+
+export { extractCourseMarkdownSnapshots, validateCourseMarkdown } from "./markdown.js";
+
+export type {
   CourseValidationIssue,
   CourseValidationIssueCode,
   CourseValidationResult

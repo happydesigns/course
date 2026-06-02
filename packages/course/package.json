@@ -25,6 +25,7 @@
     "course": "tsx src/cli.ts"
   },
   "dependencies": {
+    "@nuxtjs/mdc": "^0.22.0",
     "zod": "^4.4.3"
   }
 }

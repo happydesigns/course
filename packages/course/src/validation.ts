@@ -186,7 +186,7 @@ function checkCoursePath(
   return true;
 }
 
-function getInvalidCoursePathReason(filePath: string): string | undefined {
+export function getInvalidCoursePathReason(filePath: string): string | undefined {
   if (filePath.length === 0) {
     return "it must not be empty";
   }
