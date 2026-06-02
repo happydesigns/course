@@ -7,7 +7,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @happydesigns/course test",
     "build": "pnpm -r build",
-    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/basic.md",
+    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/basic.md && pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/using-this-tool.md",
     "dev": "pnpm --filter @happydesigns/docs dev"
   },
   "devDependencies": {
