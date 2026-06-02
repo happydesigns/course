@@ -14,10 +14,7 @@ export default defineContentConfig({
   collections: {
     courses: defineCollection({
       type: "page",
-      source: {
-        include: "courses/**/*.md",
-        prefix: "/blog"
-      },
+      source: "courses/**/*.md",
       schema: z.object({
         title: z.string().min(1),
         description: z.string().min(1),

@@ -31,6 +31,10 @@ const posts = computed<CoursePost[]>(() => {
   });
 });
 
+function blogPostPath(post: CoursePost): string {
+  return post.path.replace(/^\/courses\//, "/blog/");
+}
+
 useSeoMeta({
   title: "Course Blog",
   description: "Markdown courses authored with Nuxt Content, MDC, and synchronized code panes."
@@ -60,7 +64,7 @@ function formatDate(date?: string): string {
         <div class="border-x border-default">
           <div v-for="post in posts" :key="post.path" class="group border-b border-default last:border-b-0">
             <ULink
-              :to="post.path"
+              :to="blogPostPath(post)"
               class="flex flex-col justify-between gap-4 p-4 transition-colors duration-200 hover:bg-muted/30 sm:flex-row sm:items-center sm:gap-6 sm:p-6"
             >
               <div class="min-w-0 flex-1">

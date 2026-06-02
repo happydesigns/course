@@ -5,7 +5,7 @@ version: 0.1.0
 date: 2026-06-01
 category: Authoring Guide
 authors:
-  - name: Happy Designs
+  - name: happydesigns
     to: https://github.com/happydesigns
 navigation: true
 metadata:
@@ -42,10 +42,7 @@ export default defineContentConfig({
   collections: {
     courses: defineCollection({
       type: "page",
-      source: {
-        include: "courses/**/*.md",
-        prefix: "/blog"
-      },
+      source: "courses/**/*.md",
       schema: z.object({
         title: z.string().min(1),
         description: z.string().min(1),
@@ -122,8 +119,9 @@ const { data: courses } = await useAsyncData("blog-posts", () => queryCollection
 ```vue [apps/docs/app/pages/blog/[...slug].vue]
 <script setup lang="ts">
 const route = useRoute();
+const coursePath = computed(() => route.path.replace(/^\/blog\//, "/courses/"));
 const { data: course } = await useAsyncData(`course-${route.path}`, () =>
-  queryCollection("courses").path(route.path).first()
+  queryCollection("courses").path(coursePath.value).first()
 );
 </script>
 

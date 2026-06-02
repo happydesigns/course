@@ -7,9 +7,10 @@ import {
 } from "../../utils/course-code";
 
 const route = useRoute();
+const coursePath = computed(() => route.path.replace(/^\/blog\//, "/courses/"));
 
 const { data: course, error } = await useAsyncData(`course-${route.path}`, () =>
-  queryCollection("courses").path(route.path).first()
+  queryCollection("courses").path(coursePath.value).first()
 );
 
 if (error.value) {

@@ -5,7 +5,7 @@ version: 0.1.0
 date: 2026-06-02
 category: Tutorial Infrastructure
 authors:
-  - name: Happy Designs
+  - name: happydesigns
     to: https://github.com/happydesigns
 navigation: true
 metadata:
