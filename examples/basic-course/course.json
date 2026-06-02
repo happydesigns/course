@@ -1,0 +1,132 @@
+{
+  "id": "basic-progressive-tutorial",
+  "title": "Build a Tiny Progressive Tutorial",
+  "description": "A small generic course that demonstrates synchronized prose, actions, file snapshots, code changes, and validation hints.",
+  "version": "0.1.0",
+  "metadata": {
+    "profile": "generic",
+    "runtimeAi": false
+  },
+  "fileSnapshots": [
+    {
+      "path": "package.json",
+      "language": "json",
+      "content": "{\n  \"scripts\": {\n    \"dev\": \"nuxt dev\",\n    \"test\": \"vitest run\"\n  },\n  \"dependencies\": {\n    \"nuxt\": \"latest\",\n    \"vue\": \"latest\"\n  }\n}\n"
+    },
+    {
+      "path": "src/App.vue",
+      "language": "vue",
+      "content": "<template>\n  <main>\n    <h1>Course starter</h1>\n  </main>\n</template>\n"
+    },
+    {
+      "path": "src/main.ts",
+      "language": "typescript",
+      "content": "export const appName = 'Course starter';\n"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "lesson-reader-state",
+      "title": "Create Reader State",
+      "description": "Inspect the starter files and make the first visible code change.",
+      "steps": [
+        {
+          "id": "inspect-starter",
+          "title": "Inspect the Starter",
+          "prose": "Start by reading the starter component. The course reader keeps this prose aligned with the file that matters at this point in the tutorial.",
+          "actions": [
+            {
+              "type": "manual",
+              "description": "Open src/App.vue and confirm the starter heading is present."
+            }
+          ],
+          "visibleFiles": [
+            "src/App.vue"
+          ],
+          "validation": [
+            {
+              "type": "review",
+              "description": "Confirm the starter component contains a single heading.",
+              "expected": "src/App.vue renders Course starter."
+            }
+          ]
+        },
+        {
+          "id": "edit-heading",
+          "title": "Personalize the Heading",
+          "prose": "Replace the placeholder heading with a clearer tutorial title. This step demonstrates an edit-file action and a code change with before and after states.",
+          "actions": [
+            {
+              "type": "edit-file",
+              "file": "src/App.vue",
+              "description": "Change the heading text.",
+              "before": "<h1>Course starter</h1>",
+              "after": "<h1>Progressive Tutorial</h1>"
+            }
+          ],
+          "codeChanges": [
+            {
+              "file": "src/App.vue",
+              "description": "Update the visible heading for the tutorial.",
+              "before": "<template>\n  <main>\n    <h1>Course starter</h1>\n  </main>\n</template>\n",
+              "after": "<template>\n  <main>\n    <h1>Progressive Tutorial</h1>\n  </main>\n</template>\n"
+            }
+          ],
+          "visibleFiles": [
+            "src/App.vue"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-check-work",
+      "title": "Check the Work",
+      "description": "Run a deterministic command and record the expected result.",
+      "steps": [
+        {
+          "id": "run-dev-command",
+          "title": "Run the Project",
+          "prose": "Use the normal package script to start the local project. The course records the command and the validation hint, but it does not call an AI service at runtime.",
+          "actions": [
+            {
+              "type": "run-command",
+              "command": "pnpm dev",
+              "description": "Start the Nuxt development server."
+            }
+          ],
+          "visibleFiles": [
+            "package.json",
+            "src/App.vue"
+          ],
+          "validation": [
+            {
+              "type": "command",
+              "description": "The dev server should start without compile errors.",
+              "command": "pnpm dev",
+              "expected": "Nuxt starts and serves the component."
+            }
+          ]
+        },
+        {
+          "id": "record-manual-check",
+          "title": "Record a Manual Check",
+          "prose": "Open the rendered page and confirm that the visible heading matches the code state from the previous step.",
+          "actions": [
+            {
+              "type": "open-url",
+              "url": "http://localhost:3000",
+              "description": "Open the local development URL."
+            },
+            {
+              "type": "manual",
+              "description": "Verify the heading reads Progressive Tutorial."
+            }
+          ],
+          "visibleFiles": [
+            "src/App.vue"
+          ]
+        }
+      ]
+    }
+  ]
+}
