@@ -11,8 +11,16 @@ The package is deliberately deterministic. It does not integrate AI at runtime a
 - A generic Zod-backed course schema.
 - Structured validation with useful error output.
 - A small CLI for validating course JSON and Markdown files.
-- A Nuxt Content reader that renders one Markdown/MDC example course.
+- A Nuxt Content playground that renders Markdown/MDC example courses while the reader contract is still local.
 - Documentation for the course format and conversion workflow.
+
+## Ownership Boundaries
+
+`packages/course` is the reusable product. It owns deterministic schemas, validation, Markdown projection, and the CLI. It must stay brand-neutral and must not depend on Nuxt rendering, Nuxt UI components, or happydesigns brand defaults.
+
+`playground` is a local Nuxt app for validating reader behavior and example content. It is not the happydesigns docs product. Reader components can incubate there until their contract is stable enough to promote into `happydesigns/ui`.
+
+The eventual shared reader belongs in `happydesigns/ui` as a brand-neutral interface pattern. Brand expression should arrive through a brand or identity layer that provides tokens, app config, logos, metadata, and component defaults without changing course validation or reader behavior.
 
 ## Out of Scope for the MVP
 

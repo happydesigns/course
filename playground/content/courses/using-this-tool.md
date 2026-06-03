@@ -15,11 +15,11 @@ metadata:
 
 ## Create a Markdown Course
 
-Write courses as `.md` files under `apps/docs/content/courses`. The frontmatter describes the course, while the body uses normal Markdown and MDC components.
+Write courses as `.md` files under `playground/content/courses`. The frontmatter describes the course, while the body uses normal Markdown and MDC components.
 
 ::code-tree-intersection
 
-```mdc [apps/docs/content/courses/my-course.md]
+```mdc [playground/content/courses/my-course.md]
 ---
 title: My Course
 description: A short description of the outcome.
@@ -35,7 +35,7 @@ metadata:
 Explain the first learner action in normal Markdown.
 ```
 
-```ts [apps/docs/content.config.ts]
+```ts [playground/content.config.ts]
 import { defineCollection, defineContentConfig, z } from "@nuxt/content";
 
 export default defineContentConfig({
@@ -87,8 +87,8 @@ Run the package CLI before publishing the course. Validation is deterministic: i
 ```json [package.json]
 {
   "scripts": {
-    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/how-to-build-an-ai-chat.md && pnpm --filter @happydesigns/course course validate ../../apps/docs/content/courses/using-this-tool.md",
-    "dev": "pnpm --filter @happydesigns/docs dev"
+    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../playground/content/courses/how-to-build-an-ai-chat.md && pnpm --filter @happydesigns/course course validate ../../playground/content/courses/using-this-tool.md",
+    "dev": "pnpm --filter @happydesigns/course-playground dev"
   }
 }
 ```
@@ -106,7 +106,7 @@ Start the docs app and open `/blog`. The index lists every Markdown course, and 
 
 ::code-tree-intersection
 
-```vue [apps/docs/app/pages/blog/index.vue]
+```vue [playground/app/pages/blog/index.vue]
 <script setup lang="ts">
 const { data: courses } = await useAsyncData("blog-posts", () => queryCollection("courses").all());
 </script>
@@ -116,7 +116,7 @@ const { data: courses } = await useAsyncData("blog-posts", () => queryCollection
 </template>
 ```
 
-```vue [apps/docs/app/pages/blog/[...slug].vue]
+```vue [playground/app/pages/blog/[...slug].vue]
 <script setup lang="ts">
 const route = useRoute();
 const coursePath = computed(() => route.path.replace(/^\/blog\//, "/courses/"));
