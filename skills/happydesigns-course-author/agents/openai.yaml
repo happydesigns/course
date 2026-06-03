@@ -1,4 +1,4 @@
 interface:
-  display_name: "Happydesigns Course Author"
+  display_name: "happydesigns Course Author"
   short_description: "Convert source material into MDC courses"
   default_prompt: "Use $happydesigns-course-author to convert this repository into a reviewable MDC course."

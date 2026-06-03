@@ -142,7 +142,7 @@ name: happydesigns-course-author
 description: Convert existing repositories, Markdown docs, workshop notes, or legacy course material into happydesigns course Markdown using `.md` files with MDC syntax and synchronized code-tree sections.
 ---
 
-# Happydesigns Course Author
+# happydesigns Course Author
 
 Create deterministic `.md` course sources that can be rendered by the happydesigns/Nuxt UI course reader.
 AI is only an authoring assistant; never add runtime AI dependencies, API key requirements, or generated claims that are not supported by the source material.
