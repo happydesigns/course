@@ -63,11 +63,6 @@ function formatDate(date?: string): string {
           <time class="text-muted font-normal">{{ formatDate(course.date) }}</time>
         </template>
 
-        <template #links>
-          <UBadge color="primary" variant="soft">{{ course.category ?? "Course" }}</UBadge>
-          <UBadge color="neutral" variant="outline">v{{ course.version }}</UBadge>
-        </template>
-
         <div v-if="course.authors?.length" class="mt-6 flex flex-wrap items-center gap-6">
           <template v-for="author in course.authors" :key="author.name">
             <ULink v-if="author.to" :to="author.to" target="_blank" class="group flex items-center gap-3">
