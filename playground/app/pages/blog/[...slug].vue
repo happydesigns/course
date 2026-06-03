@@ -1,11 +1,28 @@
 <script setup lang="ts">
 import type { CSSProperties, VNode } from "vue";
-import { computed, onBeforeUnmount, onMounted, provide, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from "vue";
 
 const CODE_TREE_WIDTH_STORAGE_KEY = "course.codeTree.width";
 const MIN_CODE_TREE_WIDTH = 220;
 const MAX_CODE_TREE_WIDTH = 520;
 const MIN_CODE_CONTENT_WIDTH = 360;
+
+interface CourseInput {
+  id: string;
+  label: string;
+  replace: string | string[];
+  description?: string;
+  placeholder?: string;
+  defaultValue?: string;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+}
+
+interface CourseInputReplacement {
+  search: string;
+  value: string;
+}
 
 const route = useRoute();
 const coursePath = computed(() => route.path.replace(/^\/blog\//, "/courses/"));
@@ -22,11 +39,38 @@ if (!course.value) {
   throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: true });
 }
 
-const title = computed(() => course.value?.title ?? "Course");
-const description = computed(() => course.value?.description ?? "");
 const tree = ref<Record<string, VNode>>({});
 const activePath = ref("");
 const items = computed(() => Object.entries(tree.value).map(([label, component]) => ({ label, component })));
+const inputValues = ref<Record<string, string>>({});
+const courseInputs = computed(() => ((course.value?.inputs ?? []) as CourseInput[]).filter((input) => input.id && input.label));
+const courseInputReplacements = computed(() =>
+  courseInputs.value.flatMap((input) =>
+    normalizeReplacementTokens(input.replace)
+      .map((search) => ({
+        search,
+        value: getCourseInputValue(input)
+      }))
+      .filter((replacement) => replacement.value.length > 0)
+  )
+);
+const renderedCourse = computed(() => {
+  if (!course.value || courseInputReplacements.value.length === 0) {
+    return course.value;
+  }
+
+  return {
+    ...course.value,
+    title: replaceConfiguredStrings(course.value.title, courseInputReplacements.value) as string,
+    description: replaceConfiguredStrings(course.value.description, courseInputReplacements.value) as string,
+    body: replaceConfiguredStrings(course.value.body, courseInputReplacements.value)
+  };
+});
+const renderedTitle = computed(() => renderedCourse.value?.title ?? "Course");
+const renderedDescription = computed(() => renderedCourse.value?.description ?? "");
+const contentRenderKey = computed(() =>
+  courseInputReplacements.value.map((replacement) => `${replacement.search}:${replacement.value}`).join("\n")
+);
 const codePane = ref<HTMLElement | null>(null);
 const codeTreeWidth = ref(288);
 const isCodeTreeResizing = ref(false);
@@ -38,8 +82,8 @@ provide("tree", tree);
 provide("activePath", activePath);
 
 useSeoMeta({
-  title,
-  description
+  title: renderedTitle,
+  description: renderedDescription
 });
 
 function formatDate(date?: string): string {
@@ -48,6 +92,63 @@ function formatDate(date?: string): string {
   }
 
   return new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function getCourseInputStorageKey(input: CourseInput): string {
+  return `course:${coursePath.value}:input:${input.id}`;
+}
+
+function normalizeReplacementTokens(replace: string | string[]): string[] {
+  return (Array.isArray(replace) ? replace : [replace]).filter(Boolean);
+}
+
+function getCourseInputValue(input: CourseInput): string {
+  const value = inputValues.value[input.id];
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return input.defaultValue ?? "";
+}
+
+function setCourseInputValue(input: CourseInput, value: string | number): void {
+  inputValues.value = {
+    ...inputValues.value,
+    [input.id]: String(value)
+  };
+  localStorage.setItem(getCourseInputStorageKey(input), String(value));
+}
+
+function restoreCourseInputValues(): void {
+  inputValues.value = Object.fromEntries(
+    courseInputs.value.map((input) => {
+      const storedValue = localStorage.getItem(getCourseInputStorageKey(input));
+
+      return [input.id, storedValue ?? input.defaultValue ?? ""];
+    })
+  );
+}
+
+function replaceConfiguredStrings(value: unknown, replacements: CourseInputReplacement[]): unknown {
+  if (typeof value === "string") {
+    return replacements.reduce(
+      (currentValue, replacement) => currentValue.split(replacement.search).join(replacement.value),
+      value
+    );
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => replaceConfiguredStrings(item, replacements));
+  }
+
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entryValue]) => [key, replaceConfiguredStrings(entryValue, replacements)])
+    );
+  }
+
+  return value;
 }
 
 function clampCodeTreeWidth(width: number): number {
@@ -127,12 +228,19 @@ onMounted(() => {
   if (Number.isFinite(storedWidth)) {
     setCodeTreeWidth(storedWidth);
   }
+
+  restoreCourseInputValues();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("pointermove", resizeCodeTree);
   window.removeEventListener("pointerup", stopCodeTreeResize);
   document.documentElement.classList.remove("course-code-tree-resizing-global");
+});
+
+watch(contentRenderKey, () => {
+  tree.value = {};
+  activePath.value = "";
 });
 </script>
 
@@ -145,7 +253,7 @@ onBeforeUnmount(() => {
       }"
       class="lg:gap-8"
     >
-      <UPageHeader :title="course.title" :description="course.description" :ui="{ title: 'relative flex items-center' }">
+      <UPageHeader :title="renderedTitle" :description="renderedDescription" :ui="{ title: 'relative flex items-center' }">
         <template #headline>
           <UButton
             icon="i-lucide-arrow-left"
@@ -176,10 +284,34 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </div>
+
+        <div
+          v-if="courseInputs.length"
+          class="mt-6 grid max-w-2xl gap-3 rounded-md border border-default bg-muted/30 p-4 sm:grid-cols-2"
+        >
+          <UFormField
+            v-for="input in courseInputs"
+            :key="input.id"
+            :label="input.label"
+            :description="input.description"
+            size="sm"
+          >
+            <UInput
+              :model-value="getCourseInputValue(input)"
+              :placeholder="input.placeholder"
+              :minlength="input.minLength"
+              :maxlength="input.maxLength"
+              :pattern="input.pattern"
+              autocomplete="off"
+              class="w-full"
+              @update:model-value="(value) => setCourseInputValue(input, value)"
+            />
+          </UFormField>
+        </div>
       </UPageHeader>
 
       <UPageBody>
-        <ContentRenderer v-if="course.body" :value="course" />
+        <ContentRenderer v-if="renderedCourse?.body" :key="contentRenderKey" :value="renderedCourse" />
       </UPageBody>
 
       <template #right>

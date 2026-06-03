@@ -10,6 +10,18 @@ const authorSchema = z.object({
     .optional()
 });
 
+const inputSchema = z.object({
+  id: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]*$/),
+  label: z.string().min(1),
+  replace: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
+  description: z.string().optional(),
+  placeholder: z.string().optional(),
+  defaultValue: z.string().optional(),
+  minLength: z.number().int().nonnegative().optional(),
+  maxLength: z.number().int().positive().optional(),
+  pattern: z.string().optional()
+});
+
 export default defineContentConfig({
   collections: {
     courses: defineCollection({
@@ -23,6 +35,7 @@ export default defineContentConfig({
         image: z.string().optional(),
         category: z.string().optional(),
         authors: z.array(authorSchema).optional(),
+        inputs: z.array(inputSchema).optional(),
         navigation: z.boolean().optional(),
         seo: z
           .object({

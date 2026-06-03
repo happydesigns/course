@@ -1,5 +1,6 @@
 import { parseMarkdown } from "@nuxtjs/mdc/runtime";
 import { z } from "zod";
+import { CourseInputSchema, type CourseInput } from "./schema.js";
 import { getInvalidCoursePathReason } from "./validation.js";
 
 export type CourseMarkdownIssueCode = "frontmatter" | "mdc-parse" | "code-tree" | "file-path";
@@ -29,6 +30,7 @@ export interface CourseMarkdownMetadata {
   version: string;
   category?: string;
   navigation?: boolean;
+  inputs?: CourseInput[];
   metadata?: Record<string, unknown>;
 }
 
@@ -58,6 +60,7 @@ const CourseMarkdownFrontmatterSchema = z
     version: z.string().min(1),
     category: z.string().optional(),
     navigation: z.boolean().optional(),
+    inputs: z.array(CourseInputSchema).optional(),
     metadata: z.record(z.string(), z.unknown()).optional()
   })
   .passthrough();

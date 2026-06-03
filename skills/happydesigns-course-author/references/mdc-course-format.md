@@ -15,6 +15,7 @@ Recommended:
 - `date`: ISO date or date-time.
 - `category`: Broad grouping such as `Authoring Guide`.
 - `authors`: List of author objects with `name`, optional `to`, optional `avatar.src`.
+- `inputs`: List of learner-provided text inputs whose values replace configured tokens in rendered prose, code blocks, and code-tree file paths.
 - `navigation`: Whether the course appears in navigation.
 
 Example:
@@ -28,11 +29,42 @@ date: 2026-06-03
 category: Web App
 authors:
   - name: Course Team
+inputs:
+  - id: projectName
+    label: Project name
+    defaultValue: my-app
+    replace: __PROJECT_NAME__
 navigation: true
 ---
 ```
 
 Do not add hidden authoring metadata unless the app consumes and displays it.
+
+## Learner Inputs
+
+Use frontmatter `inputs` when a course has a repeated placeholder that the learner should set once, such as a generated package suffix, project name, or resource prefix. Keep inputs generic and course-authored; do not hard-code them into the reader.
+
+Each input supports:
+
+- `id`: Stable identifier, starting with a letter and containing letters, numbers, `_`, `.`, or `-`.
+- `label`: Visible field label.
+- `replace`: String token or list of string tokens to replace.
+- `defaultValue`: Optional value used before the learner enters one.
+- `placeholder`, `description`, `minLength`, `maxLength`, `pattern`: Optional input hints and HTML constraints.
+
+Example:
+
+```yaml
+inputs:
+  - id: groupId
+    label: Group ID
+    description: "Replaces ### in generated object names."
+    placeholder: ABC
+    replace: "###"
+    maxLength: 3
+```
+
+Input values persist across reloads per course and input id.
 
 ## Compression Boundary
 

@@ -129,6 +129,38 @@ describe("validateCourseMarkdown", () => {
       ])
     );
   });
+
+  it("accepts configured Markdown inputs", async () => {
+    const result = await validateCourseMarkdown(markdownWithInputs());
+
+    expect(result.success).toBe(true);
+    expect(result.metadata?.inputs).toEqual([
+      expect.objectContaining({
+        id: "groupId",
+        label: "Group ID",
+        replace: "###"
+      })
+    ]);
+  });
+
+  it("rejects Markdown inputs without a replacement token", async () => {
+    const result = await validateCourseMarkdown(
+      markdownWithInputs([
+        "inputs:",
+        "  - id: groupId",
+        "    label: Group ID"
+      ])
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "frontmatter"
+        })
+      ])
+    );
+  });
 });
 
 function markdownWithCodeFence(info: string): string {
@@ -145,6 +177,33 @@ function markdownWithCodeFence(info: string): string {
     "",
     `\`\`\`${info}`,
     "export {};",
+    "```",
+    "",
+    "::"
+  ].join("\n");
+}
+
+function markdownWithInputs(inputs: string[] = [
+  "inputs:",
+  "  - id: groupId",
+  "    label: Group ID",
+  "    defaultValue: \"###\"",
+  "    replace: \"###\""
+]): string {
+  return [
+    "---",
+    "title: Demo",
+    "description: Demo course",
+    "version: 0.1.0",
+    ...inputs,
+    "---",
+    "",
+    "## Setup",
+    "",
+    "::code-tree-intersection",
+    "",
+    "```ts [src/main###.ts]",
+    "export const id = '###';",
     "```",
     "",
     "::"

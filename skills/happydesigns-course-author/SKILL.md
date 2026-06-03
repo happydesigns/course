@@ -34,6 +34,7 @@ Before writing or revising a course, read `references/mdc-course-format.md`. Use
 - Compress course logistics, repeated navigation, screenshot references, repository chrome, event-specific notes, and redundant summaries.
 - Do not compress course learnings: preserve concepts, decisions, required setup, prompts that drive generated output, code changes, verification steps, warnings that affect learner action, and the reason a learner makes each meaningful change.
 - Make the frontmatter lean. Use only displayable course fields such as `title`, `description`, `version`, `date`, `category`, `authors`, and `navigation` unless the app demonstrably consumes another field.
+- Use frontmatter `inputs` when the source course has repeated learner-specific placeholders such as package suffixes, resource prefixes, or project names. Configure inputs with stable `id`, visible `label`, `replace`, and optional `defaultValue`; do not hard-code one-off replacement behavior in prose.
 - Make `description` learner-facing and outcome-focused. Do not describe the conversion process.
 - Use `.md` as the file extension even when the body contains MDC syntax.
 - Use forward-slash relative file paths in code fence metadata.

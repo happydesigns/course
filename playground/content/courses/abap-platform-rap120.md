@@ -7,6 +7,15 @@ category: SAP RAP
 authors:
   - name: SAP-samples
     to: https://github.com/SAP-samples/abap-platform-rap120
+inputs:
+  - id: groupId
+    label: Group ID
+    description: "Replaces ### in generated ABAP object names."
+    placeholder: ABC
+    replace: "###"
+    minLength: 1
+    maxLength: 3
+    pattern: "[A-Za-z0-9]{1,3}"
 navigation: true
 ---
 

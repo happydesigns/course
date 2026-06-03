@@ -1,6 +1,21 @@
 import { z } from "zod";
 
 const MetadataSchema = z.record(z.string(), z.unknown());
+const ReplacementSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]);
+
+export const CourseInputSchema = z
+  .object({
+    id: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]*$/),
+    label: z.string().min(1),
+    replace: ReplacementSchema,
+    description: z.string().optional(),
+    placeholder: z.string().optional(),
+    defaultValue: z.string().optional(),
+    minLength: z.number().int().nonnegative().optional(),
+    maxLength: z.number().int().positive().optional(),
+    pattern: z.string().optional()
+  })
+  .strict();
 
 export const AssetRefSchema = z
   .object({
@@ -118,6 +133,7 @@ export const CourseSchema = z
     title: z.string().min(1),
     description: z.string().min(1),
     version: z.string().min(1),
+    inputs: z.array(CourseInputSchema).optional(),
     lessons: z.array(LessonSchema).min(1),
     fileSnapshots: z.array(FileSnapshotSchema).default([]),
     metadata: MetadataSchema.optional()
@@ -128,6 +144,7 @@ export type AssetRef = z.infer<typeof AssetRefSchema>;
 export type FileSnapshot = z.infer<typeof FileSnapshotSchema>;
 export type CodeChange = z.infer<typeof CodeChangeSchema>;
 export type ValidationHint = z.infer<typeof ValidationHintSchema>;
+export type CourseInput = z.infer<typeof CourseInputSchema>;
 export type CourseAction = z.infer<typeof CourseActionSchema>;
 export type Step = z.infer<typeof StepSchema>;
 export type Lesson = z.infer<typeof LessonSchema>;
