@@ -6,13 +6,10 @@ export default defineNuxtConfig({
     strict: true
   },
   content: {
-    experimental: {
-      nativeSqlite: true
-    },
     build: {
       markdown: {
         highlight: {
-          langs: ["bash", "css", "json", "mdc", "ts", "typescript", "vue"]
+          langs: ["abap", "bash", "css", "json", "mdc", "ts", "typescript", "vue"]
         }
       }
     }
