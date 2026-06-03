@@ -16,25 +16,43 @@ Recommended:
 - `category`: Broad grouping such as `Authoring Guide`.
 - `authors`: List of author objects with `name`, optional `to`, optional `avatar.src`.
 - `navigation`: Whether the course appears in navigation.
-- `metadata`: Generic authoring metadata. Use this for `needsReview` entries when needed.
 
 Example:
 
 ```md
 ---
-title: Author a Course with an Agent Skill
-description: Convert existing source material into a reviewable MDC course.
+title: Build the Starter App
+description: Create the starter app, add the first route, and verify it in the browser.
 version: 0.1.0
 date: 2026-06-03
-category: Authoring Guide
+category: Web App
 authors:
-  - name: happydesigns
-    to: https://github.com/happydesigns
+  - name: Course Team
 navigation: true
-metadata:
-  runtimeAi: false
 ---
 ```
+
+Do not add hidden authoring metadata unless the app consumes and displays it.
+
+## Compression Boundary
+
+Compress source material that is only course logistics:
+
+- Repeated navigation and "next exercise" summaries.
+- Screenshot references when the action can be stated directly.
+- Repository chrome, badges, licensing footers, and support links.
+- Event-specific notes that do not change the learner action.
+- Repeated reminders that have already been established.
+
+Do not compress source material that carries course learning:
+
+- Concepts the learner is meant to understand.
+- Prompts that drive generated output.
+- Code changes and target file states.
+- Required setup that changes the learner's work.
+- Warnings, review notes, or variability that affect learner action.
+- Verification steps and expected outcomes.
+- The reason for each meaningful change.
 
 ## Synchronized Code
 
@@ -45,12 +63,12 @@ Use `::code-tree-intersection` when the article should update the right file tre
 
 ```vue [src/App.vue]
 <template>
-  <main>Course reader</main>
+  <main>Starter app</main>
 </template>
 ```
 
 ```ts [src/main.ts]
-export const appName = "Course reader";
+export const appName = "Starter app";
 ```
 
 ::
@@ -61,31 +79,26 @@ Rules:
 - Every fenced block inside `::code-tree-intersection` needs `[path]` metadata.
 - Paths must be normalized relative paths with forward slashes.
 - Do not use absolute paths, drive letters, backslashes, empty segments, `.`, or `..`.
+- For generated packages with many artifact types, keep the generated package as the root and use at most one shallow semantic folder level, such as `cds`, `metadata`, `behavior`, `access`, `tables`, `services`, or `classes`.
 - Keep commands outside `::code-tree-intersection` unless intentionally represented as a file.
 
-## Review Markers
+## Review Notes
 
-Never invent missing content. Mark uncertainty close to the affected content:
+Never invent missing content. Mark uncertainty only when it changes what the learner should do, and place the note close to the affected content:
 
 ```md
 ::note
-needsReview: The source material names the deployment step but does not provide the target environment.
+needsReview: Confirm the target environment before running the deployment step.
 ::
 ```
 
-Or in frontmatter metadata:
-
-```yaml
-metadata:
-  needsReview:
-    - The source repo has two setup commands and does not explain which one is canonical.
-```
+Do not put review notes in frontmatter metadata.
 
 ## Agent Invocation
 
 Example prompt:
 
 ```text
-Use $happydesigns-course-author to convert this repository into `playground/content/courses/my-course.md`.
-Preserve the source sequence, do not invent missing steps, and mark uncertainty with needsReview.
+Use $happydesigns-course-author to convert this repository into `playground/content/courses/<semantic-slug>.md`.
+Preserve the source sequence, do not invent missing steps, and use rendered needsReview notes only when uncertainty affects learner action.
 ```
