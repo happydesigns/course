@@ -7,7 +7,7 @@ const links = [
 
 <template>
   <UApp>
-    <UHeader>
+    <UHeader :ui="{ container: 'max-w-none' }">
       <template #left>
         <ULink to="/blog" class="flex items-center gap-2">
           <UIcon name="i-lucide-book-open" class="size-6 text-primary" />
