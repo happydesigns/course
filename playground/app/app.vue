@@ -12,7 +12,7 @@ const links = [
         <ULink to="/blog" class="flex items-center gap-2">
           <UIcon name="i-lucide-book-open" class="size-6 text-primary" />
           <span class="text-xl font-bold tracking-tight text-highlighted">
-            happydesigns<span class="text-primary">/course</span>
+            Course
           </span>
         </ULink>
       </template>
