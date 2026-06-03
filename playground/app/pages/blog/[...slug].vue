@@ -45,7 +45,7 @@ function formatDate(date?: string): string {
     <UPage
       :ui="{
         center: 'min-w-0 px-4 sm:px-6 lg:col-span-5 lg:pl-8 lg:pr-0',
-        right: 'lg:col-span-5'
+        right: 'lg:col-span-5 lg:h-[calc(100vh-var(--ui-header-height,0px))]'
       }"
       class="lg:gap-8"
     >
@@ -92,17 +92,20 @@ function formatDate(date?: string): string {
       </UPageBody>
 
       <template #right>
-        <nav class="hidden h-full max-h-[calc(100vh-var(--ui-header-height,0px))] lg:sticky lg:top-(--ui-header-height) lg:block">
+        <nav class="hidden h-[calc(100vh-var(--ui-header-height,0px))] lg:sticky lg:top-(--ui-header-height) lg:block">
           <ProseCodeTree
             v-if="activePath"
             v-model="activePath"
             :items="items"
             expand-all
-            class="h-full rounded-none border-y-0 border-r-0 border-default"
-            :ui="{ list: 'border-default', content: '[&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50' }"
+            class="my-0 h-full min-h-0 rounded-none border-y-0 border-r-0 border-default lg:h-full"
+            :ui="{
+              list: 'border-default',
+              content: 'min-h-0 [&>div]:min-h-0 [&>div>pre]:min-h-0 [&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50'
+            }"
           />
 
-          <div v-else class="flex h-full min-h-[36rem] items-center justify-center border-l border-default">
+          <div v-else class="flex h-full items-center justify-center border-l border-default">
             <UIcon name="i-lucide-arrow-down" class="size-12 animate-bounce text-dimmed" />
           </div>
         </nav>
