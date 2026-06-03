@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import type { VNode } from "vue";
-import { computed, provide, ref } from "vue";
+import type { CSSProperties, VNode } from "vue";
+import { computed, onBeforeUnmount, onMounted, provide, ref } from "vue";
+
+const CODE_TREE_WIDTH_STORAGE_KEY = "course.codeTree.width";
+const MIN_CODE_TREE_WIDTH = 220;
+const MAX_CODE_TREE_WIDTH = 520;
+const MIN_CODE_CONTENT_WIDTH = 360;
 
 const route = useRoute();
 const coursePath = computed(() => route.path.replace(/^\/blog\//, "/courses/"));
@@ -22,6 +27,12 @@ const description = computed(() => course.value?.description ?? "");
 const tree = ref<Record<string, VNode>>({});
 const activePath = ref("");
 const items = computed(() => Object.entries(tree.value).map(([label, component]) => ({ label, component })));
+const codePane = ref<HTMLElement | null>(null);
+const codeTreeWidth = ref(288);
+const isCodeTreeResizing = ref(false);
+const codePaneStyle = computed<CSSProperties>(() => ({
+  "--course-code-tree-list-width": `${codeTreeWidth.value}px`
+}));
 
 provide("tree", tree);
 provide("activePath", activePath);
@@ -38,6 +49,91 @@ function formatDate(date?: string): string {
 
   return new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
+
+function clampCodeTreeWidth(width: number): number {
+  const paneWidth = codePane.value?.getBoundingClientRect().width ?? Number.POSITIVE_INFINITY;
+  const paneMax = Math.max(MIN_CODE_TREE_WIDTH, paneWidth - MIN_CODE_CONTENT_WIDTH);
+  const maxWidth = Math.min(MAX_CODE_TREE_WIDTH, paneMax);
+
+  return Math.round(Math.min(Math.max(width, MIN_CODE_TREE_WIDTH), maxWidth));
+}
+
+function setCodeTreeWidth(width: number): void {
+  codeTreeWidth.value = clampCodeTreeWidth(width);
+}
+
+function persistCodeTreeWidth(): void {
+  localStorage.setItem(CODE_TREE_WIDTH_STORAGE_KEY, String(codeTreeWidth.value));
+}
+
+function resizeCodeTree(event: PointerEvent): void {
+  const rect = codePane.value?.getBoundingClientRect();
+
+  if (!rect) {
+    return;
+  }
+
+  setCodeTreeWidth(event.clientX - rect.left);
+}
+
+function stopCodeTreeResize(): void {
+  isCodeTreeResizing.value = false;
+  window.removeEventListener("pointermove", resizeCodeTree);
+  window.removeEventListener("pointerup", stopCodeTreeResize);
+  document.documentElement.classList.remove("course-code-tree-resizing-global");
+  persistCodeTreeWidth();
+}
+
+function startCodeTreeResize(event: PointerEvent): void {
+  if (event.button !== 0) {
+    return;
+  }
+
+  event.preventDefault();
+  isCodeTreeResizing.value = true;
+  resizeCodeTree(event);
+  document.documentElement.classList.add("course-code-tree-resizing-global");
+  window.addEventListener("pointermove", resizeCodeTree);
+  window.addEventListener("pointerup", stopCodeTreeResize);
+  (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+}
+
+function adjustCodeTreeWidth(delta: number): void {
+  setCodeTreeWidth(codeTreeWidth.value + delta);
+  persistCodeTreeWidth();
+}
+
+function handleCodeTreeResizerKeydown(event: KeyboardEvent): void {
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    adjustCodeTreeWidth(-24);
+  } else if (event.key === "ArrowRight") {
+    event.preventDefault();
+    adjustCodeTreeWidth(24);
+  } else if (event.key === "Home") {
+    event.preventDefault();
+    setCodeTreeWidth(MIN_CODE_TREE_WIDTH);
+    persistCodeTreeWidth();
+  } else if (event.key === "End") {
+    event.preventDefault();
+    setCodeTreeWidth(MAX_CODE_TREE_WIDTH);
+    persistCodeTreeWidth();
+  }
+}
+
+onMounted(() => {
+  const storedWidth = Number(localStorage.getItem(CODE_TREE_WIDTH_STORAGE_KEY));
+
+  if (Number.isFinite(storedWidth)) {
+    setCodeTreeWidth(storedWidth);
+  }
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("pointermove", resizeCodeTree);
+  window.removeEventListener("pointerup", stopCodeTreeResize);
+  document.documentElement.classList.remove("course-code-tree-resizing-global");
+});
 </script>
 
 <template>
@@ -87,17 +183,38 @@ function formatDate(date?: string): string {
       </UPageBody>
 
       <template #right>
-        <nav class="hidden h-[calc(100vh-var(--ui-header-height,0px))] lg:sticky lg:top-(--ui-header-height) lg:block">
+        <nav
+          ref="codePane"
+          :style="codePaneStyle"
+          :class="[
+            'relative hidden h-[calc(100vh-var(--ui-header-height,0px))] lg:sticky lg:top-(--ui-header-height) lg:block',
+            isCodeTreeResizing && 'course-code-tree-resizing'
+          ]"
+        >
           <ProseCodeTree
             v-if="activePath"
             v-model="activePath"
             :items="items"
             expand-all
-            class="my-0 h-full min-h-0 rounded-none border-y-0 border-r-0 border-default lg:h-full"
+            class="course-code-tree my-0 h-full min-h-0 rounded-none border-y-0 border-r-0 border-default lg:h-full"
             :ui="{
-              list: 'border-default',
-              content: 'min-h-0 [&>div]:min-h-0 [&>div>pre]:min-h-0 [&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50'
+              list: 'course-code-tree-list border-default',
+              content: 'course-code-tree-content min-h-0 [&>div]:min-h-0 [&>div>pre]:min-h-0 [&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50'
             }"
+          />
+
+          <div
+            v-if="activePath"
+            role="separator"
+            aria-label="Resize file tree"
+            aria-orientation="vertical"
+            :aria-valuemin="MIN_CODE_TREE_WIDTH"
+            :aria-valuemax="MAX_CODE_TREE_WIDTH"
+            :aria-valuenow="codeTreeWidth"
+            tabindex="0"
+            class="course-code-tree-resizer hidden lg:block"
+            @pointerdown="startCodeTreeResize"
+            @keydown="handleCodeTreeResizerKeydown"
           />
 
           <div v-else class="flex h-full items-center justify-center border-l border-default">
