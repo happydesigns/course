@@ -1,13 +1,11 @@
 import { z } from "zod";
 
 const MetadataSchema = z.record(z.string(), z.unknown());
-const ReplacementSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]);
 
 export const CourseInputSchema = z
   .object({
     id: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]*$/),
     label: z.string().min(1),
-    replace: ReplacementSchema,
     description: z.string().optional(),
     placeholder: z.string().optional(),
     defaultValue: z.string().optional(),

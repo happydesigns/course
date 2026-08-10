@@ -137,18 +137,32 @@ describe("validateCourseMarkdown", () => {
     expect(result.metadata?.inputs).toEqual([
       expect.objectContaining({
         id: "groupId",
-        label: "Group ID",
-        replace: "###"
+        label: "Group ID"
       })
     ]);
   });
 
-  it("rejects Markdown inputs without a replacement token", async () => {
+  it("rejects placeholders without a configured input", async () => {
+    const result = await validateCourseMarkdown(
+      markdownWithInputs([])
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "course-input"
+        })
+      ])
+    );
+  });
+
+  it("rejects configured inputs that are not used", async () => {
     const result = await validateCourseMarkdown(
       markdownWithInputs([
         "inputs:",
-        "  - id: groupId",
-        "    label: Group ID"
+        "  - id: unused",
+        "    label: Unused"
       ])
     );
 
@@ -156,8 +170,40 @@ describe("validateCourseMarkdown", () => {
     expect(result.issues).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: "frontmatter"
+          code: "course-input"
         })
+      ])
+    );
+  });
+
+  it("accepts lesson placeholders inherited from the course overview", async () => {
+    const result = await validateCourseMarkdown(
+      lessonMarkdown(),
+      {
+        inheritedInputs: [
+          { id: "groupId", label: "Group ID", defaultValue: "###" }
+        ]
+      }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.issues).toHaveLength(0);
+  });
+
+  it("rejects checkpoints that are not both declared and rendered", async () => {
+    const result = await validateCourseMarkdown(
+      lessonMarkdown().replace('id="lesson-done"', 'id="different-id"'),
+      {
+        inheritedInputs: [
+          { id: "groupId", label: "Group ID", defaultValue: "###" }
+        ]
+      }
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "checkpoint" })
       ])
     );
   });
@@ -187,8 +233,7 @@ function markdownWithInputs(inputs: string[] = [
   "inputs:",
   "  - id: groupId",
   "    label: Group ID",
-  "    defaultValue: \"###\"",
-  "    replace: \"###\""
+  "    defaultValue: \"ABC\""
 ]): string {
   return [
     "---",
@@ -202,10 +247,30 @@ function markdownWithInputs(inputs: string[] = [
     "",
     "::code-tree-intersection",
     "",
-    "```ts [src/main###.ts]",
-    "export const id = '###';",
+    "```ts [src/main-{{ $doc.input.groupId }}.ts]",
+    "export const id = '{{ $doc.input.groupId }}';",
     "```",
     "",
+    "::"
+  ].join("\n");
+}
+
+function lessonMarkdown(): string {
+  return [
+    "---",
+    "title: Lesson",
+    "description: A course lesson",
+    "courseId: demo-course",
+    "pageType: lesson",
+    "order: 1",
+    "checkpoints:",
+    "  - lesson-done",
+    "---",
+    "",
+    "Create `ZR_TRAVEL{{ $doc.input.groupId }}`.",
+    "",
+    '::course-checkpoint{id="lesson-done"}',
+    "I completed the lesson.",
     "::"
   ].join("\n");
 }

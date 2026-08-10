@@ -3,7 +3,13 @@ import { z } from "zod";
 import { CourseInputSchema, type CourseInput } from "./schema.js";
 import { getInvalidCoursePathReason } from "./validation.js";
 
-export type CourseMarkdownIssueCode = "frontmatter" | "mdc-parse" | "code-tree" | "file-path";
+export type CourseMarkdownIssueCode =
+  | "frontmatter"
+  | "mdc-parse"
+  | "code-tree"
+  | "file-path"
+  | "course-input"
+  | "checkpoint";
 
 export interface CourseMarkdownIssue {
   code: CourseMarkdownIssueCode;
@@ -27,10 +33,16 @@ export interface CourseMarkdownSnapshot {
 export interface CourseMarkdownMetadata {
   title: string;
   description: string;
-  version: string;
+  version?: string;
   category?: string;
   navigation?: boolean;
   inputs?: CourseInput[];
+  courseId?: string;
+  pageType?: "course" | "lesson";
+  order?: number;
+  optional?: boolean;
+  estimatedMinutes?: number;
+  checkpoints?: string[];
   metadata?: Record<string, unknown>;
 }
 
@@ -43,6 +55,7 @@ export interface CourseMarkdownValidationResult {
 
 export interface CourseMarkdownValidationOptions {
   filePath?: string;
+  inheritedInputs?: readonly CourseInput[];
 }
 
 interface MdcNode {
@@ -57,16 +70,25 @@ const CourseMarkdownFrontmatterSchema = z
   .object({
     title: z.string().min(1),
     description: z.string().min(1),
-    version: z.string().min(1),
+    version: z.string().min(1).optional(),
     category: z.string().optional(),
     navigation: z.boolean().optional(),
     inputs: z.array(CourseInputSchema).optional(),
+    courseId: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+    pageType: z.enum(["course", "lesson"]).optional(),
+    order: z.number().int().nonnegative().optional(),
+    optional: z.boolean().optional(),
+    estimatedMinutes: z.number().int().positive().optional(),
+    checkpoints: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).optional(),
     metadata: z.record(z.string(), z.unknown()).optional()
   })
   .passthrough();
 
 const CODE_TREE_TAG = "code-tree-intersection";
+const CHECKPOINT_TAG = "course-checkpoint";
 const HEADING_TAGS = new Set(["h2", "h3", "h4"]);
+const COURSE_INPUT_PLACEHOLDER_PATTERN =
+  /\{\{\s*\$doc\.input\.([A-Za-z][A-Za-z0-9_.-]*)\s*\}\}/g;
 
 export async function validateCourseMarkdown(
   source: string,
@@ -116,17 +138,18 @@ export async function validateCourseMarkdown(
         details: issue
       }))
     );
+  } else {
+    const localInputs = frontmatter.data.inputs;
+    const effectiveInputs = localInputs ?? options.inheritedInputs ?? [];
+    validateCourseInputPlaceholders(normalizedSource, effectiveInputs, issues, {
+      allowUnknown:
+        frontmatter.data.pageType === "lesson" && !localInputs && !options.inheritedInputs,
+      requireConfiguredUsage: frontmatter.data.pageType !== "course" && Boolean(localInputs)
+    });
+    validateCourseCheckpoints(parsed.body, frontmatter.data.checkpoints ?? [], issues);
   }
 
   const snapshots = extractCourseMarkdownSnapshots(parsed.body, issues);
-
-  if (snapshots.length === 0) {
-    issues.push({
-      code: "code-tree",
-      message: `Course Markdown must include at least one ${CODE_TREE_TAG} block with fenced files.`,
-      path: ["body"]
-    });
-  }
 
   return {
     success: issues.length === 0,
@@ -134,6 +157,123 @@ export async function validateCourseMarkdown(
     snapshots,
     issues
   };
+}
+
+function validateCourseInputPlaceholders(
+  source: string,
+  inputs: readonly CourseInput[],
+  issues: CourseMarkdownIssue[],
+  options: { allowUnknown: boolean; requireConfiguredUsage: boolean }
+): void {
+  const configuredIds = new Set<string>();
+
+  inputs.forEach((input, index) => {
+    if (configuredIds.has(input.id)) {
+      issues.push({
+        code: "course-input",
+        message: `Course input id "${input.id}" must be unique.`,
+        path: ["frontmatter", "inputs", index, "id"]
+      });
+    }
+
+    configuredIds.add(input.id);
+  });
+
+  const referencedIds = new Set(
+    Array.from(source.matchAll(COURSE_INPUT_PLACEHOLDER_PATTERN), (match) => match[1] as string)
+  );
+
+  for (const inputId of referencedIds) {
+    if (!configuredIds.has(inputId) && !options.allowUnknown) {
+      issues.push({
+        code: "course-input",
+        message: `Placeholder for unknown course input "${inputId}".`,
+        path: ["body"]
+      });
+    }
+  }
+
+  inputs.forEach((input, index) => {
+    if (options.requireConfiguredUsage && !referencedIds.has(input.id)) {
+      issues.push({
+        code: "course-input",
+        message: `Course input "${input.id}" is not referenced by a {{ $doc.input.${input.id} }} binding.`,
+        path: ["frontmatter", "inputs", index, "id"]
+      });
+    }
+  });
+}
+
+function validateCourseCheckpoints(
+  body: unknown,
+  declaredIds: readonly string[],
+  issues: CourseMarkdownIssue[]
+): void {
+  const declared = new Set<string>();
+
+  declaredIds.forEach((id, index) => {
+    if (declared.has(id)) {
+      issues.push({
+        code: "checkpoint",
+        message: `Checkpoint id "${id}" must be unique.`,
+        path: ["frontmatter", "checkpoints", index]
+      });
+    }
+    declared.add(id);
+  });
+
+  const rendered = new Set<string>();
+  const root = asNode(body);
+
+  const walk = (node: MdcNode): void => {
+    if (isElement(node) && node.tag === CHECKPOINT_TAG) {
+      const id = stringProp(node.props?.id);
+
+      if (!id) {
+        issues.push({
+          code: "checkpoint",
+          message: `${CHECKPOINT_TAG} requires a stable id prop.`,
+          path: ["body", CHECKPOINT_TAG]
+        });
+      } else if (rendered.has(id)) {
+        issues.push({
+          code: "checkpoint",
+          message: `Checkpoint component id "${id}" must be unique within the page.`,
+          path: ["body", CHECKPOINT_TAG, id]
+        });
+      } else {
+        rendered.add(id);
+      }
+    }
+
+    for (const child of node.children ?? []) {
+      walk(child);
+    }
+  };
+
+  if (root) {
+    walk(root);
+  }
+
+  for (const id of declared) {
+    if (!rendered.has(id)) {
+      issues.push({
+        code: "checkpoint",
+        message: `Declared checkpoint "${id}" has no ${CHECKPOINT_TAG} component.`,
+        path: ["frontmatter", "checkpoints", id]
+      });
+    }
+  }
+
+  for (const id of rendered) {
+    if (!declared.has(id)) {
+      issues.push({
+        code: "checkpoint",
+        message: `Checkpoint component "${id}" is not declared in frontmatter.`,
+        path: ["body", CHECKPOINT_TAG, id]
+      });
+    }
+  }
 }
 
 export function extractCourseMarkdownSnapshots(
