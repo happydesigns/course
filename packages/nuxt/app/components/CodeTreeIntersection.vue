@@ -1,0 +1,204 @@
+<script setup lang="ts">
+import type { VNode } from "vue";
+import { createVNode, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useCourseCodeState, type CourseCodeItem } from "../composables/useCourseCodeState";
+import { useCourseCodeCollectionMode } from "../composables/useCourseCodeCollectionMode";
+import { interpolateCourseInputPlaceholders } from "../utils/course-inputs";
+
+const props = defineProps<{
+  default?: boolean;
+}>();
+
+const slots = defineSlots();
+const target = ref<HTMLElement | null>(null);
+const state = useCourseCodeState();
+const collectOnly = useCourseCodeCollectionMode();
+const source = Symbol("course-code-intersection");
+let observer: IntersectionObserver | undefined;
+let hasRegistered = false;
+let isMounted = false;
+
+function collectItems(): CourseCodeItem[] {
+  return slots.default?.().map(transformSlot).filter(isCourseCodeItem) ?? [];
+}
+
+function register(options?: { activate?: boolean }): void {
+  const items = collectItems();
+
+  if (state?.inputsReady.value && items.length > 0) {
+    state.register(source, items, options);
+    hasRegistered = true;
+  }
+}
+
+function registerForCurrentPosition(): void {
+  if (collectOnly) {
+    register({ activate: false });
+    return;
+  }
+
+  if (props.default) {
+    register();
+    return;
+  }
+
+  const rect = target.value?.getBoundingClientRect();
+
+  if (rect && rect.top < window.innerHeight * 0.5) {
+    register();
+  }
+}
+
+watch(
+  () => state?.contentRevision.value,
+  () => {
+    if (hasRegistered) {
+      register({ activate: false });
+    } else if (isMounted) {
+      registerForCurrentPosition();
+    }
+  },
+  { flush: "post" }
+);
+
+onMounted(() => {
+  isMounted = true;
+  registerForCurrentPosition();
+
+  if (collectOnly || props.default || !target.value) {
+    return;
+  }
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        register();
+      }
+    },
+    {
+      rootMargin: "-200px 0px -50% 0px",
+      threshold: 0
+    }
+  );
+
+  observer.observe(target.value);
+});
+
+onBeforeUnmount(() => {
+  isMounted = false;
+  observer?.disconnect();
+  state?.unregister(source);
+});
+
+function findCodeBlock(slot: VNode): VNode | undefined {
+  const slotProps = slot.props ?? {};
+
+  if (slotProps.filename || slotProps.label) {
+    return slot;
+  }
+
+  if (isSlotChildren(slot.children)) {
+    for (const child of slot.children.default()) {
+      const found = findCodeBlock(child);
+
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function transformSlot(slot: unknown, index: number): CourseCodeItem | undefined {
+  if (!isVNode(slot)) {
+    return undefined;
+  }
+
+  if (typeof slot.type === "symbol" && Array.isArray(slot.children)) {
+    return slot.children
+      .map((child, childIndex) => transformSlot(child, childIndex))
+      .find(isCourseCodeItem);
+  }
+
+  const codeBlock = findCodeBlock(slot);
+
+  if (!codeBlock) {
+    return undefined;
+  }
+
+  const inputValues = state?.inputValues.value ?? {};
+  const component = interpolateCodeVNode(codeBlock, inputValues);
+  const filename = String(component.props?.filename ?? component.props?.label ?? index);
+
+  return {
+    label: filename,
+    icon: typeof codeBlock.props?.icon === "string" ? codeBlock.props.icon : undefined,
+    component
+  };
+}
+
+function interpolateCodeVNode(
+  vnode: VNode,
+  inputValues: Readonly<Record<string, string>>
+): VNode {
+  const cloned = createVNode(
+    vnode.type,
+    interpolateCourseInputPlaceholders(vnode.props ?? {}, inputValues),
+    interpolateVNodeChildren(vnode.children, inputValues) as VNode["children"]
+  );
+  return cloned;
+}
+
+function interpolateVNodeChildren(
+  value: unknown,
+  inputValues: Readonly<Record<string, string>>
+): unknown {
+  if (typeof value === "string") {
+    return interpolateCourseInputPlaceholders(value, inputValues);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) =>
+      isVNode(entry)
+        ? interpolateCodeVNode(entry, inputValues)
+        : interpolateVNodeChildren(entry, inputValues)
+    );
+  }
+
+  if (isSlotChildren(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([name, slot]) => [
+        name,
+        typeof slot === "function"
+          ? (...args: unknown[]) =>
+              interpolateVNodeChildren(
+                (slot as (...slotArgs: unknown[]) => unknown)(...args),
+                inputValues
+              )
+          : slot
+      ])
+    );
+  }
+
+  return value;
+}
+
+function isSlotChildren(value: unknown): value is { default: () => VNode[] } {
+  return typeof value === "object" && value !== null && "default" in value;
+}
+
+function isVNode(value: unknown): value is VNode {
+  return typeof value === "object" && value !== null && "type" in value;
+}
+
+function isCourseCodeItem(value: unknown): value is CourseCodeItem {
+  return typeof value === "object" && value !== null && "label" in value && "component" in value;
+}
+</script>
+
+<template>
+  <div v-if="!props.default && !collectOnly" ref="target" data-course-code-step>
+    <slot />
+  </div>
+</template>
