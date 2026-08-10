@@ -95,8 +95,8 @@ export default defineNuxtConfig({
 ```
 ::
 
-::note{to="/docs/typography"}
-`@comark/nuxt` automatically enables Nuxt UI's [prose components](/docs/typography), so Markdown rendered by Comark is styled to match your theme.
+::note{to="https://ui.nuxt.com/docs/typography"}
+`@comark/nuxt` automatically enables Nuxt UI's [prose components](https://ui.nuxt.com/docs/typography), so Markdown rendered by Comark is styled to match your theme.
 ::
 
 Create the main CSS file to import Tailwind CSS and Nuxt UI:
@@ -408,11 +408,11 @@ export default defineEventHandler(async (event) => {
 
 ## Wire up the UI
 
-Nuxt UI provides purpose-built components for AI chat interfaces: [`UChatPrompt`](/docs/components/chat-prompt) for the input area and [`UChatMessages`](/docs/components/chat-messages) for displaying the conversation.
+Nuxt UI provides purpose-built components for AI chat interfaces: [`UChatPrompt`](https://ui.nuxt.com/docs/components/chat-prompt) for the input area and [`UChatMessages`](https://ui.nuxt.com/docs/components/chat-messages) for displaying the conversation.
 
 ### Creating the home page
 
-The home page is where users start a new conversation. The [`UChatPrompt`](/docs/components/chat-prompt) component provides a textarea with auto-resize, keyboard shortcuts, and a submit button:
+The home page is where users start a new conversation. The [`UChatPrompt`](https://ui.nuxt.com/docs/components/chat-prompt) component provides a textarea with auto-resize, keyboard shortcuts, and a submit button:
 
 ::code-tree-intersection
 ```vue [app/pages/index.vue] {34-42}
@@ -465,7 +465,7 @@ async function createChat() {
 ```
 ::
 
-The [`UChatPrompt`](/docs/components/chat-prompt) component automatically handles:
+The [`UChatPrompt`](https://ui.nuxt.com/docs/components/chat-prompt) component automatically handles:
 - Form submission when pressing :kbd{value="enter"}
 - Auto-resizing as you type
 - A loading state when `status` is set to `streaming`
@@ -647,7 +647,7 @@ The `onData` callback receives [custom data events](https://ai-sdk.dev/docs/ai-s
 
 **UChatMessages Component**
 
-The [`UChatMessages`](/docs/components/chat-messages) component is purpose-built for AI chatbots with:
+The [`UChatMessages`](https://ui.nuxt.com/docs/components/chat-messages) component is purpose-built for AI chatbots with:
 - Auto-scroll to bottom on load
 - Continuous scrolling as messages stream in
 - A loading indicator while the assistant processes
@@ -655,11 +655,11 @@ The [`UChatMessages`](/docs/components/chat-messages) component is purpose-built
 
 **Rendering Message Parts**
 
-We iterate over message `parts` using AI SDK helpers like `isTextUIPart` and `isReasoningUIPart`, rendering assistant text with the `<ChatComark>` component we created earlier and reasoning content with [`UChatReasoning`](/docs/components/chat-reasoning). The `isPartStreaming` utility from `@nuxt/ui/utils/ai` detects if a part is currently being streamed.
+We iterate over message `parts` using AI SDK helpers like `isTextUIPart` and `isReasoningUIPart`, rendering assistant text with the `<ChatComark>` component we created earlier and reasoning content with [`UChatReasoning`](https://ui.nuxt.com/docs/components/chat-reasoning). The `isPartStreaming` utility from `@nuxt/ui/utils/ai` detects if a part is currently being streamed.
 
 **UChatPromptSubmit Component**
 
-The [`UChatPromptSubmit`](/docs/components/chat-prompt-submit) component adapts based on the chat status:
+The [`UChatPromptSubmit`](https://ui.nuxt.com/docs/components/chat-prompt-submit) component adapts based on the chat status:
 - Shows a send button when ready
 - Shows a stop button while streaming
 - Shows a reload button after an error
@@ -688,7 +688,7 @@ export default defineEventHandler(async () => {
 
 ### Building the chats history dropdown
 
-The component uses [`UDropdownMenu`](/docs/components/dropdown-menu) with a [`UButton`](/docs/components/button) as trigger. Use [`useFetch`](https://nuxt.com/docs/api/composables/use-fetch) with a `key` to fetch and cache the chat list:
+The component uses [`UDropdownMenu`](https://ui.nuxt.com/docs/components/dropdown-menu) with a [`UButton`](https://ui.nuxt.com/docs/components/button) as trigger. Use [`useFetch`](https://nuxt.com/docs/api/composables/use-fetch) with a `key` to fetch and cache the chat list:
 
 ::code-tree-intersection
 ```vue [app/components/ChatsHistory.vue]
@@ -946,7 +946,7 @@ export function useModels() {
 
 ### Building the model selector
 
-Create a [`USelectMenu`](/docs/components/select-menu) component that displays the available models:
+Create a [`USelectMenu`](https://ui.nuxt.com/docs/components/select-menu) component that displays the available models:
 
 ::code-tree-intersection
 ```vue [app/components/ModelSelect.vue]
