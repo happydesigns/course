@@ -1,36 +1,41 @@
 <script setup lang="ts">
-const links = [
-  { label: "Courses", to: "/blog", active: true },
-  { label: "How to use", to: "/blog/using-this-tool" }
-];
+import type { NavigationMenuItem } from "@nuxt/ui";
+
+const route = useRoute();
+const links = computed<NavigationMenuItem[]>(() => [
+  {
+    label: "Courses",
+    to: "/courses",
+    active: route.path.startsWith("/courses") && route.path !== "/courses/using-this-tool"
+  },
+  {
+    label: "How to use",
+    to: "/courses/using-this-tool",
+    active: route.path === "/courses/using-this-tool"
+  }
+]);
 </script>
 
 <template>
   <UApp>
-    <UHeader :ui="{ container: 'max-w-none' }">
+    <UHeader :ui="{ container: 'max-w-[120rem]' }">
       <template #left>
-        <ULink to="/blog" class="flex items-center gap-2">
-          <UIcon name="i-lucide-book-open" class="size-6 text-primary" />
+        <ULink to="/courses" class="flex items-center gap-2">
+          <UIcon name="i-lucide-square-library" class="size-6 shrink-0 text-primary" />
           <span class="text-xl font-bold tracking-tight text-highlighted">
             Course
           </span>
         </ULink>
       </template>
 
-      <nav class="hidden items-center gap-6 lg:flex" aria-label="Main navigation">
-        <ULink
-          v-for="link in links"
-          :key="link.label"
-          :to="link.to"
-          class="text-sm font-medium transition-colors hover:text-highlighted"
-          :class="link.active ? 'text-primary' : 'text-muted'"
-        >
-          {{ link.label }}
-        </ULink>
-      </nav>
+      <UNavigationMenu :items="links" />
 
       <template #right>
         <UButton icon="i-simple-icons-github" color="neutral" variant="ghost" to="https://github.com/happydesigns/course" target="_blank" aria-label="GitHub" />
+      </template>
+
+      <template #body>
+        <UNavigationMenu :items="links" orientation="vertical" class="-mx-2.5" />
       </template>
     </UHeader>
 
