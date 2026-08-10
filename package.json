@@ -5,15 +5,18 @@
   "packageManager": "pnpm@11.5.1",
   "scripts": {
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm --filter @happydesigns/course test",
+    "test": "pnpm -r test",
     "build": "pnpm -r build",
-    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../playground/content/courses/how-to-build-an-ai-chat.md && pnpm --filter @happydesigns/course course validate ../../playground/content/courses/using-this-tool.md",
+    "validate:examples": "pnpm --filter @happydesigns/course course validate ../../playground/content/courses/abap-platform-rap120 && pnpm --filter @happydesigns/course course validate ../../playground/content/courses/how-to-build-an-ai-chat.md && pnpm --filter @happydesigns/course course validate ../../playground/content/courses/using-this-tool.md",
     "dev": "pnpm --filter @happydesigns/course-playground dev"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
+    "tsx": "^4.23.11",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8",
-    "tsx": "^4.22.4"
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "@happydesigns/ui": "link:../ui"
   }
 }
