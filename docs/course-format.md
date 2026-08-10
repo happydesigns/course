@@ -1,16 +1,46 @@
 # MDC Course Format
 
-A course is authored as a `.md` file with MDC syntax, similar to Nuxt UI's blog content. Markdown prose is the source of truth, and fenced code blocks inside `::code-tree-intersection` blocks drive the synchronized file tree and code pane.
+A course is authored as a Nuxt Content directory. Its `0.index.md` file is the overview; each additional Markdown file is an independently addressable lesson. Markdown prose remains the source of truth, while Course components add navigation, progress, checkpoints, and the synchronized code workspace.
+
+```text
+content/courses/my-course/
+  0.index.md
+  1.getting-started.md
+  2.build-the-feature.md
+  3.verify-the-result.md
+```
+
+The overview and every lesson are ordinary Nuxt Content pages. This keeps routing, headings, the table of contents, MDC rendering, and content querying in Nuxt Content rather than duplicating them in a custom course format.
 
 The JSON schema remains available as a compatibility and interchange format for deterministic tools, but new authored courses should use Markdown.
 
 ## Markdown Source
 
-Required frontmatter:
+Required overview frontmatter:
 
 - `title`: Human-readable course title.
 - `description`: Short summary of the course.
+- `courseId`: Stable kebab-case identifier shared by all pages in the course.
+- `pageType: course`: Marks the page as the course overview.
+
+Recommended overview frontmatter:
+
 - `version`: Course content version.
+- `inputs`: Course-wide interactive values inherited by lessons.
+
+Required lesson frontmatter:
+
+- `title`: Lesson title.
+- `description`: Short lesson summary.
+- `courseId`: The overview's course identifier.
+- `pageType: lesson`: Marks the page as a lesson.
+- `order`: Stable numeric position in the curriculum.
+
+Recommended lesson frontmatter:
+
+- `estimatedMinutes`: Expected completion time.
+- `optional`: Excludes the lesson from required-progress totals when `true`.
+- `checkpoints`: Stable IDs of the checkpoints rendered on the page.
 
 Optional frontmatter:
 
@@ -19,6 +49,64 @@ Optional frontmatter:
 - `navigation`: Whether the course should appear in navigation.
 - `authors`: Author metadata for the reader.
 - `metadata`: Generic metadata for authoring, profiles, or `needsReview` markers.
+
+## Navigation and Progress
+
+Applications query the overview and all pages with the same `courseId`, order lessons by `order`, and pass them to `CourseReader`. The reader composes Nuxt UI's page, aside, content navigation, table-of-contents, progress, slideover, and surrounding-page components. URLs remain normal Nuxt routes, so learners can bookmark, reload, and navigate directly to any lesson.
+
+Progress is deliberately client-side and product-neutral. It is stored per `courseId` in `localStorage` and contains only completed lesson paths, completed checkpoint IDs, and the last visited lesson. Content and routing do not depend on progress, and a future product can replace this persistence contract with authenticated storage without changing the Markdown.
+
+Add a checkpoint where the learner has reached a meaningful, verifiable outcome:
+
+```mdc
+---
+title: Build the feature
+description: Implement and verify the first working version.
+courseId: my-course
+pageType: lesson
+order: 2
+estimatedMinutes: 20
+checkpoints:
+  - feature-runs
+---
+
+## Verify the result
+
+Run the application and confirm the expected result.
+
+::course-checkpoint{id="feature-runs"}
+I verified that the feature runs as described.
+::
+```
+
+Checkpoint IDs are declared in frontmatter and repeated on the corresponding MDC component. Validation rejects missing, undeclared, or duplicate IDs. A lesson with checkpoints is complete when all its checkpoints are complete. Optional lessons are tracked but do not reduce required-course progress.
+
+## Course Inputs
+
+Interactive values are declared in frontmatter and referenced through explicit,
+named placeholders. An input does not define arbitrary search strings:
+
+````mdc
+---
+inputs:
+  - id: groupId
+    label: Group ID
+    defaultValue: ABC
+---
+
+Create `ZR_TRAVEL{{ $doc.input.groupId }}`.
+
+```abap [src/ZR_TRAVEL{{ $doc.input.groupId }}.bdef]
+define behavior for ZR_TRAVEL{{ $doc.input.groupId }}
+```
+````
+
+The supported binding form is Nuxt Content's native
+`{{ $doc.input.<id> }}` syntax. Every binding must reference a declared input,
+every declared input must be used, and input IDs must be unique. Nuxt Content
+resolves bindings in normal Markdown through `ContentRenderer` data. The Course
+reader additionally resolves the same syntax in fenced code and filename metadata,
+where CommonMark preserves it as literal text.
 
 Code pane state is declared with MDC:
 
@@ -56,6 +144,14 @@ metadata:
 ## Agent Skill
 
 Use `skills/happydesigns-course-author` for AI-assisted conversion from existing repositories, Markdown docs, or workshop notes. The skill should draft the `.md` source, preserve the source sequence, mark uncertainty with `needsReview`, and run deterministic validation when available.
+
+## Nuxt Content Reader
+
+`@happydesigns/course-nuxt` exports `courseCollectionSchema`. Applications use that schema in their own page collection and pass the queried overview, current page, and ordered lessons to `CourseReader`. The package deliberately does not choose a collection name, source glob, route, or URL prefix.
+
+The reader resolves the `course` capability with `@happydesigns/nuxt-variants`. Structural features such as course inputs, the synchronized code stage, and the file tree can be configured or disabled through registered variant entries. Individual content remains in Markdown rather than `app.config.ts`.
+
+Every `code-tree-intersection` contributes the files declared in that block to a cumulative project state. A later block with the same normalized path replaces the previous content for that file. The right-hand desktop stage follows the current reading position; the fenced blocks remain available inline on smaller screens, with the accumulated project also available in a fixed, expandable mobile panel.
 
 ## JSON Compatibility
 

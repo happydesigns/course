@@ -10,19 +10,24 @@ The shipped reader and course files are deliberately deterministic. They do not 
 
 - Document the `.md`/MDC course authoring format.
 - Provide an agent skill for converting existing repositories or course material into the format.
-- Keep the reader as a Nuxt Content/Nuxt UI playground until the visualization is stable.
-- Move reusable reader components into `happydesigns/ui` when the component contract is clear.
-- Keep any package or CLI small and deterministic, focused on optional authoring guardrails rather than runtime rendering.
+- Keep deterministic schema, parsing, validation, and CLI behavior in `@happydesigns/course`.
+- Provide the shared reader as `@happydesigns/course-nuxt`, using Nuxt Content, Nuxt UI, and `@happydesigns/nuxt-variants`.
+- Keep routes, collection names, persistence, and product workflows in consuming applications.
+- Promote only genuinely general-purpose primitives into `happydesigns/ui`; the composed Course reader remains owned by this repository.
 
 ## Ownership Boundaries
 
-`playground` is a local Nuxt app for validating reader behavior and example content. It is not the happydesigns docs product. Reader components can incubate there until their contract is stable enough to promote into `happydesigns/ui`.
+`playground` is a local Nuxt app for validating reader behavior and example content. It is not the happydesigns docs product and owns only its routes, shell, and Content collection.
 
 `skills/happydesigns-course-author` is the AI-assisted authoring workflow. It can inspect source material and draft course Markdown, but it must preserve ambiguity with `needsReview` instead of inventing content.
 
 `packages/course` is optional authoring infrastructure. If it remains, it owns deterministic schemas, validation, Markdown projection, and CLI checks. It must stay brand-neutral and must not depend on Nuxt rendering, Nuxt UI components, or happydesigns brand defaults.
 
-The eventual shared reader belongs in `happydesigns/ui` as a brand-neutral interface pattern. Brand expression should arrive through a brand or identity layer that provides tokens, app config, logos, metadata, and component defaults without changing course authoring semantics.
+`packages/nuxt` owns the Course-specific reader experience. It receives a normalized Nuxt Content page, renders with Nuxt UI, and uses Nuxt Variants for structural capabilities and configurable defaults. It does not own a route or Content collection.
+
+`happydesigns/ui` and `happydesigns/course` are siblings built on the same Nuxt UI foundation. A website may compose both, but neither package imports product workflows from the other. Brand expression arrives through the consuming app or UI layer without changing course semantics.
+
+UKI remains the owner of document structure, revisions, permissions, storage, and conflicts. A future UKI adapter should map its safe reader blocks to the Course reader contract instead of introducing Nuxt Content as UKI persistence.
 
 ## Out of Scope for the MVP
 
@@ -30,4 +35,4 @@ The eventual shared reader belongs in `happydesigns/ui` as a brand-neutral inter
 - SAP-only schema fields in the core package.
 - Multi-user authoring workflows.
 - Hosted backend services.
-- A broad course runtime package before the docs, skill, and UI contract prove the need.
+- Executing course commands or writing directly into a learner's project.
