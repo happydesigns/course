@@ -2,6 +2,7 @@
 import type { CSSProperties } from "vue";
 import type { CourseCodeItem } from "../composables/useCourseCodeState";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useCourseStorage } from "../composables/useCourseStorage";
 
 interface CourseCodePanelConfig {
   minTreeWidth: number;
@@ -17,12 +18,15 @@ const props = defineProps<{
   config: CourseCodePanelConfig;
   storageKey: string;
   mobile?: boolean;
+  mobileView?: "files" | "code";
 }>();
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];
+  "update:mobileView": [value: "files" | "code"];
 }>();
 
+const storage = useCourseStorage();
 const panel = ref<HTMLElement | null>(null);
 const treeWidth = ref(props.config.defaultTreeWidth);
 const isResizing = ref(false);
@@ -47,7 +51,7 @@ function setTreeWidth(width: number): void {
 }
 
 function persistTreeWidth(): void {
-  localStorage.setItem(props.storageKey, String(treeWidth.value));
+  storage.setItem(props.storageKey, String(treeWidth.value));
 }
 
 function resize(event: PointerEvent): void {
@@ -108,7 +112,8 @@ onMounted(() => {
     return;
   }
 
-  const storedWidth = Number(localStorage.getItem(props.storageKey));
+  const storedValue = storage.getItem(props.storageKey);
+  const storedWidth = storedValue === null ? Number.NaN : Number(storedValue);
 
   if (Number.isFinite(storedWidth)) {
     setTreeWidth(storedWidth);
@@ -127,19 +132,44 @@ onBeforeUnmount(() => {
     ref="panel"
     :style="panelStyle"
     :class="[
-      'relative h-full min-h-0',
+      'relative flex h-full min-h-0 flex-col',
       isResizing && 'course-code-tree-resizing'
     ]"
   >
+    <div
+      v-if="mobile && mobileView === 'code'"
+      class="flex shrink-0 items-center border-b border-default px-2 py-1.5"
+    >
+      <UButton
+        label="Project files"
+        icon="i-lucide-arrow-left"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        @click="emit('update:mobileView', 'files')"
+      />
+    </div>
+
     <ProseCodeTree
       v-model="activePath"
       :items="items"
       :expand-all="config.expandAll"
-      class="course-code-tree my-0 h-full min-h-0 rounded-none border-y-0 border-r-0 border-default"
+      :class="[
+        'course-code-tree my-0 min-h-0 flex-1 rounded-none border-y-0 border-r-0 border-default',
+        mobile ? 'h-auto' : 'h-full'
+      ]"
       :ui="{
-        root: 'h-full min-h-0 lg:h-full',
-        list: 'course-code-tree-list border-default',
-        content: 'course-code-tree-content min-h-0 [&>div]:min-h-0 [&>div>pre]:min-h-0 [&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50'
+        root: 'h-full min-h-0',
+        list: [
+          'course-code-tree-list border-default',
+          mobile && 'h-full min-h-0 overflow-y-auto border-r-0',
+          mobile && mobileView === 'code' && 'hidden'
+        ],
+        content: [
+          'course-code-tree-content min-h-0 [&>div]:min-h-0 [&>div>pre]:min-h-0 [&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50',
+          mobile && 'h-full overflow-auto',
+          mobile && mobileView !== 'code' && 'hidden'
+        ]
       }"
     />
 
