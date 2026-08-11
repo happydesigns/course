@@ -13,7 +13,7 @@ authors:
     avatar:
       src: https://github.com/benjamincanac.png
     to: https://x.com/benjamincanac
-date: 2025-12-16T10:00:00.000Z
+date: 2025-12-16
 category: Tutorial
 metadata:
   upstream: nuxt/ui/docs/content/blog/how-to-build-an-ai-chat.md

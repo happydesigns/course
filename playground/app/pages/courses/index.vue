@@ -51,7 +51,11 @@ function formatDate(date?: string): string {
     return "Draft";
   }
 
-  return new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return new Date(`${date}T00:00:00`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
 }
 </script>
 
@@ -75,7 +79,10 @@ function formatDate(date?: string): string {
             >
               <div class="min-w-0 flex-1">
                 <div class="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-                  <time class="font-mono">{{ formatDate(post.date) }}</time>
+                  <span v-if="post.date">
+                    Updated <time :datetime="post.date" class="font-mono">{{ formatDate(post.date) }}</time>
+                  </span>
+                  <span v-else>Draft</span>
                   <span v-if="post.category" class="text-dimmed">/</span>
                   <span v-if="post.category">{{ post.category }}</span>
                 </div>
