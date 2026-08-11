@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { VNode } from "vue";
-import { createVNode, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { createVNode, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useCourseCodeState, type CourseCodeItem } from "../composables/useCourseCodeState";
 import { useCourseCodeCollectionMode } from "../composables/useCourseCodeCollectionMode";
 import { interpolateCourseInputPlaceholders } from "../utils/course-inputs";
@@ -14,13 +14,31 @@ const target = ref<HTMLElement | null>(null);
 const state = useCourseCodeState();
 const collectOnly = useCourseCodeCollectionMode();
 const source = Symbol("course-code-intersection");
+let renderedSlots: VNode[] = [];
 let observer: IntersectionObserver | undefined;
 let hasRegistered = false;
 let isMounted = false;
 
 function collectItems(): CourseCodeItem[] {
-  return slots.default?.().map(transformSlot).filter(isCourseCodeItem) ?? [];
+  return renderedSlots.map(transformSlot).filter(isCourseCodeItem);
 }
+
+// MDC supplies code blocks through the default slot. Capture those VNodes while
+// Vue is rendering the slot so later intersection updates never invoke a slot
+// outside its render owner (which would break dependency tracking).
+const SlotRenderer = defineComponent({
+  setup() {
+    return () => {
+      renderedSlots = slots.default?.() ?? [];
+
+      if (props.default || collectOnly) {
+        return null;
+      }
+
+      return h("div", { ref: target, "data-course-code-step": "" }, renderedSlots);
+    };
+  }
+});
 
 function register(options?: { activate?: boolean }): void {
   const items = collectItems();
@@ -198,7 +216,5 @@ function isCourseCodeItem(value: unknown): value is CourseCodeItem {
 </script>
 
 <template>
-  <div v-if="!props.default && !collectOnly" ref="target" data-course-code-step>
-    <slot />
-  </div>
+  <SlotRenderer />
 </template>
