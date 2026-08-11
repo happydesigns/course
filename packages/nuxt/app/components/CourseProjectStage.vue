@@ -26,17 +26,10 @@ const emit = defineEmits<{
 
 type MobileView = "files" | "code";
 
-const collapsedSnapPoint = 0.12;
-const mobileSnapPoints = [collapsedSnapPoint, 0.55, 0.96];
+const collapsedSnapPoint = "60px";
+const mobileSnapPoints: (string | number)[] = [collapsedSnapPoint, 0.55, 0.96];
 const mobileView = ref<MobileView>("files");
-const activeSnapPoint = ref(collapsedSnapPoint);
-const mobileTitle = computed(() => {
-  if (mobileView.value === "files") {
-    return props.config.label;
-  }
-
-  return props.modelValue?.split("/").at(-1) ?? props.config.label;
-});
+const activeSnapPoint = ref<string | number>(collapsedSnapPoint);
 const isMobileCollapsed = computed(() => activeSnapPoint.value === collapsedSnapPoint);
 
 function toggleMobileDrawer(): void {
@@ -67,7 +60,7 @@ watch(activeSnapPoint, (value) => {
     v-if="mobile && items.length"
     v-model:active-snap-point="activeSnapPoint"
     :open="true"
-    :title="mobileTitle"
+    :title="config.label"
     :snap-points="mobileSnapPoints"
     :overlay="false"
     :modal="false"
@@ -92,7 +85,7 @@ watch(activeSnapPoint, (value) => {
         @click="toggleMobileDrawer"
       >
         <UIcon name="i-lucide-folder-tree" class="size-4 shrink-0 text-muted" />
-        <span class="min-w-0 flex-1 truncate">{{ mobileTitle }}</span>
+        <span class="min-w-0 flex-1 truncate">{{ config.label }}</span>
         <UIcon
           :name="isMobileCollapsed ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
           class="size-4 shrink-0 text-muted"
