@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 type MobileView = "files" | "code";
 
-const collapsedDrawerHeight = 60;
+const collapsedDrawerHeight = 90;
 const collapsedSnapPoint = ref(collapsedDrawerHeight / 768);
 const mobileSnapPoints = computed(() => [collapsedSnapPoint.value, 0.55, 0.96]);
 const mobileView = ref<MobileView>("files");
@@ -87,9 +87,9 @@ watch(activeSnapPoint, (value) => {
     :no-body-styles="true"
     direction="bottom"
     :ui="{
-      content: 'lg:hidden',
+      content: 'mt-0 h-dvh max-h-dvh lg:hidden',
       container: 'min-h-0 gap-0 overflow-hidden p-0',
-      handle: 'mt-3 mb-2',
+      handle: 'mt-3 mb-5',
       header: 'px-4 pb-3',
       wrapper: 'w-full',
       title: 'w-full',
@@ -99,7 +99,7 @@ watch(activeSnapPoint, (value) => {
     <template #title>
       <button
         type="button"
-        class="flex w-full min-w-0 items-center gap-2 text-left text-sm font-medium"
+        class="flex min-h-10 w-full min-w-0 items-center gap-2 text-left text-sm font-medium"
         :aria-expanded="!isMobileCollapsed"
         @click="toggleMobileDrawer"
       >
