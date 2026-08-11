@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { CourseBackLink, CoursePage } from "../types/course";
-import { computed } from "vue";
+import { computed, onBeforeUnmount, watchEffect } from "vue";
 import CodeTreeIntersection from "./CodeTreeIntersection.vue";
+import CourseCodeSequence from "./CourseCodeSequence.vue";
 import CourseCheckpoint from "./CourseCheckpoint.vue";
 import { useCourseCodeWorkspace } from "../composables/useCourseCodeWorkspace";
 import { useCourseInputs } from "../composables/useCourseInputs";
 import { useCourseProgressController } from "../composables/useCourseProgressController";
+import { useCoursePageTransitionContext } from "../composables/useCoursePageTransition";
 import { useCourseReaderModel } from "../composables/useCourseReaderModel";
 import { hasCourseCodeTree } from "../utils/course-content";
 
@@ -135,10 +137,136 @@ const contentPageUi = computed(() => ({
     : "mx-auto w-full max-w-5xl min-w-0 px-4 sm:px-6 lg:col-span-10 lg:px-8",
   right: "lg:col-span-5 lg:min-h-0 2xl:col-span-1"
 }));
+const pageTransitionContext = useCoursePageTransitionContext();
+let anchorScrollFrame: number | undefined;
+
+watchEffect(() => {
+  pageTransitionContext.value = {
+    currentPath: currentPage.value.path,
+    previousPath: surround.value[0]?.path,
+    nextPath: surround.value[1]?.path
+  };
+});
+
+onBeforeUnmount(() => {
+  if (anchorScrollFrame !== undefined) {
+    window.cancelAnimationFrame(anchorScrollFrame);
+  }
+
+  if (pageTransitionContext.value?.currentPath === currentPage.value.path) {
+    pageTransitionContext.value = null;
+  }
+});
+
+function handleCourseAnchorClick(event: MouseEvent): void {
+  if (
+    event.defaultPrevented
+    || event.button !== 0
+    || event.ctrlKey
+    || event.metaKey
+    || event.shiftKey
+    || event.altKey
+  ) {
+    return;
+  }
+
+  const clickedElement = event.target instanceof Element ? event.target : null;
+  const anchor = clickedElement?.closest<HTMLAnchorElement>("a[href]");
+
+  if (!anchor || anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) {
+    return;
+  }
+
+  const url = new URL(anchor.href, window.location.href);
+  const isSameDocument = url.origin === window.location.origin
+    && url.pathname === window.location.pathname
+    && url.search === window.location.search;
+
+  if (!isSameDocument || !url.hash || url.hash === "#") {
+    return;
+  }
+
+  let targetId: string;
+
+  try {
+    targetId = decodeURIComponent(url.hash.slice(1));
+  } catch {
+    return;
+  }
+
+  const target = document.getElementById(targetId);
+
+  if (!target) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+
+  if (window.location.hash === url.hash) {
+    window.history.replaceState(window.history.state, "", nextUrl);
+  } else {
+    window.history.pushState(window.history.state, "", nextUrl);
+  }
+
+  scrollToCourseAnchor(target);
+}
+
+function scrollToCourseAnchor(target: HTMLElement): void {
+  if (anchorScrollFrame !== undefined) {
+    window.cancelAnimationFrame(anchorScrollFrame);
+    anchorScrollFrame = undefined;
+  }
+
+  const scrollMarginTop = Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) || 0;
+  const start = window.scrollY;
+  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const destination = Math.min(
+    maxScroll,
+    Math.max(0, target.getBoundingClientRect().top + start - scrollMarginTop)
+  );
+  const distance = destination - start;
+
+  if (
+    Math.abs(distance) < 1
+    || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    window.scrollTo({ top: destination, behavior: "auto" });
+    return;
+  }
+
+  const duration = Math.min(700, Math.max(320, Math.abs(distance) * 0.12));
+  let startedAt: number | undefined;
+
+  const step = (timestamp: number): void => {
+    startedAt ??= timestamp;
+
+    const progress = Math.min(1, (timestamp - startedAt) / duration);
+    const easedProgress = 1 - (1 - progress) ** 4;
+
+    window.scrollTo({
+      top: start + distance * easedProgress,
+      behavior: "auto"
+    });
+
+    if (progress < 1) {
+      anchorScrollFrame = window.requestAnimationFrame(step);
+    } else {
+      anchorScrollFrame = undefined;
+    }
+  };
+
+  anchorScrollFrame = window.requestAnimationFrame(step);
+}
 </script>
 
 <template>
-  <div :class="['min-h-screen overflow-x-clip', hasPageCodeStage && 'pb-24 lg:pb-0']">
+  <div
+    :class="['min-h-screen overflow-x-clip', hasPageCodeStage && 'pb-24 lg:pb-0']"
+    @click.capture="handleCourseAnchorClick"
+  >
     <UPage class="mx-auto w-full max-w-[120rem]" :ui="contentPageUi">
       <CourseReaderHeader
         :course="course"
@@ -154,6 +282,7 @@ const contentPageUi = computed(() => ({
         :compact-navigation="hasPageCodeStage"
         :date-locale="metadataConfig.dateLocale"
         :draft-label="metadataConfig.draftLabel"
+        @navigate-anchor="handleCourseAnchorClick"
         @update-input="courseInputs.setInputValue"
       />
 
@@ -162,6 +291,7 @@ const contentPageUi = computed(() => ({
           v-if="hasPageCodeStage"
           :pages="codeCollectionPages"
           :data="contentData"
+          :current-page-path="currentPage.path"
         />
 
         <CourseProjectStage
@@ -174,13 +304,19 @@ const contentPageUi = computed(() => ({
           @update:model-value="codeWorkspace.activePath.value = $event"
         />
 
-        <ContentRenderer
+        <CourseCodeSequence
           v-if="renderedPage.body"
-          :value="renderedPage"
-          :data="contentData"
-          :components="contentComponents"
-          :class="!isLesson ? 'w-full max-w-none' : undefined"
-        />
+          :key="renderedPage.path"
+          :page-path="renderedPage.path"
+          progressive
+        >
+          <ContentRenderer
+            :value="renderedPage"
+            :data="contentData"
+            :components="contentComponents"
+            :class="!isLesson ? 'w-full max-w-none' : undefined"
+          />
+        </CourseCodeSequence>
 
         <CourseCurriculum v-if="!isLesson" :lessons="orderedLessons" />
 

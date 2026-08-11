@@ -18,6 +18,12 @@ const links = computed<NavigationMenuItem[]>(() => [
 
 <template>
   <UApp>
+    <NuxtLoadingIndicator
+      color="var(--ui-primary)"
+      :height="2"
+      :throttle="100"
+    />
+
     <UHeader
       :ui="{
         container: 'max-w-[120rem] px-4 sm:px-6 lg:px-10 xl:px-12'
@@ -44,7 +50,7 @@ const links = computed<NavigationMenuItem[]>(() => [
     </UHeader>
 
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :page-key="route => route.path" />
     </NuxtLayout>
   </UApp>
 </template>

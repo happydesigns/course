@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import type { CoursePageAnchor } from "../composables/useCourseReaderModel";
+import { computed } from "vue";
 
-defineProps<{
+const props = defineProps<{
   links: CoursePageAnchor[];
 }>();
+
+const emit = defineEmits<{
+  navigate: [event: MouseEvent];
+}>();
+
+const interactiveLinks = computed(() => props.links.map(link => ({
+  ...link,
+  onClick: (event: MouseEvent) => emit("navigate", event)
+})));
 </script>
 
 <template>
@@ -23,7 +33,7 @@ defineProps<{
     </div>
 
     <UPageAnchors
-      :links="links"
+      :links="interactiveLinks"
       class="mt-2"
       :ui="{
         list: 'grid gap-1',

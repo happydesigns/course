@@ -55,6 +55,76 @@ export function getCourseCheckpointIds(value: unknown): string[] {
   return ids;
 }
 
+/**
+ * Build the minimal secondary body needed to collect cumulative project files.
+ * The original code-tree nodes stay intact so ContentRenderer can still turn
+ * their code blocks into the canonical VNodes used by the project stage.
+ */
+export function toCourseCodeCollectionBody<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return collectCourseCodeTreeNodes(value) as T;
+  }
+
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  if (Array.isArray(value.value)) {
+    return {
+      ...value,
+      value: collectCourseCodeTreeNodes(value.value)
+    } as T;
+  }
+
+  if (Array.isArray(value.children)) {
+    return {
+      ...value,
+      children: collectCourseCodeTreeNodes(value.children)
+    } as T;
+  }
+
+  return value;
+}
+
+function collectCourseCodeTreeNodes(value: unknown): unknown[] {
+  const nodes: unknown[] = [];
+
+  function visit(entry: unknown): void {
+    if (isMinimarkElement(entry)) {
+      if (entry[0] === "code-tree-intersection") {
+        nodes.push(entry);
+        return;
+      }
+
+      entry.slice(2).forEach(visit);
+      return;
+    }
+
+    if (Array.isArray(entry)) {
+      entry.forEach(visit);
+      return;
+    }
+
+    if (!isRecord(entry)) {
+      return;
+    }
+
+    if (entry.tag === "code-tree-intersection") {
+      nodes.push(entry);
+      return;
+    }
+
+    visit(entry.children);
+  }
+
+  visit(value);
+  return nodes;
+}
+
+function isMinimarkElement(value: unknown): value is unknown[] & [string] {
+  return Array.isArray(value) && typeof value[0] === "string";
+}
+
 function readStringProp(value: unknown, key: string): string | undefined {
   return isRecord(value) && typeof value[key] === "string" && value[key].length > 0
     ? value[key]

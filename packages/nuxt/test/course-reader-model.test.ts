@@ -1,7 +1,10 @@
 import type { CoursePage } from "../app/types/course";
 import { computed, ref } from "vue";
 import { describe, expect, it } from "vitest";
-import { useCourseReaderModel } from "../app/composables/useCourseReaderModel";
+import {
+  getCoursePageTransitionName,
+  useCourseReaderModel
+} from "../app/composables/useCourseReaderModel";
 
 function page(overrides: Partial<CoursePage>): CoursePage {
   return {
@@ -21,6 +24,20 @@ function page(overrides: Partial<CoursePage>): CoursePage {
 }
 
 describe("course reader model", () => {
+  it("chooses directional transitions only for sequential course navigation", () => {
+    const surround = [
+      { path: "/courses/demo/previous", title: "Previous" },
+      { path: "/courses/demo/next", title: "Next" }
+    ];
+
+    expect(getCoursePageTransitionName("/courses/demo/next", surround))
+      .toBe("course-page-forward");
+    expect(getCoursePageTransitionName("/courses/demo/previous", surround))
+      .toBe("course-page-backward");
+    expect(getCoursePageTransitionName("/courses", surround))
+      .toBe("course-page");
+  });
+
   const course = page({ pageType: "course", courseId: "demo" });
   const lessons = [
     page({
@@ -144,5 +161,45 @@ describe("course reader model", () => {
 
     expect(model.currentPage.value.checkpoints).toEqual(["first", "second"]);
     expect(model.orderedLessons.value[0]?.checkpoints).toEqual(["first", "second"]);
+  });
+
+  it("builds same-document links for the lesson outline", () => {
+    const lesson = page({
+      path: "/courses/demo/outline",
+      pageType: "lesson",
+      body: {
+        type: "minimark",
+        value: [],
+        toc: {
+          title: "",
+          searchDepth: 2,
+          depth: 2,
+          links: [
+            { id: "install", text: "Install", depth: 2 },
+            { id: "configure", text: "Configure", depth: 2 }
+          ]
+        }
+      }
+    });
+    const model = useCourseReaderModel({
+      course,
+      page: lesson,
+      lessons: [lesson],
+      inputValues: computed(() => ({})),
+      breadcrumbRoot: undefined
+    });
+
+    expect(model.pageAnchorLinks.value).toEqual([
+      {
+        label: "Install",
+        to: "#install",
+        step: 1
+      },
+      {
+        label: "Configure",
+        to: "#configure",
+        step: 2
+      }
+    ]);
   });
 });

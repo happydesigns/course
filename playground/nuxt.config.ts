@@ -2,6 +2,11 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-08-10",
   extends: ["../packages/nuxt"],
   css: ["~/assets/css/main.css"],
+  app: {
+    pageTransition: {
+      name: "course-page"
+    }
+  },
   devtools: { enabled: false },
   typescript: {
     strict: true

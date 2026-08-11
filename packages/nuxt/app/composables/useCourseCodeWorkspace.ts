@@ -2,7 +2,11 @@ import type { ComputedRef, Ref, VNode } from "vue";
 import { computed, nextTick, ref, shallowRef, watch } from "vue";
 import { interpolateCourseCodeVNode } from "../utils/course-code";
 import { interpolateCourseInputPlaceholders } from "../utils/course-inputs";
-import { provideCourseCodeState, type CourseCodeItem } from "./useCourseCodeState";
+import {
+  provideCourseCodeState,
+  type CourseCodeItem,
+  type CourseCodeSource
+} from "./useCourseCodeState";
 
 export interface CourseCodeWorkspace {
   activePath: Ref<string>;
@@ -11,14 +15,49 @@ export interface CourseCodeWorkspace {
   tree: Ref<Record<string, VNode>>;
 }
 
+export interface CourseCodeSourceEntry<T> {
+  items: readonly T[];
+  progressive: boolean;
+  source: CourseCodeSource;
+}
+
+export function selectCourseCodeSources<T>(
+  sources: readonly CourseCodeSourceEntry<T>[],
+  activeProgressiveSource: CourseCodeSource | undefined
+): T[] {
+  const hasActiveSource = activeProgressiveSource !== undefined
+    && sources.some(
+      (entry) => entry.progressive && entry.source === activeProgressiveSource
+    );
+  let passedActiveSource = false;
+
+  return sources.flatMap((entry) => {
+    if (!entry.progressive) {
+      return [...entry.items];
+    }
+
+    if (!hasActiveSource || passedActiveSource) {
+      return [];
+    }
+
+    if (entry.source === activeProgressiveSource) {
+      passedActiveSource = true;
+    }
+
+    return [...entry.items];
+  });
+}
+
 export function useCourseCodeWorkspace(options: {
   currentPagePath: ComputedRef<string>;
   inputValues: ComputedRef<Readonly<Record<string, string>>>;
   inputsReady: Ref<boolean>;
 }): CourseCodeWorkspace {
   const tree = shallowRef<Record<string, VNode>>({});
-  const sources = new Map<symbol, readonly CourseCodeItem[]>();
-  const renderedSources = new Map<symbol, readonly CourseCodeItem[]>();
+  const sources = new Map<CourseCodeSource, readonly CourseCodeItem[]>();
+  const renderedSources = new Map<CourseCodeSource, readonly CourseCodeItem[]>();
+  const progressiveSources = new Set<CourseCodeSource>();
+  let activeProgressiveSource: CourseCodeSource | undefined;
   const activePath = ref("");
   const changedPaths = ref<ReadonlySet<string>>(new Set());
   const contentRevision = ref(0);
@@ -38,12 +77,24 @@ export function useCourseCodeWorkspace(options: {
     }));
   }
 
-  function rebuildTree(): void {
-    tree.value = Object.fromEntries(
-      [...renderedSources.values()]
-        .flatMap((sourceItems) => sourceItems)
-        .map((item) => [item.label, item.component])
+  function rebuildTree(): CourseCodeItem[] {
+    const selectedItems = selectCourseCodeSources(
+      [...renderedSources].map(([source, sourceItems]) => ({
+        source,
+        items: sourceItems,
+        progressive: progressiveSources.has(source)
+      })),
+      activeProgressiveSource
     );
+    tree.value = Object.fromEntries(
+      selectedItems.map((item) => [item.label, item.component])
+    );
+    return selectedItems;
+  }
+
+  function selectBaseline(items: readonly CourseCodeItem[]): void {
+    activePath.value = items.at(-1)?.label ?? "";
+    changedPaths.value = new Set();
   }
 
   function applyRenamedPaths(renamedPaths: ReadonlyMap<string, string>): void {
@@ -77,6 +128,8 @@ export function useCourseCodeWorkspace(options: {
   function reset(): void {
     sources.clear();
     renderedSources.clear();
+    progressiveSources.clear();
+    activeProgressiveSource = undefined;
     tree.value = {};
     activePath.value = "";
     changedPaths.value = new Set();
@@ -89,10 +142,23 @@ export function useCourseCodeWorkspace(options: {
     inputValues: options.inputValues,
     inputsReady: options.inputsReady,
     tree,
-    activate(newItems) {
-      const renderedItems = renderItems(newItems);
+    activate(source, fallbackItems) {
+      if (!sources.has(source)) {
+        sources.set(source, fallbackItems);
+        renderedSources.set(source, renderItems(fallbackItems));
+        progressiveSources.add(source);
+      }
+
+      activeProgressiveSource = source;
+      rebuildTree();
+
+      const renderedItems = renderedSources.get(source) ?? [];
       changedPaths.value = new Set(renderedItems.map((item) => item.label));
       activePath.value = renderedItems.at(-1)?.label ?? activePath.value;
+    },
+    resetProgression() {
+      activeProgressiveSource = undefined;
+      selectBaseline(rebuildTree());
     },
     register(source, newItems, registerOptions) {
       const previousItems = renderedSources.get(source) ?? [];
@@ -106,8 +172,26 @@ export function useCourseCodeWorkspace(options: {
 
       sources.set(source, newItems);
       renderedSources.set(source, renderedItems);
-      rebuildTree();
+      if (registerOptions?.progressive) {
+        progressiveSources.add(source);
+      } else {
+        progressiveSources.delete(source);
+      }
+
+      if (registerOptions?.activate && registerOptions.progressive) {
+        activeProgressiveSource = source;
+      }
+
+      const selectedItems = rebuildTree();
       applyRenamedPaths(renamedPaths);
+
+      if (
+        !registerOptions?.progressive
+        && activeProgressiveSource === undefined
+        && progressiveSources.size === 0
+      ) {
+        selectBaseline(selectedItems);
+      }
 
       if (registerOptions?.activate !== false) {
         changedPaths.value = new Set(renderedItems.map((item) => item.label));
@@ -117,7 +201,14 @@ export function useCourseCodeWorkspace(options: {
     unregister(source) {
       sources.delete(source);
       renderedSources.delete(source);
-      rebuildTree();
+      progressiveSources.delete(source);
+
+      if (activeProgressiveSource === source) {
+        activeProgressiveSource = undefined;
+        selectBaseline(rebuildTree());
+      } else {
+        rebuildTree();
+      }
     }
   });
 

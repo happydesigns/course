@@ -7,6 +7,8 @@ export interface CourseCodeItem {
   icon?: string;
 }
 
+export type CourseCodeSource = string | symbol;
+
 export interface CourseCodeState {
   activePath: Ref<string>;
   changedPaths: Ref<ReadonlySet<string>>;
@@ -14,13 +16,14 @@ export interface CourseCodeState {
   inputValues: ComputedRef<Readonly<Record<string, string>>>;
   inputsReady: Ref<boolean>;
   tree: Ref<Record<string, VNode>>;
-  activate: (items: readonly CourseCodeItem[]) => void;
+  activate: (source: CourseCodeSource, items: readonly CourseCodeItem[]) => void;
+  resetProgression: () => void;
   register: (
-    source: symbol,
+    source: CourseCodeSource,
     items: readonly CourseCodeItem[],
-    options?: { activate?: boolean }
+    options?: { activate?: boolean; progressive?: boolean }
   ) => void;
-  unregister: (source: symbol) => void;
+  unregister: (source: CourseCodeSource) => void;
 }
 
 const courseCodeStateKey: InjectionKey<CourseCodeState> = Symbol("course-code-state");

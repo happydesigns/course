@@ -3,6 +3,7 @@ import type { VNode } from "vue";
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useCourseCodeState, type CourseCodeItem } from "../composables/useCourseCodeState";
 import { useCourseCodeCollectionMode } from "../composables/useCourseCodeCollectionMode";
+import { useCourseCodeSequence } from "../composables/useCourseCodeSequence";
 import { interpolateCourseCodeVNode } from "../utils/course-code";
 
 const props = defineProps<{
@@ -13,11 +14,15 @@ const slots = defineSlots();
 const target = ref<HTMLElement | null>(null);
 const state = useCourseCodeState();
 const collectOnly = useCourseCodeCollectionMode();
-const source = Symbol("course-code-intersection");
+const sequence = useCourseCodeSequence();
+const step = sequence?.nextStep();
+const source = step?.source ?? Symbol("course-code-intersection");
 let renderedSlots: VNode[] = [];
 let observer: IntersectionObserver | undefined;
+let activationFrame: number | undefined;
 let hasRegistered = false;
 let isMounted = false;
+let isActivationReady = false;
 
 function collectItems(): CourseCodeItem[] {
   return renderedSlots.map(transformSlot).filter(isCourseCodeItem);
@@ -49,13 +54,15 @@ function register(options?: { activate?: boolean }): void {
 
   if (state?.inputsReady.value && items.length > 0) {
     if (collectOnly) {
-      state.register(source, items, { activate: false });
+      state.register(source, items, {
+        activate: false,
+        progressive: sequence?.progressive ?? false
+      });
       hasRegistered = true;
     } else if (options?.activate !== false) {
-      // The hidden CourseCodeHistory owns the canonical tree sources. Visible
-      // intersections only select the active file; registering their already
-      // rendered VNodes would introduce a second, timing-dependent source.
-      state.activate(items);
+      // The hidden CourseCodeHistory owns the original, input-reactive VNodes.
+      // The visible counterpart selects the matching progressive source.
+      state.activate(source, items);
     }
   }
 }
@@ -83,7 +90,7 @@ watch(
   () => {
     if (hasRegistered) {
       register({ activate: false });
-    } else if (isMounted) {
+    } else if (isActivationReady) {
       registerForCurrentPosition();
     }
   },
@@ -92,29 +99,63 @@ watch(
 
 onMounted(() => {
   isMounted = true;
-  registerForCurrentPosition();
 
-  if (collectOnly || props.default || !target.value) {
+  if (collectOnly || props.default) {
+    isActivationReady = true;
+    registerForCurrentPosition();
     return;
   }
 
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        register();
-      }
-    },
-    {
-      rootMargin: "-200px 0px -50% 0px",
-      threshold: 0
-    }
-  );
+  // Nuxt restores the route scroll position after the new page has mounted.
+  // Wait for that reset before evaluating a code step, otherwise the previous
+  // page's scroll offset can briefly activate snippets near the new page's end.
+  activationFrame = requestAnimationFrame(() => {
+    activationFrame = requestAnimationFrame(() => {
+      activationFrame = undefined;
 
-  observer.observe(target.value);
+      if (!isMounted) {
+        return;
+      }
+
+      isActivationReady = true;
+      registerForCurrentPosition();
+
+      if (!target.value) {
+        return;
+      }
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            register();
+          } else if (
+            sequence?.progressive
+            && step?.index === 0
+            && target.value
+            && target.value.getBoundingClientRect().top >= window.innerHeight * 0.5
+          ) {
+            state?.resetProgression();
+          }
+        },
+        {
+          rootMargin: "-200px 0px -50% 0px",
+          threshold: 0
+        }
+      );
+
+      observer.observe(target.value);
+    });
+  });
 });
 
 onBeforeUnmount(() => {
   isMounted = false;
+  isActivationReady = false;
+
+  if (activationFrame !== undefined) {
+    cancelAnimationFrame(activationFrame);
+  }
+
   observer?.disconnect();
 
   if (hasRegistered) {

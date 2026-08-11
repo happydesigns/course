@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import type { CoursePage } from "../types/course";
+import { computed } from "vue";
 import { provideCourseCodeCollectionMode } from "../composables/useCourseCodeCollectionMode";
+import { toCourseCodeCollectionBody } from "../utils/course-content";
+import CourseCodeSequence from "./CourseCodeSequence.vue";
 import CodeTreeIntersection from "./CodeTreeIntersection.vue";
 
-defineProps<{
+const props = defineProps<{
   pages: CoursePage[];
   data: Record<string, unknown>;
+  currentPagePath: string;
 }>();
 
 provideCourseCodeCollectionMode(true);
@@ -13,16 +17,27 @@ provideCourseCodeCollectionMode(true);
 const components = {
   "code-tree-intersection": CodeTreeIntersection
 };
+const collectionPages = computed(() =>
+  props.pages.map((page) => ({
+    ...page,
+    body: toCourseCodeCollectionBody(page.body)
+  }))
+);
 </script>
 
 <template>
   <div class="hidden" aria-hidden="true">
-    <ContentRenderer
-      v-for="page in pages"
+    <CourseCodeSequence
+      v-for="page in collectionPages"
       :key="page.path"
-      :value="page"
-      :data="data"
-      :components="components"
-    />
+      :page-path="page.path"
+      :progressive="page.path === currentPagePath"
+    >
+      <ContentRenderer
+        :value="page"
+        :data="data"
+        :components="components"
+      />
+    </CourseCodeSequence>
   </div>
 </template>
