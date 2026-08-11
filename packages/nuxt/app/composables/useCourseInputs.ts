@@ -32,14 +32,14 @@ export function useCourseInputs(options: {
     values.value = Object.fromEntries(
       inputs.value.map((input) => [
         input.id,
-        storage.getItem(storageKey(input)) ?? input.defaultValue ?? ""
+        storage.getItem(storageKey(input)) ?? ""
       ])
     );
     ready.value = true;
   }
 
   function inputValue(input: CourseInput): string {
-    return values.value[input.id] ?? input.defaultValue ?? "";
+    return values.value[input.id] ?? "";
   }
 
   function setInputValue(input: CourseInput, value: string | number): void {

@@ -14,7 +14,9 @@ const emit = defineEmits<{
 
 const open = ref(props.defaultOpen ?? false);
 const summary = computed(() =>
-  props.inputs.map((input) => `${input.label}: ${props.values[input.id] ?? ""}`).join(" · ")
+  props.inputs
+    .map((input) => `${input.label}: ${props.values[input.id]?.trim() || input.defaultValue || ""}`)
+    .join(" · ")
 );
 </script>
 
@@ -42,7 +44,7 @@ const summary = computed(() =>
             size="md"
           >
             <UInput
-              :model-value="values[input.id] ?? input.defaultValue ?? ''"
+              :model-value="values[input.id] ?? ''"
               :placeholder="input.placeholder"
               :minlength="input.minLength"
               :maxlength="input.maxLength"
