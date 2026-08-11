@@ -1,6 +1,11 @@
 import { parseMarkdown } from "@nuxtjs/mdc/runtime";
 import { z } from "zod";
-import { CourseInputSchema, type CourseInput } from "./schema.js";
+import {
+  CourseDateSchema,
+  CourseInputSchema,
+  CourseVersionSchema,
+  type CourseInput
+} from "./schema.js";
 import { getInvalidCoursePathReason } from "./validation.js";
 
 export type CourseMarkdownIssueCode =
@@ -34,6 +39,7 @@ export interface CourseMarkdownMetadata {
   title: string;
   description: string;
   version?: string;
+  date?: string;
   category?: string;
   navigation?: boolean;
   inputs?: CourseInput[];
@@ -70,7 +76,8 @@ const CourseMarkdownFrontmatterSchema = z
   .object({
     title: z.string().min(1),
     description: z.string().min(1),
-    version: z.string().min(1).optional(),
+    version: CourseVersionSchema.optional(),
+    date: CourseDateSchema.optional(),
     category: z.string().optional(),
     navigation: z.boolean().optional(),
     inputs: z.array(CourseInputSchema).optional(),
@@ -146,7 +153,7 @@ export async function validateCourseMarkdown(
         frontmatter.data.pageType === "lesson" && !localInputs && !options.inheritedInputs,
       requireConfiguredUsage: frontmatter.data.pageType !== "course" && Boolean(localInputs)
     });
-    validateCourseCheckpoints(parsed.body, frontmatter.data.checkpoints ?? [], issues);
+    validateCourseCheckpoints(parsed.body, frontmatter.data.checkpoints, issues);
   }
 
   const snapshots = extractCourseMarkdownSnapshots(parsed.body, issues);
@@ -206,12 +213,12 @@ function validateCourseInputPlaceholders(
 
 function validateCourseCheckpoints(
   body: unknown,
-  declaredIds: readonly string[],
+  declaredIds: readonly string[] | undefined,
   issues: CourseMarkdownIssue[]
 ): void {
   const declared = new Set<string>();
 
-  declaredIds.forEach((id, index) => {
+  (declaredIds ?? []).forEach((id, index) => {
     if (declared.has(id)) {
       issues.push({
         code: "checkpoint",
@@ -255,23 +262,25 @@ function validateCourseCheckpoints(
     walk(root);
   }
 
-  for (const id of declared) {
-    if (!rendered.has(id)) {
-      issues.push({
-        code: "checkpoint",
-        message: `Declared checkpoint "${id}" has no ${CHECKPOINT_TAG} component.`,
-        path: ["frontmatter", "checkpoints", id]
-      });
+  if (declaredIds) {
+    for (const id of declared) {
+      if (!rendered.has(id)) {
+        issues.push({
+          code: "checkpoint",
+          message: `Declared checkpoint "${id}" has no ${CHECKPOINT_TAG} component.`,
+          path: ["frontmatter", "checkpoints", id]
+        });
+      }
     }
-  }
 
-  for (const id of rendered) {
-    if (!declared.has(id)) {
-      issues.push({
-        code: "checkpoint",
-        message: `Checkpoint component "${id}" is not declared in frontmatter.`,
-        path: ["body", CHECKPOINT_TAG, id]
-      });
+    for (const id of rendered) {
+      if (!declared.has(id)) {
+        issues.push({
+          code: "checkpoint",
+          message: `Checkpoint component "${id}" is not declared in frontmatter.`,
+          path: ["body", CHECKPOINT_TAG, id]
+        });
+      }
     }
   }
 }

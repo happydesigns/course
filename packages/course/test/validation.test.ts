@@ -81,6 +81,59 @@ describe("validateCourseMarkdown", () => {
     expect(result.snapshots.length).toBeGreaterThan(0);
   });
 
+  it("rejects a non-semantic Markdown version", async () => {
+    const source = markdownWithCodeFence("ts [src/main.ts]")
+      .replace("version: 0.1.0", "version: next");
+
+    const result = await validateCourseMarkdown(source);
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "frontmatter" })
+      ])
+    );
+  });
+
+  it("requires a semantic course version", () => {
+    const course = cloneCourse();
+    course.version = "August release";
+
+    const result = validateCourse(course);
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "schema", path: ["version"] })
+      ])
+    );
+  });
+
+  it("validates the course update date", () => {
+    const result = validateCourse({ ...cloneCourse(), date: "2026-02-30" });
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "schema", path: ["date"] })
+      ])
+    );
+  });
+
+  it("rejects an invalid Markdown update date", async () => {
+    const source = markdownWithCodeFence("ts [src/main.ts]")
+      .replace("version: 0.1.0", "version: 0.1.0\ndate: 2026-02-30");
+
+    const result = await validateCourseMarkdown(source);
+
+    expect(result.success).toBe(false);
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "frontmatter" })
+      ])
+    );
+  });
+
   it("rejects Markdown without frontmatter", async () => {
     const result = await validateCourseMarkdown([
       "## Setup",
@@ -179,6 +232,20 @@ describe("validateCourseMarkdown", () => {
   it("accepts lesson placeholders inherited from the course overview", async () => {
     const result = await validateCourseMarkdown(
       lessonMarkdown(),
+      {
+        inheritedInputs: [
+          { id: "groupId", label: "Group ID", defaultValue: "###" }
+        ]
+      }
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.issues).toHaveLength(0);
+  });
+
+  it("derives checkpoints without a duplicated frontmatter list", async () => {
+    const result = await validateCourseMarkdown(
+      lessonMarkdown().replace("checkpoints:\n  - lesson-done\n", ""),
       {
         inheritedInputs: [
           { id: "groupId", label: "Group ID", defaultValue: "###" }

@@ -2,6 +2,26 @@ import { z } from "zod";
 
 const MetadataSchema = z.record(z.string(), z.unknown());
 
+const SEMVER_PATTERN =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+
+export const CourseVersionSchema = z.string().regex(
+  SEMVER_PATTERN,
+  "Course version must use Semantic Versioning, for example 1.2.0."
+);
+
+export const CourseDateSchema = z.string().refine(
+  (value) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return false;
+    }
+
+    const parsed = new Date(`${value}T00:00:00.000Z`);
+    return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value;
+  },
+  "Course date must be a valid calendar date in YYYY-MM-DD format."
+);
+
 export const CourseInputSchema = z
   .object({
     id: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]*$/),
@@ -130,7 +150,8 @@ export const CourseSchema = z
     id: z.string().min(1),
     title: z.string().min(1),
     description: z.string().min(1),
-    version: z.string().min(1),
+    version: CourseVersionSchema,
+    date: CourseDateSchema.optional(),
     inputs: z.array(CourseInputSchema).optional(),
     lessons: z.array(LessonSchema).min(1),
     fileSnapshots: z.array(FileSnapshotSchema).default([]),
