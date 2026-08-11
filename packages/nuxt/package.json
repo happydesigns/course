@@ -8,6 +8,7 @@
   "exports": {
     ".": "./nuxt.config.ts",
     "./schemas": "./schemas/index.ts",
+    "./storage": "./app/composables/useCourseStorage.ts",
     "./types": "./app/types/course.ts"
   },
   "files": [
@@ -16,11 +17,15 @@
     "nuxt.config.ts"
   ],
   "scripts": {
+    "prebuild": "pnpm --filter @happydesigns/course build",
     "build": "nuxt prepare",
+    "pretypecheck": "pnpm --filter @happydesigns/course build",
     "typecheck": "nuxt prepare && nuxt typecheck",
-    "test": "vitest run"
+    "pretest": "pnpm --filter @happydesigns/course build",
+    "test": "vitest run --pool=threads --maxWorkers=1"
   },
   "dependencies": {
+    "@happydesigns/course": "workspace:^",
     "@happydesigns/ui": "^0.20.0",
     "@happydesigns/nuxt-variants": "^0.2.0",
     "@iconify-json/lucide": "^1.2.0",

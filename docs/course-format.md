@@ -54,7 +54,7 @@ Optional frontmatter:
 
 Applications query the overview and all pages with the same `courseId`, order lessons by `order`, and pass them to `CourseReader`. The reader composes Nuxt UI's page, aside, content navigation, table-of-contents, progress, slideover, and surrounding-page components. URLs remain normal Nuxt routes, so learners can bookmark, reload, and navigate directly to any lesson.
 
-Progress is deliberately client-side and product-neutral. It is stored per `courseId` in `localStorage` and contains only completed lesson paths, completed checkpoint IDs, and the last visited lesson. Content and routing do not depend on progress, and a future product can replace this persistence contract with authenticated storage without changing the Markdown.
+Progress is deliberately client-side and product-neutral. The default adapter stores it per `courseId` in `localStorage` and contains only completed lesson paths, completed checkpoint IDs, and the last visited lesson. Content and routing do not depend on progress. Applications can provide the `CourseStorage` contract from `@happydesigns/course-nuxt/storage` to use authenticated or synchronized storage without changing the Markdown or reader rules.
 
 Add a checkpoint where the learner has reached a meaningful, verifiable outcome:
 

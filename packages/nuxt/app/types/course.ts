@@ -1,4 +1,5 @@
 import type { PageCollectionItemBase } from "@nuxt/content";
+import type { CourseInput as CoreCourseInput } from "@happydesigns/course";
 
 export interface CourseAuthor {
   name: string;
@@ -9,16 +10,7 @@ export interface CourseAuthor {
   };
 }
 
-export interface CourseInput {
-  id: string;
-  label: string;
-  description?: string;
-  placeholder?: string;
-  defaultValue?: string;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: string;
-}
+export type CourseInput = CoreCourseInput;
 
 export interface CoursePage extends PageCollectionItemBase {
   title: string;
@@ -47,4 +39,10 @@ export interface CourseBackLink {
   label: string;
   to: string;
   icon?: string;
+}
+
+/** Persistence adapter for learner progress, parameters, and reader preferences. */
+export interface CourseStorage {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
 }

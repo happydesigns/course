@@ -6,18 +6,20 @@ import {
   parseCourseProgress,
   progressSummary
 } from "../composables/useCourseProgress";
+import { useCourseStorage } from "../composables/useCourseStorage";
 
 const props = defineProps<{
   courseId: string;
   lessons: CoursePage[];
 }>();
 
+const storage = useCourseStorage();
 const ready = ref(false);
 const data = ref<CourseProgressData>(parseCourseProgress(null));
 const summary = computed(() => progressSummary(data.value, props.lessons));
 
 onMounted(() => {
-  data.value = parseCourseProgress(localStorage.getItem(courseProgressStorageKey(props.courseId)));
+  data.value = parseCourseProgress(storage.getItem(courseProgressStorageKey(props.courseId)));
   ready.value = true;
 });
 </script>

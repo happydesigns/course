@@ -1,3 +1,4 @@
+import { CourseInputSchema } from "@happydesigns/course";
 import { z } from "zod";
 
 const authorSchema = z.object({
@@ -9,17 +10,6 @@ const authorSchema = z.object({
       alt: z.string().optional()
     })
     .optional()
-});
-
-const inputSchema = z.object({
-  id: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]*$/),
-  label: z.string().min(1),
-  description: z.string().optional(),
-  placeholder: z.string().optional(),
-  defaultValue: z.string().optional(),
-  minLength: z.number().int().nonnegative().optional(),
-  maxLength: z.number().int().positive().optional(),
-  pattern: z.string().optional()
 });
 
 export const courseVariantSchemas = {
@@ -34,7 +24,7 @@ export const courseVariantSchemas = {
     metadata: z.record(z.string(), z.unknown()).optional()
   }),
   courseInputs: z.object({
-    inputs: z.array(inputSchema).optional()
+    inputs: z.array(CourseInputSchema).optional()
   }),
   courseStructure: z.object({
     courseId: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
