@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CourseCodeItem } from "../composables/useCourseCodeState";
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 interface CourseCodeStageConfig {
   label: string;
@@ -26,11 +26,30 @@ const emit = defineEmits<{
 
 type MobileView = "files" | "code";
 
-const collapsedSnapPoint = "60px";
-const mobileSnapPoints: (string | number)[] = [collapsedSnapPoint, 0.55, 0.96];
+const collapsedDrawerHeight = 60;
+const collapsedSnapPoint = ref(collapsedDrawerHeight / 768);
+const mobileSnapPoints = computed(() => [collapsedSnapPoint.value, 0.55, 0.96]);
 const mobileView = ref<MobileView>("files");
-const activeSnapPoint = ref<string | number>(collapsedSnapPoint);
-const isMobileCollapsed = computed(() => activeSnapPoint.value === collapsedSnapPoint);
+const activeSnapPoint = ref(collapsedSnapPoint.value);
+const isMobileCollapsed = computed(() => activeSnapPoint.value === collapsedSnapPoint.value);
+
+function updateCollapsedSnapPoint(): void {
+  const wasCollapsed = activeSnapPoint.value === collapsedSnapPoint.value;
+  collapsedSnapPoint.value = collapsedDrawerHeight / window.innerHeight;
+
+  if (wasCollapsed) {
+    activeSnapPoint.value = collapsedSnapPoint.value;
+  }
+}
+
+onMounted(() => {
+  updateCollapsedSnapPoint();
+  window.addEventListener("resize", updateCollapsedSnapPoint);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", updateCollapsedSnapPoint);
+});
 
 function toggleMobileDrawer(): void {
   if (isMobileCollapsed.value) {
@@ -39,7 +58,7 @@ function toggleMobileDrawer(): void {
     return;
   }
 
-  activeSnapPoint.value = collapsedSnapPoint;
+  activeSnapPoint.value = collapsedSnapPoint.value;
 }
 
 function selectMobilePath(value: string): void {
@@ -49,7 +68,7 @@ function selectMobilePath(value: string): void {
 }
 
 watch(activeSnapPoint, (value) => {
-  if (value === collapsedSnapPoint) {
+  if (value === collapsedSnapPoint.value) {
     mobileView.value = "files";
   }
 });
