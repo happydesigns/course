@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 type MobileView = "files" | "code";
 
-const collapsedDrawerHeight = 90;
+const collapsedDrawerHeight = 40;
 const collapsedSnapPoint = ref(collapsedDrawerHeight / 768);
 const mobileSnapPoints = computed(() => [collapsedSnapPoint.value, 0.55, 0.96]);
 const mobileView = ref<MobileView>("files");
@@ -89,8 +89,8 @@ watch(activeSnapPoint, (value) => {
     :ui="{
       content: 'mt-0 h-dvh max-h-dvh lg:hidden',
       container: 'min-h-0 gap-0 overflow-hidden p-0',
-      handle: 'mt-3 mb-5',
-      header: 'px-4 pb-3',
+      handle: isMobileCollapsed ? 'mt-3 mb-5' : 'mt-3 mb-2',
+      header: isMobileCollapsed ? 'sr-only' : 'px-4 pb-3',
       wrapper: 'w-full',
       title: 'w-full',
       body: 'min-h-0 flex-1 overflow-hidden border-t border-default'
@@ -98,9 +98,10 @@ watch(activeSnapPoint, (value) => {
   >
     <template #title>
       <button
+        v-if="!isMobileCollapsed"
         type="button"
         class="flex min-h-10 w-full min-w-0 items-center gap-2 text-left text-sm font-medium"
-        :aria-expanded="!isMobileCollapsed"
+        aria-expanded="true"
         @click="toggleMobileDrawer"
       >
         <UIcon name="i-lucide-folder-tree" class="size-4 shrink-0 text-muted" />
@@ -110,6 +111,7 @@ watch(activeSnapPoint, (value) => {
           class="size-4 shrink-0 text-muted"
         />
       </button>
+      <span v-else>{{ config.label }}</span>
     </template>
 
     <template #body>
