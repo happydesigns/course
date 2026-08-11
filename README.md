@@ -17,7 +17,7 @@ Runtime AI is out of scope. AI tools may assist authors during conversion, but p
 
 ## Requirements
 
-- Node.js 22 or newer
+- Node.js 22 or newer (Node.js 24 LTS recommended)
 - pnpm 11
 - Nuxt 4.5+
 - Nuxt UI 4.10+

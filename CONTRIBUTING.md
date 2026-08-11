@@ -4,7 +4,7 @@ Thanks for improving Happydesigns Course. This repository combines a framework-i
 
 ## Prerequisites
 
-- Node.js 22 or newer
+- Node.js 22 or newer (Node.js 24 LTS recommended)
 - pnpm 11 (the version is pinned in `package.json`)
 - A current checkout of sibling Happydesigns packages when working through local workspace overrides
 

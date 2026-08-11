@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "cross-env NUXT_LOCK=1 nuxt dev",
     "build": "cross-env NUXT_LOCK=1 nuxt build",
@@ -10,7 +13,7 @@
   },
   "dependencies": {
     "@happydesigns/course-nuxt": "workspace:*",
-    "@iconify-json/lucide": "^1.2.0",
+    "@iconify-json/lucide": "^1.2.123",
     "@iconify-json/material-icon-theme": "^1.2.0",
     "@iconify-json/simple-icons": "^1.2.0",
     "@iconify-json/vscode-icons": "^1.2.0",
@@ -23,6 +26,6 @@
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
-    "vue-tsc": "3.3.8"
+    "vue-tsc": "3.3.9"
   }
 }

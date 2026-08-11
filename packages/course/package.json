@@ -4,6 +4,9 @@
   "description": "Generic schema, validation, and CLI for progressive technical courses.",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
