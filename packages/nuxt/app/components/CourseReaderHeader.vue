@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { CourseInput, CoursePage } from "../types/course";
 import type { CoursePageAnchor } from "../composables/useCourseReaderModel";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 
 interface BreadcrumbItem {
   label: string;
@@ -19,7 +20,6 @@ const props = defineProps<{
   pageAnchorLinks: CoursePageAnchor[];
   inputs: CourseInput[];
   inputValues: Readonly<Record<string, string>>;
-  compactNavigation?: boolean;
   dateLocale?: string;
   draftLabel?: string;
 }>();
@@ -28,6 +28,33 @@ const emit = defineEmits<{
   navigateAnchor: [event: MouseEvent];
   updateInput: [input: CourseInput, value: string | number];
 }>();
+
+const navigationSentinel = ref<HTMLElement>();
+const navigationStuck = ref(false);
+let navigationObserver: IntersectionObserver | undefined;
+
+onMounted(() => {
+  if (!navigationSentinel.value) {
+    return;
+  }
+
+  const headerHeight = document.querySelector("header")?.getBoundingClientRect().height ?? 64;
+
+  navigationObserver = new IntersectionObserver(
+    ([entry]) => {
+      navigationStuck.value = !entry?.isIntersecting;
+    },
+    {
+      rootMargin: `-${Math.ceil(headerHeight)}px 0px 0px`,
+      threshold: 0
+    }
+  );
+  navigationObserver.observe(navigationSentinel.value);
+});
+
+onBeforeUnmount(() => {
+  navigationObserver?.disconnect();
+});
 
 function formatDate(date?: string): string {
   if (!date) {
@@ -52,36 +79,43 @@ function formatDate(date?: string): string {
     <HBreadcrumbs :items="breadcrumbItems" :current="currentBreadcrumb" />
   </div>
 
+  <div v-if="isLesson" ref="navigationSentinel" aria-hidden="true" class="h-px -mb-px" />
+
+  <div
+    v-if="isLesson"
+    :class="[
+      'sticky top-(--ui-header-height) z-30 -mx-2 mt-4 flex min-h-10 flex-wrap items-center gap-2 bg-default/75 px-2 py-2 backdrop-blur',
+      navigationStuck && 'border-b border-default shadow-sm'
+    ]"
+  >
+    <CourseReaderNavigation
+      :course="course"
+      :lessons="lessons"
+      :current-lesson-index="currentLessonIndex"
+    />
+    <UBadge v-if="page.optional" label="Optional" color="neutral" variant="subtle" />
+    <span v-if="page.estimatedMinutes" aria-hidden="true" class="text-dimmed">·</span>
+    <span v-if="page.estimatedMinutes" class="text-sm text-muted font-normal">
+      {{ page.estimatedMinutes }} min
+    </span>
+  </div>
+
+  <div v-else class="mt-4 flex flex-wrap items-center gap-2">
+    <span v-if="course.date" class="text-sm text-muted font-normal">
+      Updated <time :datetime="course.date">{{ formatDate(course.date) }}</time>
+    </span>
+    <span v-else class="text-sm text-muted font-normal">{{ draftLabel ?? "Draft" }}</span>
+    <UBadge v-if="course.version" color="neutral" variant="subtle" :label="`v${course.version}`" />
+  </div>
+
   <UPageHeader
     :title="page.title"
     :description="page.description"
     :ui="{
-      root: inputs.length ? 'pt-6 pb-4' : 'pt-6',
+      root: inputs.length ? 'pt-2 pb-4' : 'pt-2',
       title: 'relative flex items-center'
     }"
   >
-    <template #headline>
-      <div class="flex flex-wrap items-center gap-2">
-        <template v-if="isLesson">
-          <span class="text-muted font-normal">
-            Step {{ currentLessonIndex + 1 }} of {{ lessons.length }}
-          </span>
-          <UBadge v-if="page.optional" label="Optional" color="neutral" variant="subtle" />
-          <span v-if="page.estimatedMinutes" aria-hidden="true" class="text-dimmed">·</span>
-          <span v-if="page.estimatedMinutes" class="text-muted font-normal">
-            {{ page.estimatedMinutes }} min
-          </span>
-        </template>
-        <template v-else>
-          <span v-if="course.date" class="text-muted font-normal">
-            Updated <time :datetime="course.date">{{ formatDate(course.date) }}</time>
-          </span>
-          <span v-else class="text-muted font-normal">{{ draftLabel ?? "Draft" }}</span>
-          <UBadge v-if="course.version" color="neutral" variant="subtle" :label="`v${course.version}`" />
-        </template>
-      </div>
-    </template>
-
     <div v-if="!isLesson && course.authors?.length" class="mt-6 flex flex-wrap items-center gap-6">
       <template v-for="author in course.authors" :key="author.name">
         <ULink v-if="author.to" :to="author.to" target="_blank" class="group flex items-center gap-3">
@@ -99,15 +133,6 @@ function formatDate(date?: string): string {
         </div>
       </template>
     </div>
-
-    <CourseReaderNavigation
-      v-if="lessons.length"
-      :course="course"
-      :lessons="lessons"
-      :current-lesson-index="currentLessonIndex"
-      :is-lesson="isLesson"
-      :compact="compactNavigation"
-    />
 
     <CoursePageOutline
       v-if="pageAnchorLinks.length"

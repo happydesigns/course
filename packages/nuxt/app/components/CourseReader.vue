@@ -279,7 +279,6 @@ function scrollToCourseAnchor(target: HTMLElement): void {
         :page-anchor-links="pageAnchorLinks"
         :inputs="courseInputs.inputs.value"
         :input-values="courseInputs.values.value"
-        :compact-navigation="hasPageCodeStage"
         :date-locale="metadataConfig.dateLocale"
         :draft-label="metadataConfig.draftLabel"
         @navigate-anchor="handleCourseAnchorClick"
