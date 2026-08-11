@@ -79,11 +79,12 @@ watch(activeSnapPoint, (value) => {
       container: 'min-h-0 gap-0 overflow-hidden p-0',
       handle: 'mt-3 mb-2',
       header: 'px-4 pb-3',
-      title: 'truncate',
+      wrapper: 'w-full',
+      title: 'w-full',
       body: 'min-h-0 flex-1 overflow-hidden border-t border-default'
     }"
   >
-    <template #header>
+    <template #title>
       <button
         type="button"
         class="flex w-full min-w-0 items-center gap-2 text-left text-sm font-medium"
