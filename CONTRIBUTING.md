@@ -71,7 +71,7 @@ pnpm --filter @happydesigns/course-nuxt test
 pnpm --filter @happydesigns/course-playground typecheck
 ```
 
-The playground dev command uses `NUXT_LOCK=1` to prevent multiple Nuxt development servers from mutating the same generated Content database. Stop the dev server before changing dependencies or Content configuration, and do not leave background development servers running after validation.
+Nuxt commands that write generated workspace state run through `scripts/with-nuxt-lock.mjs`. The lock prevents a development server, build, or typecheck from mutating the same Nuxt Content and `.nuxt` artifacts concurrently. Stop the dev server before running a build or typecheck, and do not leave background development servers running after validation.
 
 ## Change expectations
 

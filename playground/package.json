@@ -7,9 +7,9 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "cross-env NUXT_LOCK=1 nuxt dev",
-    "build": "cross-env NUXT_LOCK=1 nuxt build",
-    "typecheck": "nuxt typecheck"
+    "dev": "node ../scripts/with-nuxt-lock.mjs pnpm exec nuxt dev",
+    "build": "node ../scripts/with-nuxt-lock.mjs pnpm exec nuxt build",
+    "typecheck": "node ../scripts/with-nuxt-lock.mjs pnpm exec nuxt typecheck"
   },
   "dependencies": {
     "@happydesigns/course-nuxt": "workspace:*",

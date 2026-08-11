@@ -21,9 +21,10 @@
   ],
   "scripts": {
     "prebuild": "pnpm --filter @happydesigns/course build",
-    "build": "nuxt prepare",
+    "build": "node ../../scripts/with-nuxt-lock.mjs pnpm exec nuxt prepare",
     "pretypecheck": "pnpm --filter @happydesigns/course build",
-    "typecheck": "nuxt prepare && nuxt typecheck",
+    "typecheck": "node ../../scripts/with-nuxt-lock.mjs pnpm run typecheck:nuxt",
+    "typecheck:nuxt": "nuxt prepare && nuxt typecheck",
     "pretest": "pnpm --filter @happydesigns/course build",
     "test": "vitest run --pool=threads --maxWorkers=1"
   },
