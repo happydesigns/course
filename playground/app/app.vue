@@ -18,7 +18,11 @@ const links = computed<NavigationMenuItem[]>(() => [
 
 <template>
   <UApp>
-    <UHeader :ui="{ container: 'max-w-[120rem]' }">
+    <UHeader
+      :ui="{
+        container: 'max-w-[120rem] px-4 sm:px-6 lg:px-10 xl:px-12'
+      }"
+    >
       <template #left>
         <ULink to="/courses" class="flex items-center gap-2">
           <UIcon name="i-lucide-square-library" class="size-6 shrink-0 text-primary" />
@@ -39,6 +43,8 @@ const links = computed<NavigationMenuItem[]>(() => [
       </template>
     </UHeader>
 
-    <NuxtPage />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </UApp>
 </template>
