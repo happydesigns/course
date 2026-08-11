@@ -115,7 +115,10 @@ export function useCourseCodeWorkspace(options: {
     }
   });
 
-  watch(options.inputValues, refreshRenderedSources, { flush: "sync" });
+  // Let the input and ContentRenderer finish their shared update before the
+  // code tree swaps its derived VNodes. A synchronous swap can make the tree
+  // briefly clear its model while Vue is still patching the previous item.
+  watch(options.inputValues, refreshRenderedSources, { flush: "post" });
   watch(options.inputsReady, () => {
     contentRevision.value += 1;
   }, { flush: "post" });

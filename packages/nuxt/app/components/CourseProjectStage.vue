@@ -35,7 +35,7 @@ const mobileTitle = computed(() => {
     return props.config.label;
   }
 
-  return props.modelValue.split("/").at(-1) ?? props.config.label;
+  return props.modelValue?.split("/").at(-1) ?? props.config.label;
 });
 const isMobileCollapsed = computed(() => activeSnapPoint.value === collapsedSnapPoint);
 

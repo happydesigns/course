@@ -32,7 +32,11 @@ const treeWidth = ref(props.config.defaultTreeWidth);
 const isResizing = ref(false);
 const activePath = computed({
   get: () => props.modelValue,
-  set: (value: string) => emit("update:modelValue", value)
+  set: (value: string | undefined) => {
+    if (typeof value === "string") {
+      emit("update:modelValue", value);
+    }
+  }
 });
 const panelStyle = computed<CSSProperties>(() => ({
   "--course-code-tree-list-width": `${treeWidth.value}px`
