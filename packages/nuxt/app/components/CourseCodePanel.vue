@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CSSProperties } from "vue";
 import type { CourseCodeItem } from "../composables/useCourseCodeState";
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useCourseStorage } from "../composables/useCourseStorage";
 
 interface CourseCodePanelConfig {
@@ -30,6 +30,7 @@ const storage = useCourseStorage();
 const panel = ref<HTMLElement | null>(null);
 const treeWidth = ref(props.config.defaultTreeWidth);
 const isResizing = ref(false);
+const mobileTreeCollapsed = ref(false);
 const activePath = computed({
   get: () => props.modelValue,
   set: (value: string | undefined) => {
@@ -41,6 +42,15 @@ const activePath = computed({
 const panelStyle = computed<CSSProperties>(() => ({
   "--course-code-tree-list-width": `${treeWidth.value}px`
 }));
+
+watch(
+  () => props.mobileView,
+  (view) => {
+    if (view === "files") {
+      mobileTreeCollapsed.value = false;
+    }
+  }
+);
 
 function clampTreeWidth(width: number): number {
   const panelWidth = panel.value?.getBoundingClientRect().width ?? Number.POSITIVE_INFINITY;
@@ -142,15 +152,25 @@ onBeforeUnmount(() => {
   >
     <div
       v-if="mobile && mobileView === 'code'"
-      class="flex shrink-0 items-center border-b border-default px-2 py-1.5"
+      class="flex shrink-0 items-center border-b border-default p-2"
     >
       <UButton
+        class="min-h-10 w-full justify-start sm:hidden"
         label="Project files"
         icon="i-lucide-arrow-left"
         color="neutral"
+        variant="soft"
+        size="md"
+        @click="emit('update:mobileView', 'files')"
+      />
+      <UButton
+        class="hidden sm:inline-flex"
+        :label="mobileTreeCollapsed ? 'Show project files' : 'Hide project files'"
+        :icon="mobileTreeCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'"
+        color="neutral"
         variant="ghost"
         size="sm"
-        @click="emit('update:mobileView', 'files')"
+        @click="mobileTreeCollapsed = !mobileTreeCollapsed"
       />
     </div>
 
@@ -160,19 +180,22 @@ onBeforeUnmount(() => {
       :expand-all="config.expandAll"
       :class="[
         'course-code-tree my-0 min-h-0 flex-1 rounded-none border-y-0 border-r-0 border-default',
-        mobile ? 'h-auto' : 'h-full'
+        mobile ? 'h-auto' : 'h-full',
+        mobile && !mobileTreeCollapsed && 'sm:grid-cols-[minmax(11rem,14rem)_minmax(0,1fr)]',
+        mobile && mobileTreeCollapsed && 'sm:grid-cols-1'
       ]"
       :ui="{
         root: 'h-full min-h-0',
         list: [
           'course-code-tree-list border-default',
-          mobile && 'h-full min-h-0 overflow-y-auto border-r-0',
-          mobile && mobileView === 'code' && 'hidden'
+          mobile && 'h-full min-h-0 overflow-y-auto border-r-0 sm:border-r',
+          mobile && mobileView === 'code' && 'hidden sm:block',
+          mobile && mobileTreeCollapsed && 'sm:hidden'
         ],
         content: [
           'course-code-tree-content min-h-0 [&>div]:min-h-0 [&>div>pre]:min-h-0 [&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50',
           mobile && 'h-full overflow-auto',
-          mobile && mobileView !== 'code' && 'hidden'
+          mobile && mobileView !== 'code' && 'hidden sm:flex'
         ]
       }"
     />
