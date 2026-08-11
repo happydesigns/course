@@ -36,18 +36,34 @@ const complete = computed({
 </script>
 
 <template>
-  <div
+  <UAlert
+    as="label"
+    :for="checkboxId"
+    :title="title"
+    :color="complete ? 'success' : 'neutral'"
+    variant="subtle"
     :class="[
-      'not-prose my-8 flex gap-3 rounded-lg border p-4 transition-colors',
-      complete ? 'border-success/40 bg-success/5' : 'border-default bg-elevated/30'
+      'not-prose my-8 cursor-pointer transition-colors has-focus-visible:ring-2 has-focus-visible:ring-primary',
+      complete
+        ? 'hover:bg-success/15'
+        : 'hover:bg-elevated'
     ]"
+    :ui="{
+      title: 'font-semibold text-highlighted',
+      description: 'text-muted'
+    }"
   >
-    <UCheckbox :id="checkboxId" v-model="complete" color="success" class="mt-0.5 shrink-0" />
-    <label :for="checkboxId" class="min-w-0 cursor-pointer">
-      <span class="block text-sm font-semibold text-highlighted">{{ title }}</span>
-      <span class="mt-1 block text-sm text-muted">
-        <slot mdc-unwrap="p" />
-      </span>
-    </label>
-  </div>
+    <template #leading>
+      <UCheckbox
+        :id="checkboxId"
+        v-model="complete"
+        color="success"
+        class="mt-0.5 shrink-0 cursor-pointer"
+      />
+    </template>
+
+    <template #description>
+      <slot mdc-unwrap="p" />
+    </template>
+  </UAlert>
 </template>
