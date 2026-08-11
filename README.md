@@ -115,7 +115,9 @@ content/courses/my-course/
   3.verify-the-result.md
 ```
 
-The overview uses `pageType: course`; lessons use `pageType: lesson`, share the same `courseId`, and declare a stable `order`. Course-wide inputs use explicit `{{ $doc.input.<id> }}` bindings. Code steps use the `code-tree-intersection` MDC component, and meaningful outcomes use declared `course-checkpoint` IDs.
+The overview uses `pageType: course`; lessons use `pageType: lesson`, share the same `courseId`, and declare a stable `order`. Course-wide inputs use explicit `{{ $doc.input.<id> }}` bindings. Code steps use the `code-tree-intersection` MDC component, and meaningful outcomes use `course-checkpoint` components with stable IDs. Their order and the lesson progress are derived from the content tree, so checkpoint IDs do not need to be repeated in frontmatter.
+
+Published overviews use a Semantic Versioning `version` and a `date` in `YYYY-MM-DD` format. The date identifies when that content version was published and is rendered as “Updated”. Learner progress is keyed by the stable `courseId`; changing metadata alone does not reset it.
 
 See [MDC course format](docs/course-format.md) for the complete contract and [conversion guidelines](docs/conversion-guidelines.md) for source-preserving imports.
 

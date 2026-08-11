@@ -25,7 +25,8 @@ Required overview frontmatter:
 
 Recommended overview frontmatter:
 
-- `version`: Course content version.
+- `version`: Semantic Versioning identifier for the published content state, such as `1.2.0`.
+- `date`: Publication date of that version in `YYYY-MM-DD` format. The reader labels it as “Updated”.
 - `inputs`: Course-wide interactive values inherited by lessons.
 
 Required lesson frontmatter:
@@ -40,11 +41,9 @@ Recommended lesson frontmatter:
 
 - `estimatedMinutes`: Expected completion time.
 - `optional`: Excludes the lesson from required-progress totals when `true`.
-- `checkpoints`: Stable IDs of the checkpoints rendered on the page.
 
 Optional frontmatter:
 
-- `date`: Publication or revision date.
 - `category`: Course grouping label.
 - `navigation`: Whether the course should appear in navigation.
 - `authors`: Author metadata for the reader.
@@ -56,6 +55,14 @@ Applications query the overview and all pages with the same `courseId`, order le
 
 Progress is deliberately client-side and product-neutral. The default adapter stores it per `courseId` in `localStorage` and contains only completed lesson paths, completed checkpoint IDs, and the last visited lesson. Content and routing do not depend on progress. Applications can provide the `CourseStorage` contract from `@happydesigns/course-nuxt/storage` to use authenticated or synchronized storage without changing the Markdown or reader rules.
 
+`courseId` is the durable identity used for progress. Updating `version` or `date` does not reset a learner's state. Keep checkpoint IDs stable when revising content. If a new release is intentionally a separate learning experience and old progress must not carry over, publish it under a new `courseId` or migrate progress in the application's storage adapter.
+
+Use version changes to communicate the scope of a content release:
+
+- Patch: corrections and clarifications that preserve the curriculum.
+- Minor: backward-compatible lesson, checkpoint, or example additions.
+- Major: a substantially redesigned or incompatible curriculum. A major number alone still does not reset progress.
+
 Add a checkpoint where the learner has reached a meaningful, verifiable outcome:
 
 ```mdc
@@ -66,8 +73,6 @@ courseId: my-course
 pageType: lesson
 order: 2
 estimatedMinutes: 20
-checkpoints:
-  - feature-runs
 ---
 
 ## Verify the result
@@ -79,7 +84,7 @@ I verified that the feature runs as described.
 ::
 ```
 
-Checkpoint IDs are declared in frontmatter and repeated on the corresponding MDC component. Validation rejects missing, undeclared, or duplicate IDs. A lesson with checkpoints is complete when all its checkpoints are complete. Optional lessons are tracked but do not reduce required-course progress.
+Checkpoint IDs come directly from the corresponding MDC components, so authors maintain each ID only once. Validation rejects missing or duplicate IDs. A lesson with checkpoints is complete when all its checkpoints are complete. Optional lessons are tracked but do not reduce required-course progress.
 
 ## Course Inputs
 
@@ -164,11 +169,12 @@ Required fields:
 - `id`: Stable course identifier.
 - `title`: Human-readable course title.
 - `description`: Short summary of the course.
-- `version`: Course content version.
+- `version`: Semantic Versioning identifier for the content state.
 - `lessons`: Ordered lessons.
 
 Optional fields:
 
+- `date`: Publication date of the current version in `YYYY-MM-DD` format.
 - `fileSnapshots`: Known files available to the reader.
 - `metadata`: Generic metadata for authoring or profiles.
 
