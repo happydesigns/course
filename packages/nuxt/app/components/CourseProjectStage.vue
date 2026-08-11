@@ -27,8 +27,9 @@ const emit = defineEmits<{
 type MobileView = "files" | "code";
 
 const collapsedDrawerHeight = 90;
+const expandedSnapPoint = 0.96;
 const collapsedSnapPoint = ref(collapsedDrawerHeight / 768);
-const mobileSnapPoints = computed(() => [collapsedSnapPoint.value, 0.55, 0.96]);
+const mobileSnapPoints = computed(() => [collapsedSnapPoint.value, 0.55, expandedSnapPoint]);
 const mobileView = ref<MobileView>("files");
 const activeSnapPoint = ref(collapsedSnapPoint.value);
 const isMobileCollapsed = computed(() => activeSnapPoint.value === collapsedSnapPoint.value);
@@ -64,7 +65,6 @@ function toggleMobileDrawer(): void {
 function selectMobilePath(value: string): void {
   emit("update:modelValue", value);
   mobileView.value = "code";
-  activeSnapPoint.value = 0.96;
 }
 
 watch(activeSnapPoint, (value) => {
@@ -82,9 +82,9 @@ watch(activeSnapPoint, (value) => {
     :title="config.label"
     :snap-points="mobileSnapPoints"
     :overlay="false"
-    :modal="!isMobileCollapsed"
+    :modal="false"
     :dismissible="false"
-    :no-body-styles="isMobileCollapsed"
+    :no-body-styles="true"
     direction="bottom"
     :ui="{
       content: 'mt-0 h-dvh max-h-dvh lg:hidden',
