@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  courseResumePath,
   courseProgressStorageKey,
   parseCourseProgress,
   progressSummary
@@ -7,7 +8,11 @@ import {
 
 describe("course progress", () => {
   const lessons = [
-    { path: "/courses/demo/required", optional: false },
+    {
+      path: "/courses/demo/required",
+      optional: false,
+      checkpoints: ["prepared", "verified"]
+    },
     { path: "/courses/demo/optional", optional: true }
   ];
 
@@ -44,6 +49,31 @@ describe("course progress", () => {
       completedLessons: lessons.map((lesson) => lesson.path),
       completedCheckpoints: {}
     }, lessons)).toEqual({ completed: 1, total: 1, percent: 100 });
+  });
+
+  it("measures partial progress using required checkpoints", () => {
+    expect(progressSummary({
+      completedLessons: [],
+      completedCheckpoints: {
+        "/courses/demo/required": ["prepared"]
+      }
+    }, lessons)).toEqual({ completed: 0, total: 1, percent: 50 });
+  });
+
+  it("resumes after the contiguous completed checkpoint prefix", () => {
+    expect(courseResumePath({
+      completedLessons: [],
+      completedCheckpoints: {
+        "/courses/demo/required": ["prepared"]
+      }
+    }, lessons)).toBe("/courses/demo/required#checkpoint-prepared");
+
+    expect(courseResumePath({
+      completedLessons: [],
+      completedCheckpoints: {
+        "/courses/demo/required": ["verified"]
+      }
+    }, lessons)).toBe("/courses/demo/required");
   });
 
   it("namespaces storage by course", () => {

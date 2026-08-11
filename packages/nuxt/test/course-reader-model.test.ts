@@ -120,4 +120,29 @@ describe("course reader model", () => {
       "code"
     ]);
   });
+
+  it("derives lesson checkpoints from the content body", () => {
+    const lesson = page({
+      path: "/courses/demo/checkpoints",
+      pageType: "lesson",
+      body: {
+        type: "minimark",
+        value: [
+          ["course-checkpoint", { id: "first" }, "First"],
+          ["course-checkpoint", { id: "second" }, "Second"]
+        ],
+        toc: { title: "", searchDepth: 2, depth: 2, links: [] }
+      }
+    });
+    const model = useCourseReaderModel({
+      course,
+      page: lesson,
+      lessons: [lesson],
+      inputValues: computed(() => ({})),
+      breadcrumbRoot: undefined
+    });
+
+    expect(model.currentPage.value.checkpoints).toEqual(["first", "second"]);
+    expect(model.orderedLessons.value[0]?.checkpoints).toEqual(["first", "second"]);
+  });
 });

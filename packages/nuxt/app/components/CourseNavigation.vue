@@ -51,8 +51,8 @@ const navigation = computed(() => [
     <div>
       <div class="mb-2 flex items-center justify-between gap-3 text-xs text-muted">
         <span>
-          {{ progress?.completedRequiredCount.value ?? 0 }} of
-          {{ progress?.requiredLessons.value.length ?? 0 }} required exercises
+          {{ progress?.completedRequiredStepCount.value ?? 0 }} of
+          {{ progress?.requiredStepCount.value ?? 0 }} required steps
         </span>
         <span>{{ progress?.percent.value ?? 0 }}%</span>
       </div>
@@ -99,7 +99,7 @@ const navigation = computed(() => [
 
     <template v-if="tocLinks?.length">
       <USeparator />
-      <UContentToc :title="tocTitle ?? 'On this exercise'" :links="tocLinks" highlight color="neutral" />
+      <UContentToc :title="tocTitle ?? 'On this step'" :links="tocLinks" highlight color="neutral" />
     </template>
   </div>
 </template>

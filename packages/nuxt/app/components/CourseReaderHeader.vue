@@ -33,7 +33,7 @@ function formatDate(date?: string): string {
     return props.draftLabel ?? "Draft";
   }
 
-  const parsedDate = new Date(date);
+  const parsedDate = new Date(`${date}T00:00:00`);
   if (Number.isNaN(parsedDate.valueOf())) {
     return date;
   }
@@ -63,7 +63,7 @@ function formatDate(date?: string): string {
       <div class="flex flex-wrap items-center gap-2">
         <template v-if="isLesson">
           <span class="text-muted font-normal">
-            Exercise {{ currentLessonIndex + 1 }} of {{ lessons.length }}
+            Step {{ currentLessonIndex + 1 }} of {{ lessons.length }}
           </span>
           <UBadge v-if="page.optional" label="Optional" color="neutral" variant="subtle" />
           <span v-if="page.estimatedMinutes" aria-hidden="true" class="text-dimmed">·</span>
@@ -72,7 +72,10 @@ function formatDate(date?: string): string {
           </span>
         </template>
         <template v-else>
-          <time class="text-muted font-normal">{{ formatDate(course.date) }}</time>
+          <span v-if="course.date" class="text-muted font-normal">
+            Updated <time :datetime="course.date">{{ formatDate(course.date) }}</time>
+          </span>
+          <span v-else class="text-muted font-normal">{{ draftLabel ?? "Draft" }}</span>
           <UBadge v-if="course.version" color="neutral" variant="subtle" :label="`v${course.version}`" />
         </template>
       </div>

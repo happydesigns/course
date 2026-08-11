@@ -16,6 +16,7 @@ const progress = useCourseProgress();
 const localComplete = ref(false);
 const lessonPath = computed(() => progress?.currentLessonPath.value);
 const checkboxId = computed(() => `course-checkpoint-${props.id}`);
+const anchorId = computed(() => `checkpoint-${props.id}`);
 const complete = computed({
   get: () => {
     if (!progress || !lessonPath.value) {
@@ -37,13 +38,14 @@ const complete = computed({
 
 <template>
   <UAlert
+    :id="anchorId"
     as="label"
     :for="checkboxId"
     :title="title"
     :color="complete ? 'success' : 'neutral'"
     variant="subtle"
     :class="[
-      'not-prose my-8 cursor-pointer transition-colors has-focus-visible:ring-2 has-focus-visible:ring-primary',
+      'not-prose my-8 scroll-mt-24 cursor-pointer transition-colors has-focus-visible:ring-2 has-focus-visible:ring-primary',
       complete
         ? 'hover:bg-success/15'
         : 'hover:bg-elevated'

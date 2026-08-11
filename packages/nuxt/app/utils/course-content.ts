@@ -16,3 +16,51 @@ export function hasCourseCodeTree(value: unknown): boolean {
     Object.values(record).some((entry) => hasCourseCodeTree(entry))
   );
 }
+
+export function getCourseCheckpointIds(value: unknown): string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+
+  function visit(entry: unknown): void {
+    if (Array.isArray(entry)) {
+      if (entry[0] === "course-checkpoint") {
+        addCheckpointId(readStringProp(entry[1], "id"));
+      }
+
+      entry.forEach(visit);
+      return;
+    }
+
+    if (!isRecord(entry)) {
+      return;
+    }
+
+    if (entry.tag === "course-checkpoint") {
+      addCheckpointId(
+        readStringProp(entry.props, "id") ?? readStringProp(entry.attributes, "id")
+      );
+    }
+
+    Object.values(entry).forEach(visit);
+  }
+
+  function addCheckpointId(id: string | undefined): void {
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      ids.push(id);
+    }
+  }
+
+  visit(value);
+  return ids;
+}
+
+function readStringProp(value: unknown, key: string): string | undefined {
+  return isRecord(value) && typeof value[key] === "string" && value[key].length > 0
+    ? value[key]
+    : undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}

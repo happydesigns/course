@@ -21,7 +21,7 @@ const positionLabel = computed(() =>
 );
 const outlineAriaLabel = computed(() =>
   props.isLesson && props.currentLessonIndex >= 0
-    ? `Course outline, exercise ${props.currentLessonIndex + 1} of ${props.lessons.length}`
+    ? `Course outline, step ${props.currentLessonIndex + 1} of ${props.lessons.length}`
     : "Course outline, overview"
 );
 

@@ -1,6 +1,7 @@
 import type { ComputedRef, MaybeRefOrGetter } from "vue";
 import type { CourseBackLink, CoursePage } from "../types/course";
 import { computed, toValue } from "vue";
+import { getCourseCheckpointIds } from "../utils/course-content";
 import { interpolateCourseInputPlaceholders } from "../utils/course-inputs";
 
 export interface CourseSurroundLink {
@@ -23,9 +24,13 @@ export function useCourseReaderModel(options: {
   inputValues: ComputedRef<Readonly<Record<string, string>>>;
   breadcrumbRoot: MaybeRefOrGetter<CourseBackLink | undefined>;
 }) {
-  const currentPage = computed(() => toValue(options.page) ?? toValue(options.course));
+  const currentPage = computed(() => withDerivedCheckpoints(
+    toValue(options.page) ?? toValue(options.course)
+  ));
   const orderedLessons = computed(() =>
-    [...toValue(options.lessons)].sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
+    [...toValue(options.lessons)]
+      .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
+      .map(withDerivedCheckpoints)
   );
   const currentLessonIndex = computed(() =>
     orderedLessons.value.findIndex((lesson) => lesson.path === currentPage.value.path)
@@ -115,6 +120,20 @@ export function useCourseReaderModel(options: {
     pageAnchorLinks,
     surround,
     contentSurround
+  };
+}
+
+function withDerivedCheckpoints(page: CoursePage): CoursePage {
+  if (page.pageType !== "lesson") {
+    return page;
+  }
+
+  const derivedCheckpoints = getCourseCheckpointIds(page.body);
+  return {
+    ...page,
+    checkpoints: derivedCheckpoints.length > 0
+      ? derivedCheckpoints
+      : page.checkpoints ?? []
   };
 }
 

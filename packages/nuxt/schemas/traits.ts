@@ -1,4 +1,8 @@
-import { CourseInputSchema } from "@happydesigns/course";
+import {
+  CourseDateSchema,
+  CourseInputSchema,
+  CourseVersionSchema
+} from "@happydesigns/course";
 import { z } from "zod";
 
 const authorSchema = z.object({
@@ -16,8 +20,8 @@ export const courseVariantSchemas = {
   courseMetadata: z.object({
     title: z.string().min(1),
     description: z.string().min(1),
-    version: z.string().min(1).optional(),
-    date: z.string().optional(),
+    version: CourseVersionSchema.optional(),
+    date: CourseDateSchema.optional(),
     image: z.string().optional(),
     category: z.string().optional(),
     authors: z.array(authorSchema).optional(),

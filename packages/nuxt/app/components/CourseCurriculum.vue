@@ -18,13 +18,8 @@ const totalMinutes = computed(() =>
     .reduce((total, lesson) => total + (lesson.estimatedMinutes ?? 0), 0)
 );
 const completedRequiredCount = computed(() => progress?.completedRequiredCount.value ?? 0);
-const nextRequiredLesson = computed(() =>
-  orderedLessons.value.find(
-    (lesson) => !lesson.optional && !progress?.isLessonComplete(lesson.path)
-  )
-);
 const courseActionPath = computed(() =>
-  nextRequiredLesson.value?.path ?? orderedLessons.value[0]?.path
+  progress?.resumePath.value ?? orderedLessons.value.find((lesson) => !lesson.optional)?.path
 );
 const courseActionLabel = computed(() => {
   if (requiredCount.value > 0 && completedRequiredCount.value >= requiredCount.value) {
@@ -51,7 +46,7 @@ function formatDuration(minutes: number): string {
   <section v-if="orderedLessons.length" class="not-prose mt-12 border-t border-default pt-8">
     <div>
       <h2 class="text-2xl font-bold text-highlighted">Course content</h2>
-      <p class="mt-1 text-sm text-muted">Work through the core exercises in order or open any lesson directly.</p>
+      <p class="mt-1 text-sm text-muted">Work through the required steps in order or open any lesson directly.</p>
     </div>
 
     <div class="mt-5 grid gap-5 rounded-lg bg-elevated/30 p-4 lg:grid-cols-[minmax(18rem,1.5fr)_minmax(22rem,1fr)_auto] lg:items-center">
@@ -60,7 +55,8 @@ function formatDuration(minutes: number): string {
           <p class="text-sm font-semibold text-highlighted">
             Your progress
             <span class="ms-2 font-normal text-muted">
-              {{ progress?.completedRequiredCount.value ?? 0 }} of {{ requiredCount }} completed
+              {{ progress?.completedRequiredStepCount.value ?? 0 }} of
+              {{ progress?.requiredStepCount.value ?? requiredCount }} steps completed
             </span>
           </p>
           <span class="text-sm font-medium text-highlighted">{{ progress?.percent.value ?? 0 }}%</span>
@@ -74,13 +70,13 @@ function formatDuration(minutes: number): string {
         />
       </div>
 
-      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:border-s lg:border-default lg:ps-5">
-        <div class="flex items-center gap-3">
+      <dl class="grid grid-cols-1 gap-4 sm:grid-cols-[max-content_max-content] sm:justify-between lg:border-s lg:border-default lg:ps-5">
+        <div class="flex min-w-max items-center gap-3">
           <UIcon name="i-lucide-list-checks" class="size-5 shrink-0 text-muted" aria-hidden="true" />
           <div>
             <dt class="text-xs text-muted">Course structure</dt>
-            <dd class="mt-0.5 flex items-center gap-2 text-sm font-semibold text-highlighted">
-              <span>{{ requiredCount }} core</span>
+            <dd class="mt-0.5 flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-highlighted">
+              <span>{{ requiredCount }} required</span>
               <span v-if="optionalCount" class="font-normal text-dimmed" aria-hidden="true">&middot;</span>
               <span v-if="optionalCount">{{ optionalCount }} optional</span>
             </dd>

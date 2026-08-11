@@ -190,8 +190,8 @@ const contentPageUi = computed(() => ({
         >
           <UButton
             :label="progress.isLessonComplete(currentPage.path)
-              ? 'Exercise completed'
-              : 'Mark exercise complete'"
+              ? 'Step completed'
+              : 'Mark step complete'"
             :icon="progress.isLessonComplete(currentPage.path)
               ? 'i-lucide-circle-check'
               : 'i-lucide-check'"

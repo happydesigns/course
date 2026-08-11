@@ -17,7 +17,7 @@ defineProps<{
         class="flex items-center gap-2 text-sm font-semibold text-highlighted"
       >
         <UIcon name="i-lucide-list" class="size-4 text-muted" />
-        On this exercise
+        On this step
       </h2>
       <span class="text-xs text-muted">{{ links.length }} sections</span>
     </div>

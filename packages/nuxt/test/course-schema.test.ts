@@ -29,4 +29,20 @@ describe("course collection schema", () => {
       checkpoints: ["verified-result"]
     }).success).toBe(true);
   });
+
+  it("validates published course metadata", () => {
+    expect(courseCollectionSchema.safeParse({
+      title: "Course",
+      description: "Description",
+      version: "1.2.0",
+      date: "2026-08-11"
+    }).success).toBe(true);
+
+    expect(courseCollectionSchema.safeParse({
+      title: "Course",
+      description: "Description",
+      version: "latest",
+      date: "2026-02-30"
+    }).success).toBe(false);
+  });
 });

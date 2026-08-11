@@ -10,6 +10,49 @@ interface CourseTextLeaf {
   end: number;
 }
 
+export function interpolateCourseTextSegments(
+  segments: readonly string[],
+  values: Readonly<Record<string, string>>
+): string[] {
+  const source = segments.join("");
+  const matches = [...source.matchAll(new RegExp(COURSE_INPUT_PLACEHOLDER_PATTERN.source, "g"))]
+    .map((match) => ({
+      start: match.index,
+      end: match.index + match[0].length,
+      replacement: Object.hasOwn(values, match[1] ?? "")
+        ? values[match[1] ?? ""] ?? ""
+        : match[0]
+    }));
+
+  let start = 0;
+
+  return segments.map((segment) => {
+    const end = start + segment.length;
+    let cursor = start;
+    let rendered = "";
+
+    for (const match of matches) {
+      if (match.end <= start || match.start >= end) {
+        continue;
+      }
+
+      if (match.start >= start) {
+        rendered += source.slice(cursor, Math.min(match.start, end));
+        rendered += match.replacement;
+      }
+
+      cursor = Math.max(cursor, match.end);
+    }
+
+    if (cursor < end) {
+      rendered += source.slice(cursor, end);
+    }
+
+    start = end;
+    return rendered;
+  });
+}
+
 export function createCourseInputValues(
   inputs: readonly CourseInput[],
   values: Readonly<Record<string, string>>
@@ -76,41 +119,14 @@ function interpolateMinimarkCodeBlock(
   const leaves: CourseTextLeaf[] = [];
   collectMinimarkTextLeaves(result.slice(2), leaves);
 
-  const source = leaves
-    .map((leaf) => String(leaf.parent[leaf.index]))
-    .join("");
-  const matches = [...source.matchAll(new RegExp(COURSE_INPUT_PLACEHOLDER_PATTERN.source, "g"))]
-    .map((match) => ({
-      start: match.index,
-      end: match.index + match[0].length,
-      replacement: Object.hasOwn(values, match[1] ?? "")
-        ? values[match[1] ?? ""] ?? ""
-        : match[0]
-    }));
+  const renderedSegments = interpolateCourseTextSegments(
+    leaves.map((leaf) => String(leaf.parent[leaf.index])),
+    values
+  );
 
-  for (const leaf of leaves) {
-    let cursor = leaf.start;
-    let rendered = "";
-
-    for (const match of matches) {
-      if (match.end <= leaf.start || match.start >= leaf.end) {
-        continue;
-      }
-
-      if (match.start >= leaf.start) {
-        rendered += source.slice(cursor, Math.min(match.start, leaf.end));
-        rendered += match.replacement;
-      }
-
-      cursor = Math.max(cursor, match.end);
-    }
-
-    if (cursor < leaf.end) {
-      rendered += source.slice(cursor, leaf.end);
-    }
-
-    leaf.parent[leaf.index] = rendered;
-  }
+  leaves.forEach((leaf, index) => {
+    leaf.parent[leaf.index] = renderedSegments[index] ?? "";
+  });
 
   return result;
 }

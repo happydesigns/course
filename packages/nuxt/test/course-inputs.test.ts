@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { h } from "vue";
+import type { Slots } from "vue";
+import { defineComponent, h } from "vue";
 import { interpolateCourseCodeVNode } from "../app/utils/course-code";
 import {
   createCourseInputValues,
@@ -98,6 +99,43 @@ describe("course input placeholders", () => {
     });
     expect(source.props).toMatchObject({
       filename: "ZCL_HELPER_{{ $doc.input.groupId }}.clas.abap"
+    });
+  });
+
+  it("resolves placeholders split across highlighted VNode slot tokens", () => {
+    const HighlightedCode = defineComponent({
+      setup: (_, { slots }) => () => h("pre", slots.default?.())
+    });
+    const source = h(
+      HighlightedCode,
+      {
+        filename: "ZCL_HELPER_{{ $doc.input.groupId }}.clas.abap",
+        code: "CLASS zcl_helper_{{ $doc.input.groupId }} DEFINITION"
+      },
+      {
+        default: () => [
+          h("code", [
+            h("span", "CLASS "),
+            h("span", "zcl_helper_"),
+            h("span", "{{ "),
+            h("span", "$doc.input.groupId"),
+            h("span", " }}"),
+            h("span", " DEFINITION")
+          ])
+        ]
+      }
+    );
+
+    const rendered = interpolateCourseCodeVNode(source, { groupId: "WAS" });
+    const slotContent = (rendered.children as Slots).default?.() ?? [];
+    const code = slotContent[0];
+    const tokens = Array.isArray(code?.children) ? code.children : [];
+    const text = tokens.map((token) => String((token as { children?: unknown }).children ?? ""));
+
+    expect(text.join("")).toBe("CLASS zcl_helper_WAS DEFINITION");
+    expect(rendered.props).toMatchObject({
+      filename: "ZCL_HELPER_WAS.clas.abap",
+      code: "CLASS zcl_helper_WAS DEFINITION"
     });
   });
 });

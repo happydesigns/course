@@ -29,7 +29,14 @@ export function useCourseProgressController(options: {
     toValue(options.course).courseId ?? toValue(options.courseKey),
     toValue(options.storagePrefix)
   ));
-  const { requiredLessons, completedRequiredCount, percent } = useCourseProgressMetrics(
+  const {
+    requiredLessons,
+    completedRequiredCount,
+    completedRequiredStepCount,
+    requiredStepCount,
+    percent,
+    resumePath
+  } = useCourseProgressMetrics(
     data,
     options.orderedLessons
   );
@@ -96,8 +103,9 @@ export function useCourseProgressController(options: {
       }
     };
 
-    if (toValue(options.currentPage).path === lessonPath) {
-      reconcileLessonCompletion(toValue(options.currentPage));
+    const lesson = options.orderedLessons.value.find((entry) => entry.path === lessonPath);
+    if (lesson) {
+      reconcileLessonCompletion(lesson);
     }
 
     persist();
@@ -132,7 +140,10 @@ export function useCourseProgressController(options: {
   }
 
   function restore(): void {
-    data.value = parseCourseProgress(storage.getItem(storageKey.value));
+    data.value = migrateLegacyCompletedCheckpoints(
+      parseCourseProgress(storage.getItem(storageKey.value)),
+      options.orderedLessons.value
+    );
     ready.value = true;
     reconcileCurrentLesson(currentLessonPath.value);
   }
@@ -143,7 +154,10 @@ export function useCourseProgressController(options: {
     currentLessonPath,
     requiredLessons,
     completedRequiredCount,
+    completedRequiredStepCount,
+    requiredStepCount,
     percent,
+    resumePath,
     isLessonComplete,
     isCheckpointComplete,
     setCheckpointComplete,
@@ -165,4 +179,25 @@ export function useCourseProgressController(options: {
   });
 
   return context;
+}
+
+function migrateLegacyCompletedCheckpoints(
+  progress: CourseProgressData,
+  lessons: readonly CoursePage[]
+): CourseProgressData {
+  const completedCheckpoints = { ...progress.completedCheckpoints };
+  let changed = false;
+
+  for (const lesson of lessons) {
+    if (
+      progress.completedLessons.includes(lesson.path) &&
+      (lesson.checkpoints?.length ?? 0) > 0 &&
+      !(lesson.path in completedCheckpoints)
+    ) {
+      completedCheckpoints[lesson.path] = [...(lesson.checkpoints ?? [])];
+      changed = true;
+    }
+  }
+
+  return changed ? { ...progress, completedCheckpoints } : progress;
 }
