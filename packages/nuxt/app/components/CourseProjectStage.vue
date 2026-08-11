@@ -82,9 +82,9 @@ watch(activeSnapPoint, (value) => {
     :title="config.label"
     :snap-points="mobileSnapPoints"
     :overlay="false"
-    :modal="false"
+    :modal="!isMobileCollapsed"
     :dismissible="false"
-    :no-body-styles="true"
+    :no-body-styles="isMobileCollapsed"
     direction="bottom"
     :ui="{
       content: 'mt-0 h-dvh max-h-dvh lg:hidden',
@@ -93,7 +93,7 @@ watch(activeSnapPoint, (value) => {
       header: 'px-4 pb-3',
       wrapper: 'w-full',
       title: 'w-full',
-      body: 'min-h-0 flex-1 overflow-hidden border-t border-default'
+      body: 'min-h-0 flex-1 overflow-hidden overscroll-contain border-t border-default'
     }"
   >
     <template #title>

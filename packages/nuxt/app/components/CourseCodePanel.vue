@@ -188,13 +188,13 @@ onBeforeUnmount(() => {
         root: 'h-full min-h-0',
         list: [
           'course-code-tree-list border-default',
-          mobile && 'h-full min-h-0 overflow-y-auto border-r-0 sm:border-r',
+          mobile && 'h-full min-h-0 overflow-y-auto overscroll-contain border-r-0 sm:border-r',
           mobile && mobileView === 'code' && 'hidden sm:block',
           mobile && mobileTreeCollapsed && 'sm:hidden'
         ],
         content: [
           'course-code-tree-content min-h-0 [&>div]:min-h-0 [&>div>pre]:min-h-0 [&>div>pre]:rounded-none [&>div>pre]:border-default [&>div>pre]:bg-muted/50',
-          mobile && 'h-full overflow-auto',
+          mobile && 'h-full overflow-auto overscroll-contain',
           mobile && mobileView !== 'code' && 'hidden sm:flex'
         ]
       }"
