@@ -12,7 +12,6 @@ export interface CourseCodeState {
   changedPaths: Ref<ReadonlySet<string>>;
   contentRevision: Ref<number>;
   inputsReady: Ref<boolean>;
-  inputValues: Ref<Readonly<Record<string, string>>>;
   tree: Ref<Record<string, VNode>>;
   register: (
     source: symbol,

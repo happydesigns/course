@@ -1,5 +1,7 @@
 import type { ComputedRef, Ref, VNode } from "vue";
 import { computed, nextTick, ref, shallowRef, watch } from "vue";
+import { interpolateCourseCodeVNode } from "../utils/course-code";
+import { interpolateCourseInputPlaceholders } from "../utils/course-inputs";
 import { provideCourseCodeState, type CourseCodeItem } from "./useCourseCodeState";
 
 export interface CourseCodeWorkspace {
@@ -16,6 +18,7 @@ export function useCourseCodeWorkspace(options: {
 }): CourseCodeWorkspace {
   const tree = shallowRef<Record<string, VNode>>({});
   const sources = new Map<symbol, readonly CourseCodeItem[]>();
+  const renderedSources = new Map<symbol, readonly CourseCodeItem[]>();
   const activePath = ref("");
   const changedPaths = ref<ReadonlySet<string>>(new Set());
   const contentRevision = ref(0);
@@ -27,16 +30,53 @@ export function useCourseCodeWorkspace(options: {
     }))
   );
 
+  function renderItems(sourceItems: readonly CourseCodeItem[]): CourseCodeItem[] {
+    return sourceItems.map((item) => ({
+      ...item,
+      label: interpolateCourseInputPlaceholders(item.label, options.inputValues.value),
+      component: interpolateCourseCodeVNode(item.component, options.inputValues.value)
+    }));
+  }
+
   function rebuildTree(): void {
     tree.value = Object.fromEntries(
-      [...sources.values()]
+      [...renderedSources.values()]
         .flatMap((sourceItems) => sourceItems)
         .map((item) => [item.label, item.component])
     );
   }
 
+  function applyRenamedPaths(renamedPaths: ReadonlyMap<string, string>): void {
+    activePath.value = renamedPaths.get(activePath.value) ?? activePath.value;
+    changedPaths.value = new Set(
+      [...changedPaths.value].map((path) => renamedPaths.get(path) ?? path)
+    );
+  }
+
+  function refreshRenderedSources(): void {
+    const renamedPaths = new Map<string, string>();
+
+    for (const [source, sourceItems] of sources) {
+      const previousItems = renderedSources.get(source) ?? [];
+      const nextItems = renderItems(sourceItems);
+
+      previousItems.forEach((item, index) => {
+        const replacement = nextItems[index];
+        if (replacement) {
+          renamedPaths.set(item.label, replacement.label);
+        }
+      });
+
+      renderedSources.set(source, nextItems);
+    }
+
+    rebuildTree();
+    applyRenamedPaths(renamedPaths);
+  }
+
   function reset(): void {
     sources.clear();
+    renderedSources.clear();
     tree.value = {};
     activePath.value = "";
     changedPaths.value = new Set();
@@ -47,42 +87,38 @@ export function useCourseCodeWorkspace(options: {
     changedPaths,
     contentRevision,
     inputsReady: options.inputsReady,
-    inputValues: options.inputValues,
     tree,
     register(source, newItems, registerOptions) {
-      const previousItems = sources.get(source) ?? [];
+      const previousItems = renderedSources.get(source) ?? [];
+      const renderedItems = renderItems(newItems);
       const renamedPaths = new Map(
         previousItems.flatMap((item, index) => {
-          const replacement = newItems[index];
+          const replacement = renderedItems[index];
           return replacement ? [[item.label, replacement.label] as const] : [];
         })
       );
 
       sources.set(source, newItems);
+      renderedSources.set(source, renderedItems);
       rebuildTree();
-      activePath.value = renamedPaths.get(activePath.value) ?? activePath.value;
-      changedPaths.value = new Set(
-        [...changedPaths.value].map((path) => renamedPaths.get(path) ?? path)
-      );
+      applyRenamedPaths(renamedPaths);
 
       if (registerOptions?.activate !== false) {
-        changedPaths.value = new Set(newItems.map((item) => item.label));
-        activePath.value = newItems.at(-1)?.label ?? activePath.value;
+        changedPaths.value = new Set(renderedItems.map((item) => item.label));
+        activePath.value = renderedItems.at(-1)?.label ?? activePath.value;
       }
     },
     unregister(source) {
       sources.delete(source);
+      renderedSources.delete(source);
       rebuildTree();
     }
   });
 
-  watch(
-    [options.inputValues, options.inputsReady],
-    () => {
-      contentRevision.value += 1;
-    },
-    { flush: "post" }
-  );
+  watch(options.inputValues, refreshRenderedSources, { flush: "sync" });
+  watch(options.inputsReady, () => {
+    contentRevision.value += 1;
+  }, { flush: "post" });
   watch(options.currentPagePath, async () => {
     reset();
     await nextTick();

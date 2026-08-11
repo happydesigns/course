@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { h } from "vue";
+import { interpolateCourseCodeVNode } from "../app/utils/course-code";
 import {
   createCourseInputValues,
   interpolateCourseInputPlaceholders
@@ -75,5 +77,27 @@ describe("course input placeholders", () => {
         ["span", {}, " DEFINITION"]
       ]
     ]);
+  });
+
+  it("re-renders code VNodes from their unchanged placeholder source", () => {
+    const source = h("pre", {
+      filename: "ZCL_HELPER_{{ $doc.input.groupId }}.clas.abap",
+      code: "CLASS zcl_helper_{{ $doc.input.groupId }} DEFINITION"
+    });
+
+    const first = interpolateCourseCodeVNode(source, { groupId: "JNF" });
+    const second = interpolateCourseCodeVNode(source, { groupId: "ABC" });
+
+    expect(first.props).toMatchObject({
+      filename: "ZCL_HELPER_JNF.clas.abap",
+      code: "CLASS zcl_helper_JNF DEFINITION"
+    });
+    expect(second.props).toMatchObject({
+      filename: "ZCL_HELPER_ABC.clas.abap",
+      code: "CLASS zcl_helper_ABC DEFINITION"
+    });
+    expect(source.props).toMatchObject({
+      filename: "ZCL_HELPER_{{ $doc.input.groupId }}.clas.abap"
+    });
   });
 });

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { VNode } from "vue";
-import { createVNode, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useCourseCodeState, type CourseCodeItem } from "../composables/useCourseCodeState";
 import { useCourseCodeCollectionMode } from "../composables/useCourseCodeCollectionMode";
-import { interpolateCourseInputPlaceholders } from "../utils/course-inputs";
 
 const props = defineProps<{
   default?: boolean;
@@ -145,61 +144,13 @@ function transformSlot(slot: unknown, index: number): CourseCodeItem | undefined
     return undefined;
   }
 
-  const inputValues = state?.inputValues.value ?? {};
-  const component = interpolateCodeVNode(codeBlock, inputValues);
-  const filename = String(component.props?.filename ?? component.props?.label ?? index);
+  const filename = String(codeBlock.props?.filename ?? codeBlock.props?.label ?? index);
 
   return {
     label: filename,
     icon: typeof codeBlock.props?.icon === "string" ? codeBlock.props.icon : undefined,
-    component
+    component: codeBlock
   };
-}
-
-function interpolateCodeVNode(
-  vnode: VNode,
-  inputValues: Readonly<Record<string, string>>
-): VNode {
-  const cloned = createVNode(
-    vnode.type,
-    interpolateCourseInputPlaceholders(vnode.props ?? {}, inputValues),
-    interpolateVNodeChildren(vnode.children, inputValues) as VNode["children"]
-  );
-  return cloned;
-}
-
-function interpolateVNodeChildren(
-  value: unknown,
-  inputValues: Readonly<Record<string, string>>
-): unknown {
-  if (typeof value === "string") {
-    return interpolateCourseInputPlaceholders(value, inputValues);
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((entry) =>
-      isVNode(entry)
-        ? interpolateCodeVNode(entry, inputValues)
-        : interpolateVNodeChildren(entry, inputValues)
-    );
-  }
-
-  if (isSlotChildren(value)) {
-    return Object.fromEntries(
-      Object.entries(value).map(([name, slot]) => [
-        name,
-        typeof slot === "function"
-          ? (...args: unknown[]) =>
-              interpolateVNodeChildren(
-                (slot as (...slotArgs: unknown[]) => unknown)(...args),
-                inputValues
-              )
-          : slot
-      ])
-    );
-  }
-
-  return value;
 }
 
 function isSlotChildren(value: unknown): value is { default: () => VNode[] } {
