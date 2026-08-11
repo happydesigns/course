@@ -83,4 +83,41 @@ describe("course reader model", () => {
       path: "/courses/demo"
     });
   });
+
+  it("keeps history page bodies unchanged for workspace interpolation", () => {
+    const historyBody = {
+      type: "minimark",
+      value: [["pre", { filename: "project/{{ $doc.input.suffix }}.ts" }, "code"]],
+      toc: { title: "", searchDepth: 2, depth: 2, links: [] }
+    } as CoursePage["body"];
+    const historyLesson = page({
+      id: "history.md",
+      path: "/courses/demo/history",
+      pageType: "lesson",
+      order: 1,
+      title: "History",
+      body: historyBody
+    });
+    const currentLesson = page({
+      id: "current.md",
+      path: "/courses/demo/current",
+      pageType: "lesson",
+      order: 2,
+      title: "Current"
+    });
+    const model = useCourseReaderModel({
+      course,
+      page: currentLesson,
+      lessons: [historyLesson, currentLesson],
+      inputValues: computed(() => ({ suffix: "JNF" })),
+      breadcrumbRoot: { label: "Courses", to: "/courses" }
+    });
+
+    expect(model.historyPages.value[0]?.body).toBe(historyBody);
+    expect(model.historyPages.value[0]?.body?.value).toContainEqual([
+      "pre",
+      { filename: "project/{{ $doc.input.suffix }}.ts" },
+      "code"
+    ]);
+  });
 });

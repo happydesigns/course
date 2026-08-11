@@ -86,8 +86,14 @@ export function useCourseCodeWorkspace(options: {
     activePath,
     changedPaths,
     contentRevision,
+    inputValues: options.inputValues,
     inputsReady: options.inputsReady,
     tree,
+    activate(newItems) {
+      const renderedItems = renderItems(newItems);
+      changedPaths.value = new Set(renderedItems.map((item) => item.label));
+      activePath.value = renderedItems.at(-1)?.label ?? activePath.value;
+    },
     register(source, newItems, registerOptions) {
       const previousItems = renderedSources.get(source) ?? [];
       const renderedItems = renderItems(newItems);

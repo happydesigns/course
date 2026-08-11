@@ -40,13 +40,12 @@ export function useCourseReaderModel(options: {
     ),
     body: interpolateCourseInputPlaceholders(currentPage.value.body, options.inputValues.value)
   }));
-  const renderedHistoryPages = computed<CoursePage[]>(() =>
+  // Keep code-history pages untouched. Their code VNodes are interpolated by
+  // the code workspace, which must retain the original placeholders so later
+  // input changes can re-render every previously collected file.
+  const historyPages = computed<CoursePage[]>(() =>
     orderedLessons.value
       .slice(0, Math.max(0, currentLessonIndex.value))
-      .map((page) => ({
-        ...page,
-        body: interpolateCourseInputPlaceholders(page.body, options.inputValues.value)
-      }))
   );
   const breadcrumbItems = computed(() => {
     const root = toValue(options.breadcrumbRoot);
@@ -109,7 +108,7 @@ export function useCourseReaderModel(options: {
     currentLessonIndex,
     isLesson,
     renderedPage,
-    renderedHistoryPages,
+    historyPages,
     breadcrumbItems,
     currentBreadcrumb,
     navigationTocLinks,

@@ -3,6 +3,7 @@ import type { VNode } from "vue";
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useCourseCodeState, type CourseCodeItem } from "../composables/useCourseCodeState";
 import { useCourseCodeCollectionMode } from "../composables/useCourseCodeCollectionMode";
+import { interpolateCourseCodeVNode } from "../utils/course-code";
 
 const props = defineProps<{
   default?: boolean;
@@ -34,7 +35,11 @@ const SlotRenderer = defineComponent({
         return null;
       }
 
-      return h("div", { ref: target, "data-course-code-step": "" }, renderedSlots);
+      const displayedSlots = renderedSlots.map((slot) =>
+        interpolateCourseCodeVNode(slot, state?.inputValues.value ?? {})
+      );
+
+      return h("div", { ref: target, "data-course-code-step": "" }, displayedSlots);
     };
   }
 });
@@ -43,14 +48,21 @@ function register(options?: { activate?: boolean }): void {
   const items = collectItems();
 
   if (state?.inputsReady.value && items.length > 0) {
-    state.register(source, items, options);
-    hasRegistered = true;
+    if (collectOnly) {
+      state.register(source, items, { activate: false });
+      hasRegistered = true;
+    } else if (options?.activate !== false) {
+      // The hidden CourseCodeHistory owns the canonical tree sources. Visible
+      // intersections only select the active file; registering their already
+      // rendered VNodes would introduce a second, timing-dependent source.
+      state.activate(items);
+    }
   }
 }
 
 function registerForCurrentPosition(): void {
   if (collectOnly) {
-    register({ activate: false });
+    register();
     return;
   }
 
@@ -104,7 +116,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   isMounted = false;
   observer?.disconnect();
-  state?.unregister(source);
+
+  if (hasRegistered) {
+    state?.unregister(source);
+  }
 });
 
 function findCodeBlock(slot: VNode): VNode | undefined {

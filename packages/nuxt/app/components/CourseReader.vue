@@ -88,7 +88,7 @@ const {
   currentLessonIndex,
   isLesson,
   renderedPage,
-  renderedHistoryPages,
+  historyPages,
   breadcrumbItems,
   currentBreadcrumb,
   pageAnchorLinks,
@@ -119,7 +119,7 @@ const contentComponents = {
 };
 const contentData = computed(() => ({ input: courseInputs.resolvedValues.value }));
 const codeCollectionPages = computed(() => [
-  ...renderedHistoryPages.value,
+  ...historyPages.value,
   currentPage.value
 ]);
 const hasPageCodeStage = computed(

@@ -1,4 +1,4 @@
-import type { InjectionKey, Ref, VNode } from "vue";
+import type { ComputedRef, InjectionKey, Ref, VNode } from "vue";
 import { inject, provide } from "vue";
 
 export interface CourseCodeItem {
@@ -11,8 +11,10 @@ export interface CourseCodeState {
   activePath: Ref<string>;
   changedPaths: Ref<ReadonlySet<string>>;
   contentRevision: Ref<number>;
+  inputValues: ComputedRef<Readonly<Record<string, string>>>;
   inputsReady: Ref<boolean>;
   tree: Ref<Record<string, VNode>>;
+  activate: (items: readonly CourseCodeItem[]) => void;
   register: (
     source: symbol,
     items: readonly CourseCodeItem[],
