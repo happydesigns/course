@@ -7,6 +7,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "build": "pnpm -r build",
+    "verify": "pnpm test && pnpm typecheck && pnpm build && pnpm validate:examples",
     "validate:examples": "pnpm --filter @happydesigns/course course validate ../../playground/content/courses/abap-platform-rap120 && pnpm --filter @happydesigns/course course validate ../../playground/content/courses/how-to-build-an-ai-chat.md && pnpm --filter @happydesigns/course course validate ../../playground/content/courses/using-this-tool.md",
     "dev": "pnpm --filter @happydesigns/course-playground dev"
   },
