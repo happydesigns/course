@@ -9,7 +9,6 @@ import CodeTreeIntersection from "./CodeTreeIntersection.vue";
 const props = defineProps<{
   pages: CoursePage[];
   data: Record<string, unknown>;
-  currentPagePath: string;
 }>();
 
 provideCourseCodeCollectionMode(true);
@@ -31,7 +30,7 @@ const collectionPages = computed(() =>
       v-for="page in collectionPages"
       :key="page.path"
       :page-path="page.path"
-      :progressive="page.path === currentPagePath"
+      :progressive="false"
     >
       <ContentRenderer
         :value="page"

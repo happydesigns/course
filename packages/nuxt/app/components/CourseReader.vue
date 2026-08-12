@@ -120,10 +120,10 @@ const contentComponents = {
   "course-checkpoint": CourseCheckpoint
 };
 const contentData = computed(() => ({ input: courseInputs.resolvedValues.value }));
-const codeCollectionPages = computed(() => [
-  ...historyPages.value,
-  currentPage.value
-]);
+// Completed pages form the stable project baseline. The current page is
+// registered by its visible code steps so later files are only revealed when
+// the reader reaches them.
+const codeCollectionPages = computed(() => historyPages.value);
 const hasPageCodeStage = computed(
   () => hasCodeStage.value && hasCourseCodeTree(renderedPage.value.body)
 );
@@ -296,7 +296,6 @@ function scrollToCourseAnchor(target: HTMLElement): void {
           v-if="hasPageCodeStage"
           :pages="codeCollectionPages"
           :data="contentData"
-          :current-page-path="currentPage.path"
         />
 
         <CourseProjectStage

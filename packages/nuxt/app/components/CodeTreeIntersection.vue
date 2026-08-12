@@ -53,15 +53,13 @@ function register(options?: { activate?: boolean }): void {
   const items = collectItems();
 
   if (state?.inputsReady.value && items.length > 0) {
-    if (collectOnly) {
-      state.register(source, items, {
-        activate: false,
-        progressive: sequence?.progressive ?? false
-      });
-      hasRegistered = true;
-    } else if (options?.activate !== false) {
-      // The hidden CourseCodeHistory owns the original, input-reactive VNodes.
-      // The visible counterpart selects the matching progressive source.
+    state.register(source, items, {
+      activate: false,
+      progressive: sequence?.progressive ?? false
+    });
+    hasRegistered = true;
+
+    if (!collectOnly && options?.activate !== false) {
       state.activate(source, items);
     }
   }
@@ -105,6 +103,11 @@ onMounted(() => {
     registerForCurrentPosition();
     return;
   }
+
+  // Pre-register the current page in source order without revealing it. This
+  // lets activation select the project state through the visible code step,
+  // while later files remain excluded until their intersection is reached.
+  register({ activate: false });
 
   // Nuxt restores the route scroll position after the new page has mounted.
   // Wait for that reset before evaluating a code step, otherwise the previous
