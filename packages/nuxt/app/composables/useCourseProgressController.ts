@@ -19,7 +19,17 @@ export function useCourseProgressController(options: {
   storagePrefix?: MaybeRefOrGetter<string | undefined>;
 }): CourseProgressContext {
   const storage = useCourseStorage();
-  const data = ref<CourseProgressData>(createEmptyCourseProgress());
+  const initialStorageKey = courseProgressStorageKey(
+    toValue(options.course).courseId ?? toValue(options.courseKey),
+    toValue(options.storagePrefix)
+  );
+  // Route pages are separate component instances. Keeping the progress in a
+  // Nuxt state cell lets an overview react immediately when a lesson updates a
+  // checkpoint, while localStorage remains the durable cross-session source.
+  const data = useState<CourseProgressData>(
+    `happydesigns-course:progress:${initialStorageKey}`,
+    createEmptyCourseProgress
+  );
   const ready = ref(false);
   const currentLessonPath = computed(() => {
     const page = toValue(options.currentPage);
