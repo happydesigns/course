@@ -34,7 +34,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @happydesigns/course build
+      - run: pnpm --filter @happydesigns/course-nuxt build
 
       - name: Build static playground
         run: pnpm --filter @happydesigns/course-playground build
