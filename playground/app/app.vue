@@ -50,7 +50,7 @@ const links = computed<NavigationMenuItem[]>(() => [
     </UHeader>
 
     <NuxtLayout>
-      <NuxtPage :page-key="route => route.path" />
+      <NuxtPage :page-key="route => normalizeCourseRoutePath(route.path)" />
     </NuxtLayout>
   </UApp>
 </template>

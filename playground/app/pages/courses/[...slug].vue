@@ -1,10 +1,11 @@
 <script setup lang="ts">
 const route = useRoute();
+const routePath = computed(() => normalizeCourseRoutePath(route.path));
 
 const { data, error } = await useAsyncData(
-  computed(() => `course-page:${route.path}`),
+  computed(() => `course-page:${routePath.value}`),
   async () => {
-    const page = await queryCollection("courses").path(route.path).first();
+    const page = await queryCollection("courses").path(routePath.value).first();
 
     if (!page) {
       return undefined;
@@ -31,7 +32,7 @@ const { data, error } = await useAsyncData(
 
     return { course, page, lessons };
   },
-  { watch: [() => route.path] }
+  { watch: [routePath] }
 );
 
 if (error.value) {

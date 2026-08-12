@@ -140,13 +140,19 @@ const contentPageUi = computed(() => ({
 const pageTransitionContext = useCoursePageTransitionContext();
 let anchorScrollFrame: number | undefined;
 
-watchEffect(() => {
-  pageTransitionContext.value = {
-    currentPath: currentPage.value.path,
-    previousPath: surround.value[0]?.path,
-    nextPath: surround.value[1]?.path
-  };
-});
+// Route transitions describe client-side navigation only. Populating this
+// state while rendering on the server serializes the current route into the
+// Nuxt payload. On a hard reload the client can then mistake hydration for a
+// leave navigation and remove the freshly rendered page.
+if (import.meta.client) {
+  watchEffect(() => {
+    pageTransitionContext.value = {
+      currentPath: currentPage.value.path,
+      previousPath: surround.value[0]?.path,
+      nextPath: surround.value[1]?.path
+    };
+  });
+}
 
 onBeforeUnmount(() => {
   if (anchorScrollFrame !== undefined) {

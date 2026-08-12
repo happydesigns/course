@@ -1,5 +1,8 @@
 import { getCoursePageTransitionName } from "../composables/useCourseReaderModel";
-import { useCoursePageTransitionContext } from "../composables/useCoursePageTransition";
+import {
+  shouldRunCoursePageTransition,
+  useCoursePageTransitionContext
+} from "../composables/useCoursePageTransition";
 
 function freezeLeavingPage(element: Element): void {
   if (!(element instanceof HTMLElement)) {
@@ -23,6 +26,27 @@ function freezeLeavingPage(element: Element): void {
 }
 
 export default defineNuxtRouteMiddleware((to, from) => {
+  // A hard reload has no client-side source route. Applying a leave
+  // transition in that situation can fade out and remove the hydrated page
+  // without a corresponding entering page.
+  if (import.meta.server) {
+    return;
+  }
+
+  const nuxtApp = useNuxtApp();
+
+  if (
+    !shouldRunCoursePageTransition(
+      to.path,
+      from.path,
+      from.matched.length,
+      nuxtApp.isHydrating,
+      nuxtApp.payload.serverRendered
+    )
+  ) {
+    return;
+  }
+
   const context = useCoursePageTransitionContext();
 
   if (!context.value || context.value.currentPath !== from.path) {
