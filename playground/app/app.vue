@@ -41,6 +41,7 @@ const links = computed<NavigationMenuItem[]>(() => [
       <UNavigationMenu :items="links" />
 
       <template #right>
+        <UColorModeButton color="neutral" variant="ghost" />
         <UButton icon="i-simple-icons-github" color="neutral" variant="ghost" to="https://github.com/happydesigns/course" target="_blank" aria-label="GitHub" />
       </template>
 
