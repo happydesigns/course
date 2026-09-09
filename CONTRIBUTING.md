@@ -20,7 +20,8 @@ pnpm install
 | --- | --- | --- |
 | `packages/course` | Generic schemas, Markdown parsing, deterministic validation, CLI, interchange types | Nuxt rendering, product workflows, SAP-specific fields |
 | `packages/nuxt` | Course reader composition, Course-specific components and state, Nuxt Content schema, Course variants | Routes, collection names, product persistence, generic UI primitives |
-| `playground` | Reference routes, Content collection, application shell, realistic course fixtures | Reusable package behavior |
+| `packages/nuxt/preview` | Optional shared Academy scenario, demo collection, fixtures and catalog metadata | Normal Course runtime defaults, production data or routes |
+| `playground` | Reference routes, application shell and application-owned course fixtures; consumes the shared Academy | Reusable package behavior or copies of the shared Academy |
 | `docs` | Authoring contract, product boundaries, conversion guidance | Duplicated live Cora policy |
 | `examples` | Small deterministic format examples | Production application logic |
 | `skills` | Source-preserving AI-assisted authoring workflow | Runtime AI behavior |

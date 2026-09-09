@@ -197,3 +197,31 @@ pnpm verify
 `pnpm dev` starts the playground with a single-dev-server lock. `pnpm verify` runs unit tests, typechecking, all workspace builds, and deterministic example validation.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for repository boundaries, change expectations, and the validation matrix.
+
+## Shared Academy example
+
+`@happydesigns/course-nuxt/preview` is an optional Nuxt layer for a complete, neutral
+Academy scenario. It owns `CourseAcademyPreview`, its two Markdown source documents,
+the `coursePreview` collection and an optional `idStudio.templates.academy` catalog
+entry. The Course playground renders that exact component at `/academy`; a brand
+studio can opt into the same layer. Course has no dependency on id.
+
+```ts
+export default defineNuxtConfig({
+  extends: ['@happydesigns/course-nuxt/preview']
+})
+```
+
+Render `<CourseAcademyPreview />` in your own page. This layer does not add routes.
+It offers Home, Course overview and Lesson views and uses the actual CourseReader,
+checkpoint components and Markdown rendering. The component optionally receives a
+brand `document`, `mode` and a controlled `page`, and emits `navigate(pageId)`.
+All theme styling uses semantic Nuxt UI tokens. Progress stays in a per-instance
+memory store and never modifies normal learner storage or another preview frame.
+
+Maintain the example content and UI here once. Do not copy it into brand, id or a
+second playground. The global scene is loaded asynchronously; installing the normal
+Course layer does not activate the preview component or its content collection.
+The scenario intentionally has one short lesson with real code and checkpoints;
+there is no parallel minimal rendering to keep in sync. This is a preview, not a
+production course or an automatic capability installer.

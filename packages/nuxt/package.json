@@ -12,12 +12,14 @@
     ".": "./nuxt.config.ts",
     "./schemas": "./schemas/index.ts",
     "./storage": "./app/composables/useCourseStorage.ts",
-    "./types": "./app/types/course.ts"
+    "./types": "./app/types/course.ts",
+    "./preview": "./preview/nuxt.config.ts"
   },
   "files": [
     "app",
     "schemas",
-    "nuxt.config.ts"
+    "nuxt.config.ts",
+    "preview"
   ],
   "scripts": {
     "prebuild": "pnpm --filter @happydesigns/course build",

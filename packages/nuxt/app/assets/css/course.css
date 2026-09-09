@@ -1,3 +1,9 @@
+/* Reader-specific inline code wrapping must not change the host's prose. */
+.course-reader :not(pre) > code {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 @media (min-width: 1024px) {
   .course-code-stage {
     height: calc(100dvh - var(--ui-header-height, 0px));

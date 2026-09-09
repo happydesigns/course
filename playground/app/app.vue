@@ -2,7 +2,7 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 const route = useRoute();
-const links = computed<NavigationMenuItem[]>(() => [
+const links = computed<NavigationMenuItem[]>(() => [{ label: "Academy example", to: "/academy" },
   {
     label: "Courses",
     to: "/courses",
@@ -24,7 +24,7 @@ const links = computed<NavigationMenuItem[]>(() => [
       :throttle="100"
     />
 
-    <UHeader
+    <UHeader v-if="route.path !== '/academy'"
       :ui="{
         container: 'max-w-[120rem] px-4 sm:px-6 lg:px-10 xl:px-12'
       }"
