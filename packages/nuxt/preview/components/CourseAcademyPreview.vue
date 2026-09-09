@@ -5,7 +5,9 @@ import { provideCourseStorage } from '../../app/composables/useCourseStorage';
 
 const props = defineProps<{ page?: string; document?: { theme: { label: string }; brand: { claim?: string; assets?: { logos?: Record<string, { src: string; alt?: string }> } } }; mode?: string }>();
 const emit = defineEmits<{ navigate: [page: string] }>();
-const current = ref(props.page || 'home');
+const route = useRoute();
+const initialPage = props.page || String(route.query.academy || 'home');
+const current = ref(['home', 'overview', 'lesson'].includes(initialPage) ? initialPage : 'home');
 watch(() => props.page, page => {
   if (page && ['home', 'overview', 'lesson'].includes(page)) {
     current.value = page;
@@ -34,6 +36,7 @@ function go(page: string) {
   if (import.meta.client) window.scrollTo({ top: 0, behavior: 'instant' });
 }
 function follow(event: MouseEvent) {
+  if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
   const anchor = (event.target as Element).closest('a');
   const href = anchor?.getAttribute('href');
   if (!href || !href.includes('academy=')) return;
@@ -46,38 +49,39 @@ function follow(event: MouseEvent) {
 <template>
   <div class="academy bg-default text-default" @click.capture="follow">
     <header class="border-b border-default">
-      <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
-        <button class="flex min-w-0 items-center gap-3" aria-label="Academy home" @click="go('home')">
+      <UContainer class="flex items-center justify-between gap-4 py-5">
+        <NuxtLink to="?academy=home" aria-label="Academy home" class="min-w-0 rounded focus-visible:outline-2 focus-visible:outline-primary">
           <img v-if="logo" :src="logo.src" :alt="logo.alt || name" class="max-h-7 max-w-32 sm:max-w-36">
-          <span v-else class="text-xl font-semibold tracking-tight text-highlighted">{{ name }}<span class="text-primary">.</span></span>
-          <span class="hidden border-l border-default pl-3 text-xs text-muted sm:inline">Learning together</span>
-        </button>
+          <span v-else class="text-xl font-semibold text-highlighted">{{ name }}</span>
+        </NuxtLink>
         <nav aria-label="Academy navigation" class="flex gap-2">
-          <UButton color="neutral" variant="ghost" class="hidden sm:inline-flex" @click="go('overview')">The course</UButton>
-          <UButton class="shrink-0 whitespace-nowrap" @click="go('lesson')">Start learning</UButton>
+          <UButton to="?academy=overview" color="neutral" variant="ghost" class="hidden sm:inline-flex">Course overview</UButton>
+          <UButton to="?academy=lesson" class="shrink-0">Start lesson</UButton>
         </nav>
-      </div>
+      </UContainer>
     </header>
-    <UAlert v-if="error || !course" class="m-8" color="error" title="Course example unavailable" description="The optional preview content collection must be included in this build." />
+    <UAlert v-if="error || !course" class="m-8" role="alert" color="error" title="Course unavailable" description="The course content could not be loaded." />
     <template v-else-if="current === 'home'">
-      <section class="mx-auto grid max-w-7xl items-center gap-12 px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.1fr_1fr]">
-        <div>
-          <UBadge variant="subtle" icon="i-lucide-sparkles">Make something worth sharing</UBadge>
-          <h1 class="mt-6 max-w-xl text-4xl font-semibold leading-tight tracking-tight text-highlighted sm:text-6xl">Small lessons.<br>Lasting skills.</h1>
-          <p class="mt-6 max-w-lg text-lg leading-8 text-muted">Learn by making. Build your confidence with a thoughtful project, practical checkpoints and a clear next step.</p>
-          <div class="mt-8 flex flex-wrap items-center gap-4"><UButton size="lg" trailing-icon="i-lucide-arrow-right" @click="go('overview')">Explore the course</UButton><span class="text-xs text-muted">At your pace. In your own way.</span></div>
-          <div class="mt-10 flex items-center gap-3"><UAvatarGroup><UAvatar v-for="person in ['Alex Morgan', 'Sam Taylor', 'Jamie Chen']" :key="person" :alt="person" /></UAvatarGroup><p class="text-sm text-muted">A place for curious minds.</p></div>
-        </div>
-        <div class="rounded-2xl border border-default bg-muted p-5 sm:p-8">
-          <div class="mb-6 flex items-center justify-between"><span class="text-xs font-medium uppercase tracking-widest text-muted">Your next chapter</span><UIcon name="i-lucide-book-open" class="size-5 text-primary" /></div>
-          <UCard><UBadge color="neutral" variant="subtle">Design foundations</UBadge><h2 class="mt-5 text-2xl font-semibold text-highlighted">{{ course.title }}</h2><p class="mt-3 leading-7 text-muted">{{ course.description }}</p><USeparator class="my-6" /><div class="flex items-center justify-between text-sm"><span class="text-muted">One focused lesson</span><span class="text-highlighted">{{ lessons[0]?.estimatedMinutes }} minutes</span></div><UButton class="mt-6" block @click="go('lesson')">Begin your first lesson</UButton></UCard>
-          <div class="mt-5 flex items-center gap-3 text-sm text-muted"><UIcon name="i-lucide-check-circle-2" class="size-5 text-primary" />Real code. Practical checkpoints.</div>
-        </div>
-      </section>
-      <section class="border-y border-default bg-muted/30"><div class="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:grid-cols-3 sm:px-8"><div v-for="(item, index) in [{ title: 'Learn with purpose', text: 'A clear outcome gives every small step meaning.' }, { title: 'Make it tangible', text: 'Watch a working example take shape as you read.' }, { title: 'See your progress', text: 'Check your understanding before moving forward.' }]" :key="item.title"><span class="font-mono text-xs text-primary">0{{ index + 1 }}</span><h2 class="mt-3 font-semibold text-highlighted">{{ item.title }}</h2><p class="mt-2 text-sm leading-6 text-muted">{{ item.text }}</p></div></div></section>
-      <section class="mx-auto max-w-7xl px-5 py-12 sm:px-8"><div class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-xs uppercase tracking-widest text-muted">A good place to begin</p><h2 class="mt-3 text-2xl font-semibold text-highlighted">Build the foundations.</h2></div><UButton color="neutral" variant="outline" @click="go('overview')">View learning path</UButton></div><button class="mt-6 flex w-full items-center justify-between gap-5 rounded-xl border border-default p-6 text-left hover:bg-muted" @click="go('lesson')"><div><span class="text-xs text-primary">Lesson 01 · {{ lessons[0]?.estimatedMinutes }} min</span><h3 class="mt-2 text-lg font-semibold text-highlighted">{{ lessons[0]?.title }}</h3><p class="mt-2 text-sm text-muted">{{ lessons[0]?.description }}</p></div><UIcon name="i-lucide-arrow-up-right" class="size-6 shrink-0 text-primary" /></button></section>
+      <UPageHero orientation="horizontal" title="Build your first interface" description="Practice layout, semantic colors and keyboard accessibility in a short course with working code." :ui="{ container: 'py-12 sm:py-16 lg:py-20 gap-10', title: 'text-4xl sm:text-5xl' }">
+        <template #links><UButton to="?academy=overview" size="lg" trailing-icon="i-lucide-arrow-right">Explore the course</UButton></template>
+        <UPageCard :description="course.description" variant="subtle" :ui="{ description: 'text-muted' }">
+          <template #leading><UBadge color="neutral" variant="subtle">{{ course.category }}</UBadge></template>
+          <template #title><h2 class="text-2xl">{{ course.title }}</h2></template>
+          <template #footer>
+            <div class="flex items-center justify-between gap-4 text-sm text-muted"><span>{{ lessons.length }} lesson</span><span>{{ lessons[0]?.estimatedMinutes }} min</span></div>
+            <UButton to="?academy=lesson" block class="mt-5">Start lesson</UButton>
+          </template>
+        </UPageCard>
+      </UPageHero>
+      <UPageSection title="Lessons" :ui="{ container: 'py-10 sm:py-12 lg:py-12 gap-6', title: 'text-2xl sm:text-2xl lg:text-2xl text-left' }">
+        <UPageCard v-for="(lesson, index) in lessons" :key="lesson.path" :to="lesson.path" :description="lesson.description" orientation="horizontal">
+          <template #leading><span class="text-sm text-muted">{{ String(index + 1).padStart(2, '0') }}</span></template>
+          <template #title><h3>{{ lesson.title }}</h3></template>
+          <span class="shrink-0 text-sm text-muted">{{ lesson.estimatedMinutes }} min</span>
+        </UPageCard>
+      </UPageSection>
     </template>
     <CourseReader v-else :course="course" :page="current === 'lesson' ? lessons[0] : course" :lessons="lessons" course-key="academy-example" :back="{ label: 'Academy', to: '?academy=home' }" />
-    <footer class="mx-auto flex max-w-7xl flex-wrap justify-between gap-3 border-t border-default px-5 py-6 text-xs text-muted sm:px-8"><span>{{ name }}<template v-if="name !== 'Academy'"> · Academy</template></span><span>Keep a little room for learning.</span></footer>
+    <footer class="border-t border-default"><UContainer class="py-6 text-xs text-muted">{{ name }}</UContainer></footer>
   </div>
 </template>
