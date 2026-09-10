@@ -55,8 +55,7 @@ function follow(event: MouseEvent) {
           <span v-else class="text-xl font-semibold text-highlighted">{{ name }}</span>
         </NuxtLink>
         <nav aria-label="Academy navigation" class="flex gap-2">
-          <UButton to="?academy=overview" color="neutral" variant="ghost" class="hidden sm:inline-flex">Course overview</UButton>
-          <UButton to="?academy=lesson" class="shrink-0">Start lesson</UButton>
+          <UButton to="?academy=overview" color="neutral" variant="ghost">Course overview</UButton>
         </nav>
       </UContainer>
     </header>
@@ -69,7 +68,7 @@ function follow(event: MouseEvent) {
           <template #title><h2 class="text-2xl">{{ course.title }}</h2></template>
           <template #footer>
             <div class="flex items-center justify-between gap-4 text-sm text-muted"><span>{{ lessons.length }} lesson</span><span>{{ lessons[0]?.estimatedMinutes }} min</span></div>
-            <UButton to="?academy=lesson" block class="mt-5">Start lesson</UButton>
+            <UButton to="?academy=lesson" color="neutral" variant="outline" block class="mt-5">Start lesson</UButton>
           </template>
         </UPageCard>
       </UPageHero>
