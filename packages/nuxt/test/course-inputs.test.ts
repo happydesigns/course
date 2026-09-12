@@ -78,3 +78,13 @@ describe("course input placeholders", () => {
   });
 
 });
+
+ describe("native Comark inputs", () => {
+  it("resolves binding nodes and placeholders split across highlighted tokens", () => {
+    const nodes = [["binding", { ":value": "$doc.input.project" }], ["pre", {}, ["code", {}, ["span", {}, "{{ $doc."], ["span", {}, "input.project }}"]]]];
+    const resolved = interpolateCourseInputPlaceholders(nodes, { project: "course-app" });
+    expect(resolved[0]).toBe("course-app");
+    expect(JSON.stringify(resolved)).not.toContain("{{");
+    expect(JSON.stringify(nodes)).toContain("{{");
+  });
+});

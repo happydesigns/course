@@ -123,7 +123,7 @@ const contentComponents = {
 };
 const contentData = computed(() => ({ input: courseInputs.resolvedValues.value }));
 const hasPageCodeStage = computed(
-  () => hasCodeStage.value && hasCourseCodeTree(renderedPage.value.body)
+  () => hasCodeStage.value && hasCourseCodeTree(renderedPage.value.nodes)
 );
 const codeTreeStorageKey = computed(() => `course:${props.courseKey}:code-tree-width`);
 const contentPageUi = computed(() => ({
@@ -301,10 +301,10 @@ function scrollToCourseAnchor(target: HTMLElement): void {
         />
 
         <slot name="body" :page="renderedPage" :data="contentData" :components="contentComponents">
-          <ContentRenderer
-            v-if="renderedPage.body"
+          <MarkdownDocument
+            v-if="renderedPage.nodes"
             :key="renderedPage.path"
-            :value="renderedPage"
+            :value="{ nodes: renderedPage.nodes }"
             :data="contentData"
             :components="contentComponents"
             :class="!isLesson ? 'w-full max-w-none' : undefined"

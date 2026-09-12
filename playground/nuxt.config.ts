@@ -1,12 +1,27 @@
 import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
+import { writeSnapshots } from "comark-content/build";
+import { createCourses } from "./content";
 
+const sourceDir = fileURLToPath(new URL('./content', import.meta.url));
+const courses = createCourses(sourceDir);
 export default defineNuxtConfig({
-  nitro: {
-    serverAssets: [{
-      baseName: "comark-course",
-      dir: fileURLToPath(new URL("./content/courses/abap-platform-rap120", import.meta.url))
-    }],
-    prerender: { routes: ["/comark/abap-platform-rap120", "/api/comark-course"] }
+  runtimeConfig: { courseContentDir: sourceDir },
+  hooks: {
+    "nitro:config": async (config) => {
+      const dir = resolve(config.buildDir!, "courses");
+      config.serverAssets ??= [];
+      config.serverAssets.push({ baseName: "courses", dir });
+      config.prerender ??= {};
+      config.prerender.routes ??= [];
+      config.prerender.routes.push("/api/content/snapshot.json", "/courses", "/academy");
+    },
+    "nitro:build:before": async (nitro) => {
+      // Nitro resolves the build-directory alias before server assets are read.
+      const asset = nitro.options.serverAssets.find(item => item.baseName === "courses")!;
+      await writeSnapshots(courses, { dir: asset.dir });
+      nitro.options.prerender.routes.push(...(await courses.list()).map(file => file.path));
+    }
   },
   compatibilityDate: "2026-08-10",
   extends: ["../packages/nuxt/preview"],
@@ -19,15 +34,6 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   typescript: {
     strict: true
-  },
-  content: {
-    build: {
-      markdown: {
-        highlight: {
-          langs: ["abap", "bash", "css", "json", "mdc", "ts", "typescript", "vue"]
-        }
-      }
-    }
   },
   icon: {
     clientBundle: {

@@ -57,7 +57,7 @@ export function useCourseReaderModel(options: {
     orderedLessons.value.findIndex((lesson) => lesson.path === currentPage.value.path)
   );
   const isLesson = computed(() => currentPage.value.pageType === "lesson");
-  const codeDocument = computed(() => extractCourseCodeDocument(currentPage.value.body));
+  const codeDocument = computed(() => extractCourseCodeDocument(currentPage.value.nodes));
   const codeSteps = computed(() => codeDocument.value.steps);
   const renderedPage = computed<CoursePage>(() => ({
     ...currentPage.value,
@@ -66,14 +66,14 @@ export function useCourseReaderModel(options: {
       currentPage.value.description,
       options.inputValues.value
     ),
-    body: interpolateCourseInputPlaceholders(codeDocument.value.body, options.inputValues.value)
+    nodes: interpolateCourseInputPlaceholders(codeDocument.value.body, options.inputValues.value)
   }));
   // Keep original placeholders so changing an input can resolve every file again.
   const historyPages = computed<CoursePage[]>(() =>
     orderedLessons.value
       .slice(0, Math.max(0, currentLessonIndex.value))
   );
-  const codeHistory = computed(() => historyPages.value.flatMap((page) => extractCourseCodeDocument(page.body).steps));
+  const codeHistory = computed(() => historyPages.value.flatMap((page) => extractCourseCodeDocument(page.nodes).steps));
   const breadcrumbItems = computed(() => {
     const root = toValue(options.breadcrumbRoot);
     const items = root
@@ -91,7 +91,7 @@ export function useCourseReaderModel(options: {
     to: renderedPage.value.path
   }));
   const navigationTocLinks = computed(() => {
-    const links = renderedPage.value.body?.toc?.links ?? [];
+    const links = renderedPage.value.meta?.toc?.links ?? [];
     return isLesson.value && links.length >= 2 ? links : [];
   });
   const pageAnchorLinks = computed<CoursePageAnchor[]>(() =>
@@ -152,7 +152,7 @@ function withDerivedCheckpoints(page: CoursePage): CoursePage {
     return page;
   }
 
-  const derivedCheckpoints = getCourseCheckpointIds(page.body);
+  const derivedCheckpoints = getCourseCheckpointIds(page.nodes);
   return {
     ...page,
     checkpoints: derivedCheckpoints.length > 0

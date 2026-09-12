@@ -1,6 +1,6 @@
 # Happydesigns Course
 
-Happydesigns Course is a deterministic toolkit for progressive technical courses. Authors write ordinary Markdown and MDC with Nuxt Content; learners read the explanation while an optional project view accumulates the files introduced by each step.
+Happydesigns Course is a deterministic toolkit for progressive technical courses. Authors write ordinary Markdown with Comark component syntax; learners read the explanation while an optional project view accumulates the files introduced by each step.
 
 The reader provides course navigation, lesson outlines, checkpoints, client-side progress, parameters, and a synchronized code workspace. It deliberately does not own application routes, a Content collection, product workflows, or a backend.
 
@@ -11,7 +11,7 @@ Runtime AI is out of scope. AI tools may assist authors during conversion, but p
 | Package | Responsibility |
 | --- | --- |
 | `@happydesigns/course` | Framework-independent Zod schemas, Markdown validation, interchange types, and CLI. |
-| `@happydesigns/course-nuxt` | Nuxt 4 layer with the Nuxt Content reader, Course-specific UI, collection schema, and variants. |
+| `@happydesigns/course-nuxt` | Nuxt 4 layer with the Comark reader, Course-specific UI, collection schema, and variants. |
 
 `@happydesigns/ui` owns shared visual foundations. `@happydesigns/nuxt-variants` owns generic capability resolution. Course-specific navigation, progress, checkpoints, and code-workspace behavior stay in this repository.
 
@@ -21,14 +21,14 @@ Runtime AI is out of scope. AI tools may assist authors during conversion, but p
 - pnpm 11
 - Nuxt 4.5+
 - Nuxt UI 4.11.1+
-- Nuxt Content 3.16+
+- Comark 0.6.2 and Comark Content 0.4
 
 ## Nuxt quick start
 
 Install the reader and extend its layer:
 
 ```bash
-pnpm add @happydesigns/course-nuxt
+pnpm add @happydesigns/course-nuxt comark-content@0.4.0 comark@0.6.2 shiki@4.3.1
 ```
 
 ```ts
@@ -38,74 +38,15 @@ export default defineNuxtConfig({
 });
 ```
 
-The application owns its Content collection. Use the package schema so frontmatter is validated and typed by Nuxt Content:
+The application owns its content source and routes. Define a Comark Content instance with the filesystem source, TOC and Shiki plugins; expose its standard `handler(toWebRequest(event))` in a Nitro API route. The [playground content configuration](playground/content.ts) and [Nuxt snapshot hook](playground/nuxt.config.ts) are the complete reference setup. The hook writes fresh snapshots into Nitro's build directory and bundles them as server assets.
 
-```ts
-// content.config.ts
-import { courseCollectionSchema } from "@happydesigns/course-nuxt/schemas";
-import { defineCollection, defineContentConfig } from "@nuxt/content";
-
-export default defineContentConfig({
-  collections: {
-    courses: defineCollection({
-      type: "page",
-      source: "courses/**/*.md",
-      schema: courseCollectionSchema
-    })
-  }
-});
-```
-
-A route adapter queries the current page, its overview, and the ordered lessons. The package intentionally leaves the collection name and URL structure to the application:
-
-```vue
-<script setup lang="ts">
-const route = useRoute();
-
-const { data } = await useAsyncData(
-  () => `course:${route.path}`,
-  async () => {
-    const page = await queryCollection("courses").path(route.path).first();
-    if (!page) return;
-
-    const overviewPath = page.pageType === "lesson"
-      ? page.path.split("/").slice(0, 3).join("/")
-      : page.path;
-    const course = page.pageType === "lesson"
-      ? await queryCollection("courses").path(overviewPath).first()
-      : page;
-    if (!course) return;
-
-    const lessons = course.courseId
-      ? await queryCollection("courses")
-          .where("courseId", "=", course.courseId)
-          .where("pageType", "=", "lesson")
-          .order("order", "ASC")
-          .all()
-      : [];
-
-    return { course, page, lessons };
-  },
-  { watch: [() => route.path] }
-);
-</script>
-
-<template>
-  <CourseReader
-    v-if="data"
-    :course="data.course"
-    :page="data.page"
-    :lessons="data.lessons"
-    :course-key="data.course.courseId ?? data.course.path"
-  />
-</template>
-```
+In an application route, `useCourseContent().all()` uses Comark Content's parser-free snapshot runtime and validates frontmatter before returning native `CoursePage` documents. Select the current page, overview and ordered lessons from that result, then pass them to `CourseReader`. The composable accepts a different API base path for applications with another source.
 
 The [playground route](playground/app/pages/courses/%5B...slug%5D.vue) is the complete reference adapter.
 
 ## Authoring
 
-Courses are directories of Nuxt Content pages:
+Courses are directories of Markdown pages:
 
 ```text
 content/courses/my-course/
@@ -182,15 +123,15 @@ Provide the adapter in an ancestor of `CourseReader`. Each provider owns both pe
 | Export | Use |
 | --- | --- |
 | package root | Nuxt layer used through `extends` |
-| `/schemas` | `courseCollectionSchema` for an application-owned Content collection |
+| `/schemas` | Source-independent course metadata and variant schemas |
 | `/types` | Course page, input, progress, link, and storage contracts |
 | `/storage` | Default storage implementation and persistence injection helpers |
 
 Reader components and composables under the Nuxt layer are auto-imported by Nuxt. `CourseReader` is the primary supported rendering entry point; smaller components remain composition details unless documented here.
 
-`CourseReader` also exposes a `body` slot with `{ page, data, components }`. A custom renderer must render the supplied `page.body` (already annotated with code-step indices and resolved inputs), pass `data` to its binding context, and register `components` for Course checkpoints and code intersections. Omitting the slot retains Nuxt Content rendering.
+`CourseReader` also exposes a `body` slot with `{ page, data, components }`. A custom renderer must render the supplied `page.nodes` (already annotated with code-step indices and resolved inputs), pass `data` to its binding context, and register `components` for Course checkpoints and code intersections. Omitting the slot uses Comark’s `MarkdownDocument` and the prose components registered by `@comark/nuxt`.
 
-The playground includes an isolated [Comark pilot](docs/comark-pilot.md) at `/comark/abap-platform-rap120`. The regular `/courses` routes and the core Markdown validator continue to use Nuxt Content/MDC.
+All regular course routes, the Academy preview, and the core Markdown validator now use Comark. See [Comark integration](docs/comark.md) for deployment details and the remaining inherited UI dependency.
 
 ## Development
 
@@ -232,7 +173,7 @@ memory store and never modifies normal learner storage or another preview frame.
 
 Maintain the example content and UI here once. Do not copy it into brand, id or a
 second playground. The global scene is loaded asynchronously; installing the normal
-Course layer does not activate the preview component or its content collection.
+Course layer does not activate the preview component or its content source.
 The scenario intentionally has one short lesson with real code and checkpoints;
 there is no parallel minimal rendering to keep in sync. This is a preview, not a
 production course or an automatic capability installer.

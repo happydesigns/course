@@ -1,21 +1,69 @@
 import { isDeepStrictEqual } from "node:util";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { comarkContent } from "comark-content/runtime";
+import snapshot from "comark-content/sources/snapshot";
 import { textContent } from "comark/utils";
 import type { Node } from "comark";
-import { parseComarkCourse } from "../server/utils/comark-course";
+import { fileURLToPath } from "node:url";
+import { createCourses } from "../content";
+import { createPreviewContent } from "../../packages/nuxt/preview/content";
+
+const courses = createCourses(fileURLToPath(new URL("../content", import.meta.url)));
+const previewContent = createPreviewContent(fileURLToPath(new URL("../../packages/nuxt/preview/content", import.meta.url)));
 
 // Unit tests alone cannot detect a stale prerender cache. Compare the shipped
 // snapshot with fresh parsing, including code metadata and highlighted tokens.
-const sources = new URL("../content/courses/abap-platform-rap120/", import.meta.url);
-const filenames = (await readdir(sources)).filter((name) => name.endsWith(".md")).sort();
-const expected = await Promise.all(filenames.map(async (filename) =>
-  parseComarkCourse(await readFile(new URL(filename, sources), "utf8"), filename)
-));
-const actual = JSON.parse(await readFile(new URL("../.output/public/api/comark-course", import.meta.url), "utf8"));
-if (!isDeepStrictEqual(normalize(actual), normalize(JSON.parse(JSON.stringify(expected))))) {
-  throw new Error("The built Comark snapshot does not match current source text, metadata or syntax palettes.");
+let count = 0;
+for (const [content, endpoint] of [[courses, "content"], [previewContent, "course-preview"]] as const) {
+  await content.init({ partial: false, ignoreCache: true });
+  const artifact = JSON.parse(await readFile(new URL("../.output/public/api/" + endpoint + "/snapshot.json", import.meta.url), "utf8"));
+  const shipped = comarkContent({ source: snapshot(artifact) });
+  for (const entry of await content.list()) {
+    const expected = await content.get(entry.path);
+    const actual = await shipped.get(entry.path);
+    if (!isDeepStrictEqual(normalize(actual), normalize(JSON.parse(JSON.stringify(expected))))) {
+      throw new Error("Built Comark document differs from current source: " + entry.path);
+    }
+    count++;
+  }
 }
-console.log(`Comark build matches ${filenames.length} current source documents.`);
+console.log("Comark build matches " + count + " current source documents.");
+
+// Prerendering can pass via raw sources even when server assets were omitted.
+// Start the actual server with missing source paths to verify deployment isolation.
+const serverPath = fileURLToPath(new URL("../.output/server/index.mjs", import.meta.url));
+if (existsSync(serverPath)) {
+  const server = spawn(process.execPath, [serverPath], {
+    cwd: fileURLToPath(new URL("../.output/server", import.meta.url)),
+    windowsHide: true,
+    env: { ...process.env, PORT: "0", NITRO_PORT: "0", HOST: "127.0.0.1", NITRO_HOST: "127.0.0.1",
+      NUXT_COURSE_CONTENT_DIR: serverPath + ".missing",
+      NUXT_COURSE_PREVIEW_CONTENT_DIR: serverPath + ".missing" },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  try {
+    const origin = await new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Production server did not start.")), 20000);
+      server.once("error", error => { clearTimeout(timeout); reject(error); });
+      server.once("exit", code => { clearTimeout(timeout); reject(new Error("Production server exited: " + code)); });
+      server.stdout.on("data", chunk => {
+        const match = String(chunk).match(/http:\/\/127\.0\.0\.1:\d+/);
+        if (match) { clearTimeout(timeout); resolve(match[0]); }
+      });
+    });
+    for (const [content, endpoint] of [[courses, "content"], [previewContent, "course-preview"]] as const) {
+      const response = await fetch(origin + "/api/" + endpoint + "/list", { signal: AbortSignal.timeout(10000) });
+      if (!response.ok) throw new Error("Production content needs local Markdown: " + await response.text());
+      const entries = await response.json() as unknown[];
+      if (entries.length !== (await content.list()).length) throw new Error("Production snapshot is incomplete: " + endpoint);
+    }
+    console.log("Production APIs work without local Markdown sources.");
+  } finally {
+    server.kill();
+  }
+}
 
 function normalize(value: unknown): unknown {
   if (Array.isArray(value)) {

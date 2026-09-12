@@ -24,7 +24,8 @@ watch(() => props.page, page => {
 // and original/draft previews never share progress even on the same origin.
 const memory = new Map<string, string>();
 provideCourseStorage({ getItem: key => memory.get(key) ?? null, setItem: (key, value) => { memory.set(key, value); } });
-const { data, error } = await useAsyncData('course-academy-example', () => queryCollection('coursePreview').all());
+const content = useCourseContent('/api/course-preview');
+const { data, error } = await useAsyncData('course-academy-example', () => content.all());
 const course = computed(() => {
   const item = data.value?.find(item => item.pageType === 'course');
   return item ? { ...item, path: previewPath('overview') } as CoursePage : undefined;

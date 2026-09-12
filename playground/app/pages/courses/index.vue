@@ -18,7 +18,8 @@ interface CoursePost {
   pageType?: "course" | "lesson";
 }
 
-const { data: coursePages } = await useAsyncData("course-catalog", () => queryCollection("courses").all());
+const content = useCourseContent();
+const { data: coursePages } = await useAsyncData("course-catalog", () => content.all());
 
 const posts = computed<CoursePost[]>(() => {
   return [...((coursePages.value ?? []) as CoursePost[])]
@@ -43,7 +44,7 @@ function courseLessons(post: CoursePost) {
 
 useSeoMeta({
   title: "Courses",
-  description: "Markdown courses rendered with Nuxt Content, MDC, Nuxt UI components, and synchronized code panes."
+  description: "Practical courses with step-by-step lessons and synchronized code examples."
 });
 
 function formatDate(date?: string): string {
@@ -63,7 +64,7 @@ function formatDate(date?: string): string {
   <UMain class="relative flex min-h-screen flex-col">
     <UPageHero
       title="Courses"
-      description="Markdown courses rendered with Nuxt Content, MDC, Nuxt UI components, and synchronized code panes."
+      description="Practical courses with step-by-step lessons and synchronized code examples."
       :ui="{ container: 'relative py-10 sm:py-16 lg:py-24' }"
     >
       <div aria-hidden="true" class="absolute inset-0 z-[-1] mx-4 border-x border-default sm:mx-6 lg:mx-8" />
