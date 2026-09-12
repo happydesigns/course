@@ -27,7 +27,7 @@
     "pretypecheck": "pnpm --filter @happydesigns/course build",
     "typecheck": "node ../../scripts/with-nuxt-lock.mjs pnpm run typecheck:nuxt",
     "typecheck:nuxt": "nuxt prepare && nuxt typecheck",
-    "pretest": "pnpm --filter @happydesigns/course build",
+    "pretest": "pnpm run build",
     "test": "vitest run --pool=threads --maxWorkers=1"
   },
   "dependencies": {
