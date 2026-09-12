@@ -141,7 +141,7 @@ pnpm dev
 pnpm verify
 ```
 
-`pnpm dev` starts the playground with a single-dev-server lock. `pnpm verify` runs unit tests, typechecking, all workspace builds, and deterministic example validation.
+`pnpm dev` starts the playground. `pnpm verify` runs unit tests, typechecking, all workspace builds, and deterministic example validation.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for repository boundaries, change expectations, and the validation matrix.
 

@@ -7,11 +7,11 @@
     "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
   },
   "scripts": {
-    "pretest": "node ../scripts/with-nuxt-lock.mjs pnpm exec nuxt prepare",
+    "pretest": "nuxt prepare",
     "test": "vitest run --maxWorkers=1",
-    "dev": "node ../scripts/with-nuxt-lock.mjs pnpm exec nuxt dev",
-    "build": "node ../scripts/with-nuxt-lock.mjs pnpm exec nuxt build && tsx scripts/verify-comark-build.ts",
-    "typecheck": "node ../scripts/with-nuxt-lock.mjs pnpm exec nuxt typecheck"
+    "dev": "nuxt dev",
+    "build": "nuxt build && tsx scripts/verify-comark-build.ts",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@happydesigns/course-nuxt": "workspace:*",

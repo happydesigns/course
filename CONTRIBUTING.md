@@ -77,7 +77,7 @@ pnpm --filter @happydesigns/course-nuxt test
 pnpm --filter @happydesigns/course-playground typecheck
 ```
 
-Nuxt commands that write generated workspace state run through `scripts/with-nuxt-lock.mjs`. The lock prevents a development server, build, or typecheck from mutating the same Nuxt Content and `.nuxt` artifacts concurrently. Stop the dev server before running a build or typecheck, and do not leave background development servers running after validation.
+Nuxt commands run directly through the Nuxt CLI. Stop the dev server before running a build or typecheck in the same checkout, since these commands share generated `.nuxt` artifacts. Use separate worktrees when running them concurrently, and do not leave background development servers running after validation.
 
 ## Change expectations
 
