@@ -45,6 +45,9 @@ function adaptNode(node: Node): Node {
   }
   const adapted: ElementNode = [tag, { ...attrs }, ...children.map(adaptNode)];
   // Keep copy text deterministic in Nuxt UI v4 instead of relying on its DOM fallback.
-  if (tag === "pre") adapted[1].code = textContent(node);
+  if (tag === "pre") {
+    adapted[1].code = textContent(node);
+    adapted[1].class = `${attrs.class ?? ""} comark-code`.trim();
+  }
   return adapted;
 }
