@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { CSSProperties } from "vue";
-import type { CourseCodeItem } from "../composables/useCourseCodeState";
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import type { CourseCodeItem } from "../types/course-code";
+import { computed, h, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import CourseCodeFile from "./CourseCodeFile.vue";
 import { useCourseStorage } from "../composables/useCourseStorage";
 
 interface CourseCodePanelConfig {
@@ -27,12 +28,18 @@ const emit = defineEmits<{
 }>();
 
 const storage = useCourseStorage();
+// Nuxt UI's VNode API stays at the presentation boundary.
+const treeItems = computed(() => props.items.map(({ label, file, icon }) => ({
+  label, icon, component: h(CourseCodeFile, { file })
+})));
 const panel = ref<HTMLElement | null>(null);
 const treeWidth = ref(props.config.defaultTreeWidth);
 const isResizing = ref(false);
 const mobileTreeCollapsed = ref(false);
 const activePath = computed({
-  get: () => props.modelValue,
+  // The mobile file list is a picker. Keeping its current value selected would
+  // make a tap on that file toggle selection off instead of opening the code.
+  get: () => props.mobile && props.mobileView === "files" ? undefined : props.modelValue,
   set: (value: string | undefined) => {
     if (typeof value === "string") {
       emit("update:modelValue", value);
@@ -176,7 +183,7 @@ onBeforeUnmount(() => {
 
     <ProseCodeTree
       v-model="activePath"
-      :items="items"
+      :items="treeItems"
       :expand-all="config.expandAll"
       :class="[
         'course-code-tree my-0 min-h-0 flex-1 rounded-none border-y-0 border-r-0 border-default',

@@ -3,6 +3,7 @@ import type { CourseBackLink, CoursePage } from "../types/course";
 import { computed, toValue } from "vue";
 import { getCourseCheckpointIds } from "../utils/course-content";
 import { interpolateCourseInputPlaceholders } from "../utils/course-inputs";
+import { extractCourseCodeDocument } from "../utils/course-code-document";
 
 export interface CourseSurroundLink {
   [key: string]: unknown;
@@ -56,6 +57,8 @@ export function useCourseReaderModel(options: {
     orderedLessons.value.findIndex((lesson) => lesson.path === currentPage.value.path)
   );
   const isLesson = computed(() => currentPage.value.pageType === "lesson");
+  const codeDocument = computed(() => extractCourseCodeDocument(currentPage.value.body));
+  const codeSteps = computed(() => codeDocument.value.steps);
   const renderedPage = computed<CoursePage>(() => ({
     ...currentPage.value,
     title: interpolateCourseInputPlaceholders(currentPage.value.title, options.inputValues.value),
@@ -63,15 +66,14 @@ export function useCourseReaderModel(options: {
       currentPage.value.description,
       options.inputValues.value
     ),
-    body: interpolateCourseInputPlaceholders(currentPage.value.body, options.inputValues.value)
+    body: interpolateCourseInputPlaceholders(codeDocument.value.body, options.inputValues.value)
   }));
-  // Keep code-history pages untouched. Their code VNodes are interpolated by
-  // the code workspace, which must retain the original placeholders so later
-  // input changes can re-render every previously collected file.
+  // Keep original placeholders so changing an input can resolve every file again.
   const historyPages = computed<CoursePage[]>(() =>
     orderedLessons.value
       .slice(0, Math.max(0, currentLessonIndex.value))
   );
+  const codeHistory = computed(() => historyPages.value.flatMap((page) => extractCourseCodeDocument(page.body).steps));
   const breadcrumbItems = computed(() => {
     const root = toValue(options.breadcrumbRoot);
     const items = root
@@ -134,6 +136,8 @@ export function useCourseReaderModel(options: {
     isLesson,
     renderedPage,
     historyPages,
+    codeSteps,
+    codeHistory,
     breadcrumbItems,
     currentBreadcrumb,
     navigationTocLinks,
