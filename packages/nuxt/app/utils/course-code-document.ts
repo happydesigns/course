@@ -71,15 +71,23 @@ function tokenText(tokens: CourseCodeToken[]): string {
 
 function readElement(value: unknown): ContentElement | undefined {
   if (Array.isArray(value) && typeof value[0] === "string" && isRecord(value[1])) {
-    return { tag: value[0], props: value[1], children: value.slice(2) };
+    return { tag: value[0], props: normalizeProps(value[1]), children: value.slice(2) };
   }
   if (isRecord(value) && typeof value.tag === "string") {
     return {
       tag: value.tag,
-      props: isRecord(value.props) ? value.props : isRecord(value.attributes) ? value.attributes : {},
+      props: normalizeProps(isRecord(value.props) ? value.props : isRecord(value.attributes) ? value.attributes : {}),
       children: Array.isArray(value.children) ? value.children : []
     };
   }
+}
+
+function normalizeProps(props: Record<string, unknown>): Record<string, unknown> {
+  // HAST uses className. As a Vue fallthrough attribute it would overwrite
+  // ProsePre's DOM class instead of merging with Nuxt UI's component styles.
+  if (!("className" in props)) return props;
+  const { className, ...rest } = props;
+  return { ...rest, class: props.class ? [props.class, className] : className };
 }
 
 function stringProp(value: unknown): string | undefined {

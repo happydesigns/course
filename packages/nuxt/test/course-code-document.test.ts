@@ -6,6 +6,19 @@ const pre = (filename: string, code: string) => ["pre", { filename, code, langua
 const step = (...files: unknown[]) => ["code-tree-intersection", {}, ...files];
 
 describe("code documents", () => {
+  it("normalizes HAST classes so Vue merges them with the code component theme", () => {
+    const { steps } = extractCourseCodeDocument({ value: [step([
+      "pre", { filename: "app.ts", code: "const a = 1", className: "language-ts shiki" },
+      ["code", {}, ["span", { className: ["line", "highlight"] }, "const a = 1"]]
+    ])] });
+    const file = steps[0]!.files[0]!;
+    expect(file.props.class).toBe("language-ts shiki");
+    expect(file.props).not.toHaveProperty("className");
+    expect(file.tokens).toEqual([{ tag: "code", props: {}, children: [
+      { tag: "span", props: { class: ["line", "highlight"] }, children: ["const a = 1"] }
+    ] }]);
+  });
+
   it("extracts every named file in source order, including files inside wrappers", () => {
     const body = { type: "minimark", value: [
       pre("outside.ts", "ignore"),
