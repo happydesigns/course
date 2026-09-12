@@ -5,7 +5,7 @@ export default defineContentConfig({
   collections: {
     coursePreview: defineCollection({
       type: 'page',
-      source: { cwd: fileURLToPath(new URL('./content', import.meta.url)), include: '*.md' },
+      source: { cwd: fileURLToPath(new URL('./content/courses', import.meta.url)), include: '**/*.md', prefix: '/courses' },
       schema: courseCollectionSchema
     })
   }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: 'course-preview', header: false, footer: false });
 interface CoursePostAuthor {
   name: string;
   to?: string;
@@ -18,7 +19,7 @@ interface CoursePost {
   pageType?: "course" | "lesson";
 }
 
-const { data: coursePages } = await useAsyncData("course-catalog", () => queryCollection("courses").all());
+const { data: coursePages } = await useAsyncData("course-catalog", () => queryCollection("coursePreview").all());
 
 const posts = computed<CoursePost[]>(() => {
   return [...((coursePages.value ?? []) as CoursePost[])]

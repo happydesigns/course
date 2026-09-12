@@ -1,4 +1,4 @@
 <script setup lang="ts">
-useSeoMeta({ title: 'Academy — Course example' });
+await navigateTo('/courses', { replace: true, redirectCode: 301 });
 </script>
-<template><CourseAcademyPreview /></template>
+<template><div /></template>

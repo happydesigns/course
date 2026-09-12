@@ -1,29 +1,35 @@
 <script setup lang="ts">
+definePageMeta({
+  layout: 'course-preview',
+  header: false,
+  footer: false,
+  key: route => route.path.replace(/\/+$/, '') || '/'
+});
 const route = useRoute();
-const routePath = computed(() => normalizeCourseRoutePath(route.path));
+const routePath = normalizeCourseRoutePath(route.path);
 
 const { data, error } = await useAsyncData(
-  computed(() => `course-page:${routePath.value}`),
+  `course-page:${routePath}`,
   async () => {
-    const page = await queryCollection("courses").path(routePath.value).first();
+    const page = await queryCollection("coursePreview").path(routePath).first();
 
     if (!page) {
-      return undefined;
+      throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: true });
     }
 
     const rootPath = page.pageType === "lesson"
       ? page.path.split("/").slice(0, 3).join("/")
       : page.path;
     const course = page.pageType === "lesson"
-      ? await queryCollection("courses").path(rootPath).first()
+      ? await queryCollection("coursePreview").path(rootPath).first()
       : page;
 
     if (!course) {
-      return undefined;
+      throw createError({ statusCode: 404, statusMessage: "Course not found", fatal: true });
     }
 
     const lessons = course.courseId
-      ? await queryCollection("courses")
+      ? await queryCollection("coursePreview")
           .where("courseId", "=", course.courseId)
           .where("pageType", "=", "lesson")
           .order("order", "ASC")
@@ -31,17 +37,16 @@ const { data, error } = await useAsyncData(
       : [];
 
     return { course, page, lessons };
-  },
-  { watch: [routePath] }
+  }
 );
 
 if (error.value) {
   throw createError(error.value);
 }
 
-if (!data.value) {
-  throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: true });
-}
+// A host can mount this route while its hydration is still completing. Only a
+// completed content query can establish a 404; an idle result is still loading.
+watch(error, value => { if (value) showError(value); });
 
 useSeoMeta({
   title: () => data.value?.page.title,
@@ -51,6 +56,7 @@ useSeoMeta({
 
 <template>
   <UMain>
+    <UProgress v-if="!data" aria-label="Loading course" class="max-w-xl mx-auto my-12" />
     <CourseReader
       v-if="data"
       :course="data.course"

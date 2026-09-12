@@ -11,15 +11,6 @@ export default defineNuxtConfig({
   typescript: {
     strict: true
   },
-  content: {
-    build: {
-      markdown: {
-        highlight: {
-          langs: ["abap", "bash", "css", "json", "mdc", "ts", "typescript", "vue"]
-        }
-      }
-    }
-  },
   icon: {
     clientBundle: {
       icons: [
