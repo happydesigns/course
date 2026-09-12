@@ -37,7 +37,9 @@ const treeWidth = ref(props.config.defaultTreeWidth);
 const isResizing = ref(false);
 const mobileTreeCollapsed = ref(false);
 const activePath = computed({
-  get: () => props.modelValue,
+  // The mobile file list is a picker. Keeping its current value selected would
+  // make a tap on that file toggle selection off instead of opening the code.
+  get: () => props.mobile && props.mobileView === "files" ? undefined : props.modelValue,
   set: (value: string | undefined) => {
     if (typeof value === "string") {
       emit("update:modelValue", value);
