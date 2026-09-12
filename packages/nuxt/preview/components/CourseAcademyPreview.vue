@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { CoursePage } from '../../app/types/course';
 import { provideCourseStorage } from '../../app/composables/useCourseStorage';
 
 const props = defineProps<{ page?: string; document?: { theme: { label: string }; brand: { claim?: string; assets?: { logos?: Record<string, { src: string; alt?: string }> } } }; mode?: string }>();
 const emit = defineEmits<{ navigate: [page: string] }>();
 const route = useRoute();
+const router = useRouter();
+const previewPath = (page: string) => router.resolve({ path: route.path, query: { ...route.query, academy: page } }).fullPath;
 const initialPage = props.page || String(route.query.academy || 'home');
 const current = ref(['home', 'overview', 'lesson'].includes(initialPage) ? initialPage : 'home');
 watch(() => props.page, page => {
@@ -21,28 +23,34 @@ provideCourseStorage({ getItem: key => memory.get(key) ?? null, setItem: (key, v
 const { data, error } = await useAsyncData('course-academy-example', () => queryCollection('coursePreview').all());
 const course = computed(() => {
   const item = data.value?.find(item => item.pageType === 'course');
-  return item ? { ...item, path: '?academy=overview' } as CoursePage : undefined;
+  return item ? { ...item, path: previewPath('overview') } as CoursePage : undefined;
 });
-const lessons = computed(() => (data.value ?? []).filter(item => item.pageType === 'lesson').map(item => ({ ...item, path: '?academy=lesson' }) as CoursePage));
+const lessons = computed(() => (data.value ?? []).filter(item => item.pageType === 'lesson').map(item => ({ ...item, path: previewPath('lesson') }) as CoursePage));
 const name = computed(() => props.document?.theme.label || 'Academy');
 const logo = computed(() => {
   const logos = props.document?.brand.assets?.logos;
   return (props.mode === 'dark' ? logos?.wordmarkInverse : undefined) ?? logos?.wordmark;
 });
-function go(page: string) {
+async function go(page: string, hash: string) {
   if (!['home', 'overview', 'lesson'].includes(page)) return;
   current.value = page;
   emit('navigate', page);
-  if (import.meta.client) window.scrollTo({ top: 0, behavior: 'instant' });
+  if (import.meta.client) {
+    await nextTick();
+    const target = hash ? window.document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    if (target) target.scrollIntoView({ behavior: 'instant' });
+    else window.scrollTo({ top: 0, behavior: 'instant' });
+  }
 }
 function follow(event: MouseEvent) {
   if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
   const anchor = (event.target as Element).closest('a');
   const href = anchor?.getAttribute('href');
   if (!href || !href.includes('academy=')) return;
-  const page = new URL(href, 'https://preview.invalid').searchParams.get('academy');
+  const url = new URL(href, 'https://preview.invalid');
+  const page = url.searchParams.get('academy');
   if (!page || !['home', 'overview', 'lesson'].includes(page)) return;
-  event.preventDefault(); event.stopPropagation(); go(page);
+  event.preventDefault(); event.stopPropagation(); void go(page, url.hash);
 }
 </script>
 
@@ -50,25 +58,25 @@ function follow(event: MouseEvent) {
   <div class="academy bg-default text-default" @click.capture="follow">
     <header class="border-b border-default">
       <UContainer class="flex items-center justify-between gap-4 py-5">
-        <NuxtLink to="?academy=home" aria-label="Academy home" class="min-w-0 rounded focus-visible:outline-2 focus-visible:outline-primary">
+        <NuxtLink :to="previewPath('home')" aria-label="Academy home" class="min-w-0 rounded focus-visible:outline-2 focus-visible:outline-primary">
           <img v-if="logo" :src="logo.src" :alt="logo.alt || name" class="max-h-7 max-w-32 sm:max-w-36">
           <span v-else class="text-xl font-semibold text-highlighted">{{ name }}</span>
         </NuxtLink>
         <nav aria-label="Academy navigation" class="flex gap-2">
-          <UButton to="?academy=overview" color="neutral" variant="ghost">Course overview</UButton>
+          <UButton :to="previewPath('overview')" color="neutral" variant="ghost">Course overview</UButton>
         </nav>
       </UContainer>
     </header>
     <UAlert v-if="error || !course" class="m-8" role="alert" color="error" title="Course unavailable" description="The course content could not be loaded." />
     <template v-else-if="current === 'home'">
       <UPageHero orientation="horizontal" title="Build your first interface" description="Practice layout, semantic colors and keyboard accessibility in a short course with working code." :ui="{ container: 'py-12 sm:py-16 lg:py-20 gap-10', title: 'text-4xl sm:text-5xl' }">
-        <template #links><UButton to="?academy=overview" size="lg" trailing-icon="i-lucide-arrow-right">Explore the course</UButton></template>
+        <template #links><UButton :to="previewPath('overview')" size="lg" trailing-icon="i-lucide-arrow-right">Explore the course</UButton></template>
         <UPageCard :description="course.description" variant="subtle" :ui="{ description: 'text-muted' }">
           <template #leading><UBadge color="neutral" variant="subtle">{{ course.category }}</UBadge></template>
           <template #title><h2 class="text-2xl">{{ course.title }}</h2></template>
           <template #footer>
             <div class="flex items-center justify-between gap-4 text-sm text-muted"><span>{{ lessons.length }} lesson</span><span>{{ lessons[0]?.estimatedMinutes }} min</span></div>
-            <UButton to="?academy=lesson" color="neutral" variant="outline" block class="mt-5">Start lesson</UButton>
+            <UButton :to="previewPath('lesson')" color="neutral" variant="outline" block class="mt-5">Start lesson</UButton>
           </template>
         </UPageCard>
       </UPageHero>
@@ -80,7 +88,7 @@ function follow(event: MouseEvent) {
         </UPageCard>
       </UPageSection>
     </template>
-    <CourseReader v-else :course="course" :page="current === 'lesson' ? lessons[0] : course" :lessons="lessons" course-key="academy-example" :back="{ label: 'Academy', to: '?academy=home' }" />
+    <CourseReader v-else :course="course" :page="current === 'lesson' ? lessons[0] : course" :lessons="lessons" course-key="academy-example" :back="{ label: 'Academy', to: previewPath('home') }" />
     <footer class="border-t border-default"><UContainer class="py-6 text-xs text-muted">{{ name }}</UContainer></footer>
   </div>
 </template>
