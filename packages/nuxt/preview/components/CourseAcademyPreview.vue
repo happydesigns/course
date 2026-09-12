@@ -10,6 +10,10 @@ const router = useRouter();
 const previewPath = (page: string) => router.resolve({ path: route.path, query: { ...route.query, academy: page } }).fullPath;
 const initialPage = props.page || String(route.query.academy || 'home');
 const current = ref(['home', 'overview', 'lesson'].includes(initialPage) ? initialPage : 'home');
+onNuxtReady(() => {
+  const location = router.currentRoute.value;
+  void go(props.page || String(location.query.academy || 'home'), location.hash);
+});
 watch(() => props.page, page => {
   if (page && ['home', 'overview', 'lesson'].includes(page)) {
     current.value = page;
@@ -37,6 +41,7 @@ async function go(page: string, hash: string) {
   emit('navigate', page);
   if (import.meta.client) {
     await nextTick();
+    await new Promise<void>(resolve => window.requestAnimationFrame(() => resolve()));
     const target = hash ? window.document.getElementById(decodeURIComponent(hash.slice(1))) : null;
     if (target) target.scrollIntoView({ behavior: 'instant' });
     else window.scrollTo({ top: 0, behavior: 'instant' });
