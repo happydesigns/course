@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CoursePage, CourseProgressData } from "../types/course";
+import type { CourseProgressLesson, CourseProgressData } from "../types/course";
 import { computed, onMounted, ref } from "vue";
 import {
   courseProgressStorageKey,
@@ -10,7 +10,7 @@ import { useCourseStorage } from "../composables/useCourseStorage";
 
 const props = defineProps<{
   courseId: string;
-  lessons: CoursePage[];
+  lessons: CourseProgressLesson[];
 }>();
 
 const storage = useCourseStorage();

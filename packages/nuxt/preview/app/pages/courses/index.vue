@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { courseCatalogEntry } from '../../utils/course-catalog';
 definePageMeta({ layout: 'course-preview', header: false, footer: false });
 interface CoursePostAuthor {
   name: string;
@@ -19,7 +20,14 @@ interface CoursePost {
   pageType?: "course" | "lesson";
 }
 
-const { data: coursePages } = await useAsyncData("course-catalog", () => queryCollection("coursePreview").all());
+const { data: coursePages } = await useAsyncData("course-catalog", async () => {
+  const pages = await queryCollection("coursePreview")
+    .select('path', 'title', 'description', 'date', 'category', 'authors', 'courseId', 'pageType', 'optional', 'checkpoints', 'body')
+    .all();
+  // SSR still derives checkpoints from the authoritative lesson body, but the
+  // catalog payload contains only display metadata and progress identifiers.
+  return pages.map(courseCatalogEntry);
+});
 
 const posts = computed<CoursePost[]>(() => {
   return [...((coursePages.value ?? []) as CoursePost[])]

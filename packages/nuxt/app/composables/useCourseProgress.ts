@@ -1,4 +1,4 @@
-import type { CoursePage, CourseProgressData } from "../types/course";
+import type { CoursePage, CourseProgressData, CourseProgressLesson } from "../types/course";
 import type { ComputedRef, InjectionKey, Ref } from "vue";
 import { computed, inject, provide } from "vue";
 import { getCourseCheckpointIds } from "../utils/course-content";
@@ -69,7 +69,7 @@ export function courseProgressStorageKey(courseId: string, prefix = "course-prog
 
 export function progressSummary(
   data: CourseProgressData,
-  lessons: readonly CoursePage[]
+  lessons: readonly CourseProgressLesson[]
 ): { completed: number; total: number; percent: number } {
   const required = lessons.filter((lesson) => !lesson.optional);
   const completed = required.filter((lesson) => data.completedLessons.includes(lesson.path)).length;
@@ -137,7 +137,7 @@ export function useCourseProgressMetrics(
 
 function requiredProgressSteps(
   data: CourseProgressData,
-  lessons: readonly CoursePage[]
+  lessons: readonly CourseProgressLesson[]
 ): { completed: number; total: number } {
   return lessons.reduce((summary, lesson) => {
     const checkpoints = checkpointIds(lesson);
@@ -160,7 +160,7 @@ function requiredProgressSteps(
   }, { completed: 0, total: 0 });
 }
 
-function checkpointIds(lesson: CoursePage): string[] {
+function checkpointIds(lesson: CourseProgressLesson): string[] {
   const derived = getCourseCheckpointIds(lesson.body);
   return derived.length > 0 ? derived : lesson.checkpoints ?? [];
 }
