@@ -1,6 +1,7 @@
 import type { CourseStorage } from "../types/course";
 import type { InjectionKey } from "vue";
 import { inject, provide } from "vue";
+import { provideCourseProgressStore } from "./useCourseProgressState";
 
 export type { CourseStorage } from "../types/course";
 
@@ -8,6 +9,7 @@ const courseStorageKey: InjectionKey<CourseStorage> = Symbol("course-storage");
 
 export function provideCourseStorage(storage: CourseStorage): void {
   provide(courseStorageKey, storage);
+  provideCourseProgressStore();
 }
 
 export function useCourseStorage(): CourseStorage {
