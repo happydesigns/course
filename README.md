@@ -17,11 +17,11 @@ Runtime AI is out of scope. AI tools may assist authors during conversion, but p
 
 ## Requirements
 
-- Node.js 22 or newer (Node.js 24 LTS recommended)
+- Node.js 22.19+, 24.11+, or 26+ (Node.js 24 LTS recommended)
 - pnpm 11
 - Nuxt 4.5+
-- Nuxt UI 4.10+
-- Nuxt Content 3.15+
+- Nuxt UI 4.11.1+
+- Nuxt Content 3.16+
 
 ## Nuxt quick start
 
@@ -173,7 +173,7 @@ const storage: CourseStorage = {
 provideCourseStorage(storage);
 ```
 
-Provide the adapter in an ancestor of `CourseReader`. Product-specific synchronization, accounts, permissions, and conflicts remain application concerns.
+Provide the adapter in an ancestor of `CourseReader`. Each provider owns both persistence and the live progress state of its descendant readers. Separate providers stay isolated even when they render the same course; readers without a custom provider share learner progress across routes in the Nuxt application. Product-specific synchronization, accounts, permissions, and conflicts remain application concerns.
 
 ## Public surface
 
