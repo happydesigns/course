@@ -1,4 +1,13 @@
+import { fileURLToPath } from "node:url";
+
 export default defineNuxtConfig({
+  nitro: {
+    serverAssets: [{
+      baseName: "comark-course",
+      dir: fileURLToPath(new URL("./content/courses/abap-platform-rap120", import.meta.url))
+    }],
+    prerender: { routes: ["/comark/abap-platform-rap120", "/api/comark-course"] }
+  },
   compatibilityDate: "2026-08-10",
   extends: ["../packages/nuxt/preview"],
   css: ["~/assets/css/main.css"],

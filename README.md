@@ -188,6 +188,10 @@ Provide the adapter in an ancestor of `CourseReader`. Each provider owns both pe
 
 Reader components and composables under the Nuxt layer are auto-imported by Nuxt. `CourseReader` is the primary supported rendering entry point; smaller components remain composition details unless documented here.
 
+`CourseReader` also exposes a `body` slot with `{ page, data, components }`. A custom renderer must render the supplied `page.body` (already annotated with code-step indices and resolved inputs), pass `data` to its binding context, and register `components` for Course checkpoints and code intersections. Omitting the slot retains Nuxt Content rendering.
+
+The playground includes an isolated [Comark pilot](docs/comark-pilot.md) at `/comark/abap-platform-rap120`. The regular `/courses` routes and the core Markdown validator continue to use Nuxt Content/MDC.
+
 ## Development
 
 ```bash
