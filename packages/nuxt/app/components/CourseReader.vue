@@ -2,7 +2,6 @@
 import type { CourseBackLink, CoursePage } from "../types/course";
 import { computed, onBeforeUnmount, watchEffect } from "vue";
 import CodeTreeIntersection from "./CodeTreeIntersection.vue";
-import CourseCodeSequence from "./CourseCodeSequence.vue";
 import CourseCheckpoint from "./CourseCheckpoint.vue";
 import { useCourseCodeWorkspace } from "../composables/useCourseCodeWorkspace";
 import { useCourseInputs } from "../composables/useCourseInputs";
@@ -90,7 +89,8 @@ const {
   currentLessonIndex,
   isLesson,
   renderedPage,
-  historyPages,
+  codeHistory,
+  codeSteps,
   breadcrumbItems,
   currentBreadcrumb,
   pageAnchorLinks,
@@ -112,6 +112,8 @@ const progress = useCourseProgressController({
 });
 const codeWorkspace = useCourseCodeWorkspace({
   currentPagePath: computed(() => currentPage.value.path),
+  history: codeHistory,
+  steps: codeSteps,
   inputValues: courseInputs.resolvedValues,
   inputsReady: courseInputs.ready
 });
@@ -120,10 +122,6 @@ const contentComponents = {
   "course-checkpoint": CourseCheckpoint
 };
 const contentData = computed(() => ({ input: courseInputs.resolvedValues.value }));
-// Completed pages form the stable project baseline. The current page is
-// registered by its visible code steps so later files are only revealed when
-// the reader reaches them.
-const codeCollectionPages = computed(() => historyPages.value);
 const hasPageCodeStage = computed(
   () => hasCodeStage.value && hasCourseCodeTree(renderedPage.value.body)
 );
@@ -292,12 +290,6 @@ function scrollToCourseAnchor(target: HTMLElement): void {
       />
 
       <UPageBody>
-        <CourseCodeHistory
-          v-if="hasPageCodeStage"
-          :pages="codeCollectionPages"
-          :data="contentData"
-        />
-
         <CourseProjectStage
           v-if="hasPageCodeStage"
           :model-value="codeWorkspace.activePath.value"
@@ -308,19 +300,14 @@ function scrollToCourseAnchor(target: HTMLElement): void {
           @update:model-value="codeWorkspace.activePath.value = $event"
         />
 
-        <CourseCodeSequence
+        <ContentRenderer
           v-if="renderedPage.body"
           :key="renderedPage.path"
-          :page-path="renderedPage.path"
-          progressive
-        >
-          <ContentRenderer
-            :value="renderedPage"
-            :data="contentData"
-            :components="contentComponents"
-            :class="!isLesson ? 'w-full max-w-none' : undefined"
-          />
-        </CourseCodeSequence>
+          :value="renderedPage"
+          :data="contentData"
+          :components="contentComponents"
+          :class="!isLesson ? 'w-full max-w-none' : undefined"
+        />
 
         <CourseCurriculum v-if="!isLesson" :lessons="orderedLessons" />
 

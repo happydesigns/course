@@ -1,125 +1,59 @@
-import type { VNode } from "vue";
-import { createVNode } from "vue";
-import {
-  interpolateCourseInputPlaceholders,
-  interpolateCourseTextSegments
-} from "./course-inputs";
+import type { CourseCodeFile, CourseCodeStep, CourseCodeToken, ResolvedCourseCodeFile } from "../types/course-code";
+import { interpolateCourseInputPlaceholders, interpolateCourseTextSegments } from "./course-inputs";
 
-export function interpolateCourseCodeVNode(
-  vnode: VNode,
-  inputValues: Readonly<Record<string, string>>
-): VNode {
-  const isHighlightedCodeBlock = typeof vnode.props?.code === "string";
-
-  return createVNode(
-    vnode.type,
-    interpolateCourseInputPlaceholders(vnode.props ?? {}, inputValues),
-    interpolateVNodeChildren(
-      vnode.children,
-      inputValues,
-      isHighlightedCodeBlock
-    ) as VNode["children"]
-  );
-}
-
-function interpolateVNodeChildren(
-  value: unknown,
-  inputValues: Readonly<Record<string, string>>,
-  interpolateAcrossTextNodes = false
-): unknown {
-  if (interpolateAcrossTextNodes && !isSlotChildren(value)) {
-    return interpolateVNodeTextForest(value, inputValues);
-  }
-
-  if (typeof value === "string") {
-    return interpolateCourseInputPlaceholders(value, inputValues);
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((entry) =>
-      isVNode(entry)
-        ? interpolateCourseCodeVNode(entry, inputValues)
-        : interpolateVNodeChildren(entry, inputValues)
-    );
-  }
-
-  if (isSlotChildren(value)) {
-    return Object.fromEntries(
-      Object.entries(value).map(([name, slot]) => [
-        name,
-        typeof slot === "function"
-          ? (...args: unknown[]) =>
-              interpolateAcrossTextNodes
-                ? interpolateVNodeTextForest(
-                    (slot as (...slotArgs: unknown[]) => unknown)(...args),
-                    inputValues
-                  )
-                : interpolateVNodeChildren(
-                    (slot as (...slotArgs: unknown[]) => unknown)(...args),
-                    inputValues
-                  )
-          : slot
-      ])
-    );
-  }
-
-  return value;
-}
-
-function interpolateVNodeTextForest(
-  value: unknown,
-  inputValues: Readonly<Record<string, string>>
-): unknown {
+export function resolveCourseCodeFile(
+  file: CourseCodeFile,
+  values: Readonly<Record<string, string>>
+): ResolvedCourseCodeFile {
   const segments: string[] = [];
-  collectVNodeTextSegments(value, segments);
-  const renderedSegments = interpolateCourseTextSegments(segments, inputValues);
-  let segmentIndex = 0;
-
-  function rebuild(entry: unknown): unknown {
-    if (typeof entry === "string") {
-      const rendered = renderedSegments[segmentIndex] ?? entry;
-      segmentIndex += 1;
-      return rendered;
-    }
-
-    if (Array.isArray(entry)) {
-      return entry.map(rebuild);
-    }
-
-    if (isVNode(entry)) {
-      return createVNode(
-        entry.type,
-        interpolateCourseInputPlaceholders(entry.props ?? {}, inputValues),
-        rebuild(entry.children) as VNode["children"]
-      );
-    }
-
-    return entry;
+  function collect(tokens: CourseCodeToken[]): void {
+    tokens.forEach((token) => typeof token === "string" ? segments.push(token) : collect(token.children));
   }
-
-  return rebuild(value);
+  collect(file.tokens);
+  const resolved = interpolateCourseTextSegments(segments, values);
+  let index = 0;
+  function resolve(tokens: CourseCodeToken[]): CourseCodeToken[] {
+    return tokens.map((token) => typeof token === "string"
+      ? resolved[index++] ?? token
+      : {
+          ...token,
+          props: interpolateCourseInputPlaceholders(token.props, values),
+          children: resolve(token.children)
+        });
+  }
+  return {
+    ...file,
+    sourcePath: file.path,
+    path: interpolateCourseInputPlaceholders(file.path, values),
+    code: interpolateCourseInputPlaceholders(file.code, values),
+    props: interpolateCourseInputPlaceholders(file.props, values),
+    tokens: resolve(file.tokens)
+  };
 }
 
-function collectVNodeTextSegments(value: unknown, segments: string[]): void {
-  if (typeof value === "string") {
-    segments.push(value);
-    return;
+/** Last write wins within the ordered lesson/step sequence. */
+export function courseCodeSnapshot<T extends CourseCodeFile>(
+  history: readonly CourseCodeStep<T>[],
+  current: readonly CourseCodeStep<T>[],
+  activeIndex: number | undefined
+): T[] {
+  const visible = activeIndex === undefined || !current.some((step) => step.index === activeIndex)
+    ? [] : current.filter((step) => step.index <= activeIndex);
+  const files = new Map<string, T>();
+  for (const step of [...history, ...visible]) {
+    for (const file of step.files) {
+      files.set(file.path, file);
+    }
   }
-
-  if (Array.isArray(value)) {
-    value.forEach((entry) => collectVNodeTextSegments(entry, segments));
-    return;
-  }
-
-  if (isVNode(value)) {
-    collectVNodeTextSegments(value.children, segments);
-  }
+  return [...files.values()];
 }
 
-function isSlotChildren(value: unknown): value is { default: () => VNode[] } {
-  return typeof value === "object" && value !== null && "default" in value;
-}
-
-function isVNode(value: unknown): value is VNode {
-  return typeof value === "object" && value !== null && "type" in value;
+export function resolveCourseCodeSteps(
+  steps: readonly CourseCodeStep[],
+  values: Readonly<Record<string, string>>
+): CourseCodeStep<ResolvedCourseCodeFile>[] {
+  return steps.map((step) => ({
+    ...step,
+    files: step.files.map((file) => resolveCourseCodeFile(file, values))
+  }));
 }

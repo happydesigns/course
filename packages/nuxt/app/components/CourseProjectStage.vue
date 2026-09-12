@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CourseCodeItem } from "../composables/useCourseCodeState";
+import type { CourseCodeItem } from "../types/course-code";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 interface CourseCodeStageConfig {
