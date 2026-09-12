@@ -44,6 +44,7 @@ const summary = computed(() =>
             size="md"
           >
             <UInput
+              :aria-label="input.label"
               :model-value="values[input.id] ?? ''"
               :placeholder="input.placeholder"
               :minlength="input.minLength"
