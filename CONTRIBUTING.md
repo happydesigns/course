@@ -4,7 +4,7 @@ Thanks for improving Happydesigns Course. This repository combines a framework-i
 
 ## Prerequisites
 
-- Node.js 22 or newer (Node.js 24 LTS recommended)
+- Node.js 22.19+, 24.11+, or 26+ (Node.js 24 LTS recommended)
 - pnpm 11 (the version is pinned in `package.json`)
 - A current checkout of sibling Happydesigns packages when working through local workspace overrides
 
@@ -20,7 +20,8 @@ pnpm install
 | --- | --- | --- |
 | `packages/course` | Generic schemas, Markdown parsing, deterministic validation, CLI, interchange types | Nuxt rendering, product workflows, SAP-specific fields |
 | `packages/nuxt` | Course reader composition, Course-specific components and state, Nuxt Content schema, Course variants | Routes, collection names, product persistence, generic UI primitives |
-| `playground` | Reference routes, Content collection, application shell, realistic course fixtures | Reusable package behavior |
+| `packages/nuxt/preview` | Optional shared Academy scenario, demo collection, fixtures and catalog metadata | Normal Course runtime defaults, production data or routes |
+| `playground` | Reference routes, application shell and application-owned course fixtures; consumes the shared Academy | Reusable package behavior or copies of the shared Academy |
 | `docs` | Authoring contract, product boundaries, conversion guidance | Duplicated live Cora policy |
 | `examples` | Small deterministic format examples | Production application logic |
 | `skills` | Source-preserving AI-assisted authoring workflow | Runtime AI behavior |
@@ -56,9 +57,14 @@ pnpm verify
 The command covers:
 
 - all Vitest suites
+- Nuxt runtime regression tests for progress sharing, preview isolation, and course changes
 - TypeScript and Nuxt typechecking
 - package and playground builds
 - deterministic validation of the checked-in course examples
+
+Pull requests run the same verification plus the GitHub Pages build. Nuxt runtime tests use a minimal fixture under `packages/nuxt/test/fixtures/runtime`, separate from the reader layer and playground build directories.
+
+Keep TypeScript on the 6.x line while `vue-tsc` relies on the JavaScript compiler API. A TypeScript 7 upgrade needs a compatible Vue compiler integration, not only a newer CLI.
 
 During development, narrower commands are available:
 

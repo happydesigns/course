@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   compatibilityDate: "2026-08-10",
-  extends: ["../packages/nuxt"],
+  extends: ["../packages/nuxt/preview"],
   css: ["~/assets/css/main.css"],
   app: {
     pageTransition: {

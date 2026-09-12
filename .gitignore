@@ -1,6 +1,7 @@
 node_modules/
 .pnpm-store/
 .nuxt/
+packages/nuxt/test/fixtures/runtime/.nuxtrc
 .output/
 dist/
 coverage/

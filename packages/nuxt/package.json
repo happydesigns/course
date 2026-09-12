@@ -5,19 +5,21 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=22.0.0"
+    "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
   },
   "main": "./nuxt.config.ts",
   "exports": {
     ".": "./nuxt.config.ts",
     "./schemas": "./schemas/index.ts",
     "./storage": "./app/composables/useCourseStorage.ts",
-    "./types": "./app/types/course.ts"
+    "./types": "./app/types/course.ts",
+    "./preview": "./preview/nuxt.config.ts"
   },
   "files": [
     "app",
     "schemas",
-    "nuxt.config.ts"
+    "nuxt.config.ts",
+    "preview"
   ],
   "scripts": {
     "prebuild": "pnpm --filter @happydesigns/course build",
@@ -25,25 +27,28 @@
     "pretypecheck": "pnpm --filter @happydesigns/course build",
     "typecheck": "node ../../scripts/with-nuxt-lock.mjs pnpm run typecheck:nuxt",
     "typecheck:nuxt": "nuxt prepare && nuxt typecheck",
-    "pretest": "pnpm --filter @happydesigns/course build",
+    "pretest": "pnpm run build",
     "test": "vitest run --pool=threads --maxWorkers=1"
   },
   "dependencies": {
     "@happydesigns/course": "workspace:^",
     "@happydesigns/nuxt-variants": "^0.2.0",
     "@happydesigns/ui": "0.19.3",
-    "@iconify-json/lucide": "^1.2.123",
-    "@nuxt/content": "^3.15.2",
-    "@nuxt/ui": "^4.10.0",
-    "zod": "^4.4.3"
+    "@iconify-json/lucide": "^1.2.131",
+    "@nuxt/content": "^3.16.0",
+    "@nuxt/ui": "^4.11.1",
+    "zod": "^4.6.2"
   },
   "devDependencies": {
-    "@types/node": "^22.20.1",
+    "@nuxt/test-utils": "4.3.2",
+    "@types/node": "^22.20.2",
+    "@vue/test-utils": "2.4.6",
+    "happy-dom": "20.14.5",
     "nuxt": "^4.5.2",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10",
-    "vue": "^3.5.41",
-    "vue-tsc": "3.3.9"
+    "vitest": "^5.0.0",
+    "vue": "^3.5.42",
+    "vue-tsc": "3.3.11"
   },
   "peerDependencies": {
     "nuxt": "^4.5.0"

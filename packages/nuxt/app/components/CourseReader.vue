@@ -270,7 +270,7 @@ function scrollToCourseAnchor(target: HTMLElement): void {
 
 <template>
   <div
-    :class="['min-h-screen overflow-x-clip', hasPageCodeStage && 'pb-24 lg:pb-0']"
+    :class="['course-reader min-h-screen overflow-x-clip', hasPageCodeStage && 'pb-24 lg:pb-0']"
     @click.capture="handleCourseAnchorClick"
   >
     <UPage class="mx-auto w-full max-w-[120rem]" :ui="contentPageUi">

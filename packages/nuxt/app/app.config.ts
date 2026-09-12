@@ -1,11 +1,4 @@
 export default defineAppConfig({
-  ui: {
-    prose: {
-      code: {
-        base: "max-w-full whitespace-normal wrap-anywhere"
-      }
-    }
-  },
   variants: {
     courseMetadata: {
       config: {

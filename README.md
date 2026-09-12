@@ -17,11 +17,11 @@ Runtime AI is out of scope. AI tools may assist authors during conversion, but p
 
 ## Requirements
 
-- Node.js 22 or newer (Node.js 24 LTS recommended)
+- Node.js 22.19+, 24.11+, or 26+ (Node.js 24 LTS recommended)
 - pnpm 11
 - Nuxt 4.5+
-- Nuxt UI 4.10+
-- Nuxt Content 3.15+
+- Nuxt UI 4.11.1+
+- Nuxt Content 3.16+
 
 ## Nuxt quick start
 
@@ -173,7 +173,7 @@ const storage: CourseStorage = {
 provideCourseStorage(storage);
 ```
 
-Provide the adapter in an ancestor of `CourseReader`. Product-specific synchronization, accounts, permissions, and conflicts remain application concerns.
+Provide the adapter in an ancestor of `CourseReader`. Each provider owns both persistence and the live progress state of its descendant readers. Separate providers stay isolated even when they render the same course; readers without a custom provider share learner progress across routes in the Nuxt application. Product-specific synchronization, accounts, permissions, and conflicts remain application concerns.
 
 ## Public surface
 
@@ -197,3 +197,36 @@ pnpm verify
 `pnpm dev` starts the playground with a single-dev-server lock. `pnpm verify` runs unit tests, typechecking, all workspace builds, and deterministic example validation.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for repository boundaries, change expectations, and the validation matrix.
+
+## Shared Academy example
+
+`@happydesigns/course-nuxt/preview` is an optional Nuxt layer for a complete, neutral
+Academy scenario. It owns `CourseAcademyPreview`, its two Markdown source documents,
+the `coursePreview` collection and an optional `idStudio.templates.course` catalog
+entry. The Course playground renders that exact component at `/academy`; a brand
+studio can opt into the same layer. Course has no dependency on id.
+
+The Studio catalog uses the capability name **Course** and stable key `course`.
+Academy names the example website, not a separate capability. Other capabilities
+follow the same convention: their optional `/preview` layer owns the catalog
+entry, page IDs, fixtures and renderer; the consuming Studio opts into the layer.
+
+```ts
+export default defineNuxtConfig({
+  extends: ['@happydesigns/course-nuxt/preview']
+})
+```
+
+Render `<CourseAcademyPreview />` in your own page. This layer does not add routes.
+It offers Home, Course overview and Lesson views and uses the actual CourseReader,
+checkpoint components and Markdown rendering. The component optionally receives a
+brand `document`, `mode` and a controlled `page`, and emits `navigate(pageId)`.
+All theme styling uses semantic Nuxt UI tokens. Progress stays in a per-instance
+memory store and never modifies normal learner storage or another preview frame.
+
+Maintain the example content and UI here once. Do not copy it into brand, id or a
+second playground. The global scene is loaded asynchronously; installing the normal
+Course layer does not activate the preview component or its content collection.
+The scenario intentionally has one short lesson with real code and checkpoints;
+there is no parallel minimal rendering to keep in sync. This is a preview, not a
+production course or an automatic capability installer.
