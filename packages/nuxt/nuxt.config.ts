@@ -15,8 +15,9 @@ export default defineNuxtConfig({
   modules: [
     "@happydesigns/nuxt-variants",
     "@nuxt/ui",
-    "@nuxt/content"
+    "@comark/nuxt"
   ],
+  ui: { content: true },
   variants: {
     registry: courseVariantRegistry
   }

@@ -1,7 +1,7 @@
 {
   "name": "@happydesigns/course-nuxt",
   "version": "0.1.0",
-  "description": "Nuxt Content reader layer for progressive technical courses.",
+  "description": "Comark reader layer for progressive technical courses.",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -23,20 +23,22 @@
   ],
   "scripts": {
     "prebuild": "pnpm --filter @happydesigns/course build",
-    "build": "node ../../scripts/with-nuxt-lock.mjs pnpm exec nuxt prepare",
+    "build": "nuxt prepare",
     "pretypecheck": "pnpm --filter @happydesigns/course build",
-    "typecheck": "node ../../scripts/with-nuxt-lock.mjs pnpm run typecheck:nuxt",
-    "typecheck:nuxt": "nuxt prepare && nuxt typecheck",
+    "typecheck": "nuxt prepare && nuxt typecheck",
     "pretest": "pnpm run build",
     "test": "vitest run --pool=threads --maxWorkers=1"
   },
   "dependencies": {
+    "@comark/nuxt": "0.6.2",
     "@happydesigns/course": "workspace:^",
     "@happydesigns/nuxt-variants": "^0.2.0",
     "@happydesigns/ui": "0.19.3",
     "@iconify-json/lucide": "^1.2.131",
-    "@nuxt/content": "^3.16.0",
     "@nuxt/ui": "^4.11.1",
+    "comark": "0.6.2",
+    "comark-content": "0.4.0",
+    "shiki": "4.3.1",
     "zod": "^4.6.2"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 # MDC Course Format
 
-A course is authored as a Nuxt Content directory. Its `0.index.md` file is the overview; each additional Markdown file is an independently addressable lesson. Markdown prose remains the source of truth, while Course components add navigation, progress, checkpoints, and the synchronized code workspace.
+A course is authored as a Comark directory. Its `0.index.md` file is the overview; each additional Markdown file is an independently addressable lesson. Markdown prose remains the source of truth, while Course components add navigation, progress, checkpoints, and the synchronized code workspace.
 
 ```text
 content/courses/my-course/
@@ -10,7 +10,7 @@ content/courses/my-course/
   3.verify-the-result.md
 ```
 
-The overview and every lesson are ordinary Nuxt Content pages. This keeps routing, headings, the table of contents, MDC rendering, and content querying in Nuxt Content rather than duplicating them in a custom course format.
+The overview and every lesson are ordinary Comark pages. Nuxt owns routes; Comark parses component syntax and headings, and Comark Content supplies documents without a second course format.
 
 The JSON schema remains available as a compatibility and interchange format for deterministic tools, but new authored courses should use Markdown.
 
@@ -106,11 +106,10 @@ define behavior for ZR_TRAVEL{{ $doc.input.groupId }}
 ```
 ````
 
-The supported binding form is Nuxt Content's native
+The supported Course binding form is
 `{{ $doc.input.<id> }}` syntax. Every binding must reference a declared input,
-every declared input must be used, and input IDs must be unique. Nuxt Content
-resolves bindings in normal Markdown through `ContentRenderer` data. The Course
-reader additionally resolves the same syntax in fenced code and filename metadata,
+every declared input must be used, and input IDs must be unique. The Course
+reader resolves native Comark binding nodes as well as fenced code and filename metadata,
 where CommonMark preserves it as literal text.
 
 Code pane state is declared with MDC:
@@ -150,7 +149,7 @@ metadata:
 
 Use `skills/happydesigns-course-author` for AI-assisted conversion from existing repositories, Markdown docs, or workshop notes. The skill should draft the `.md` source, preserve the source sequence, mark uncertainty with `needsReview`, and run deterministic validation when available.
 
-## Nuxt Content Reader
+## Comark Reader
 
 `@happydesigns/course-nuxt` exports `courseCollectionSchema`. Applications use that schema in their own page collection and pass the queried overview, current page, and ordered lessons to `CourseReader`. The package deliberately does not choose a collection name, source glob, route, or URL prefix.
 

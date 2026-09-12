@@ -6,7 +6,7 @@ interface ContentElement {
   children: unknown[];
 }
 
-/** The Nuxt Content/MDC adapter. Walk content children, never frontmatter or props. */
+/** The Comark document traversal (also accepts legacy MDC trees). Walk content children, never frontmatter or props. */
 export function extractCourseCodeDocument<T>(body: T): { body: T; steps: CourseCodeStep[] } {
   const steps: CourseCodeStep[] = [];
 

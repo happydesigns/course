@@ -1,4 +1,5 @@
-import type { PageCollectionItemBase } from "@nuxt/content";
+import type { Toc } from "comark/plugins/toc";
+import type { MarkdownDocument } from "comark";
 import type { CourseInput as CoreCourseInput } from "@happydesigns/course";
 
 export interface CourseAuthor {
@@ -12,7 +13,9 @@ export interface CourseAuthor {
 
 export type CourseInput = CoreCourseInput;
 
-export interface CoursePage extends PageCollectionItemBase {
+export interface CoursePage extends Pick<MarkdownDocument, "nodes"> {
+  meta: { toc?: Toc; [key: string]: unknown };
+  path: string;
   title: string;
   description: string;
   version?: string;

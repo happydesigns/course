@@ -1,11 +1,13 @@
 <script setup lang="ts">
+const content = useCourseContent();
 const route = useRoute();
 const routePath = computed(() => normalizeCourseRoutePath(route.path));
 
 const { data, error } = await useAsyncData(
   computed(() => `course-page:${routePath.value}`),
   async () => {
-    const page = await queryCollection("courses").path(routePath.value).first();
+    const pages = await content.all();
+    const page = pages.find(item => item.path === routePath.value);
 
     if (!page) {
       return undefined;
@@ -15,7 +17,7 @@ const { data, error } = await useAsyncData(
       ? page.path.split("/").slice(0, 3).join("/")
       : page.path;
     const course = page.pageType === "lesson"
-      ? await queryCollection("courses").path(rootPath).first()
+      ? pages.find(item => item.path === rootPath)
       : page;
 
     if (!course) {
@@ -23,11 +25,7 @@ const { data, error } = await useAsyncData(
     }
 
     const lessons = course.courseId
-      ? await queryCollection("courses")
-          .where("courseId", "=", course.courseId)
-          .where("pageType", "=", "lesson")
-          .order("order", "ASC")
-          .all()
+      ? pages.filter(item => item.courseId === course.courseId && item.pageType === "lesson").sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       : [];
 
     return { course, page, lessons };
