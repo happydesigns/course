@@ -99,6 +99,7 @@ Nuxt commands that write generated workspace state run through `scripts/with-nux
 
 - Keep `CourseReader` as the stable composition root.
 - Separate derived data, persistence, progress rules, and code-workspace state from presentation.
+- Keep parser-specific code extraction in `app/utils/course-code-document.ts`. The code-step model and snapshot utilities contain data, not Vue VNodes; `CourseCodePanel` adapts this model to Nuxt UI. New content engines should supply the same model, including syntax tokens and code metadata.
 - Preserve SSR and hydration safety; browser APIs must be accessed through guarded adapters.
 - Use Nuxt UI/Reka UI interaction primitives for popovers, slideovers, collapsibles, focus management, and keyboard behavior.
 - Test route changes without assuming the reader component is remounted.
