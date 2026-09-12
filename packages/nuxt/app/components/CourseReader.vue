@@ -300,14 +300,16 @@ function scrollToCourseAnchor(target: HTMLElement): void {
           @update:model-value="codeWorkspace.activePath.value = $event"
         />
 
-        <ContentRenderer
-          v-if="renderedPage.body"
-          :key="renderedPage.path"
-          :value="renderedPage"
-          :data="contentData"
-          :components="contentComponents"
-          :class="!isLesson ? 'w-full max-w-none' : undefined"
-        />
+        <slot name="body" :page="renderedPage" :data="contentData" :components="contentComponents">
+          <ContentRenderer
+            v-if="renderedPage.body"
+            :key="renderedPage.path"
+            :value="renderedPage"
+            :data="contentData"
+            :components="contentComponents"
+            :class="!isLesson ? 'w-full max-w-none' : undefined"
+          />
+        </slot>
 
         <CourseCurriculum v-if="!isLesson" :lessons="orderedLessons" />
 
