@@ -31,11 +31,11 @@ Runtime AI is not part of the course reader. The agent skill is an authoring aid
 
 ## Start with the Markdown file
 
-Create a `.md` file under `playground/content/courses`. The frontmatter describes the article. The body reads like a Nuxt UI blog post: short outcome, sections, commands, and file snapshots where they help.
+Create a `.md` file under `packages/nuxt/preview/content/courses`. The frontmatter describes the article. The body reads like a Nuxt UI blog post: short outcome, sections, commands, and file snapshots where they help.
 
 ::code-tree-intersection
 
-````mdc [playground/content/courses/my-course.md]
+````mdc [packages/nuxt/preview/content/courses/my-course.md]
 ---
 title: Build the Starter
 description: Convert existing setup notes into a progressive course.
@@ -180,7 +180,7 @@ When the skill is installed, call it directly by name. When it is only available
 
 ```md [prompts/convert-repository.md]
 Use $happydesigns-course-author to convert this repository into
-`playground/content/courses/my-course.md`.
+`packages/nuxt/preview/content/courses/my-course.md`.
 
 Preserve the source sequence.
 Do not invent missing steps.
@@ -192,7 +192,7 @@ Run the available validation command before finishing.
 
 ```md [prompts/convert-with-repo-local-skill.md]
 Use the skill at `skills/happydesigns-course-author` to convert the existing course notes
-in `docs/source-notes` into `playground/content/courses/source-notes.md`.
+in `docs/source-notes` into `packages/nuxt/preview/content/courses/source-notes.md`.
 
 Keep generated content reviewable and deterministic.
 ```
@@ -225,7 +225,7 @@ Review the output like a pull request. The important checks are source faithfuln
 
 ```bash [commands/validate.sh]
 pnpm validate:examples
-pnpm --filter @happydesigns/course course validate ../../playground/content/courses/my-course.md
+pnpm --filter @happydesigns/course course validate ../nuxt/preview/content/courses/my-course.md
 ```
 
 ::

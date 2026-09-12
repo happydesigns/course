@@ -1,16 +1,17 @@
 <script setup lang="ts">
-const content = useCourseContent();
+definePageMeta({ layout: 'course-preview', header: false, footer: false, key: route => route.path.replace(/\/+$/, '') || '/' });
+const content = useCourseContent('/api/course-preview');
 const route = useRoute();
-const routePath = computed(() => normalizeCourseRoutePath(route.path));
+const routePath = normalizeCourseRoutePath(route.path);
 
 const { data, error } = await useAsyncData(
-  computed(() => `course-page:${routePath.value}`),
+  `course-page:${routePath}`,
   async () => {
     const pages = await content.all();
-    const page = pages.find(item => item.path === routePath.value);
+    const page = pages.find(item => item.path === routePath);
 
     if (!page) {
-      return undefined;
+      throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: true });
     }
 
     const rootPath = page.pageType === "lesson"
@@ -21,7 +22,7 @@ const { data, error } = await useAsyncData(
       : page;
 
     if (!course) {
-      return undefined;
+      throw createError({ statusCode: 404, statusMessage: "Course not found", fatal: true });
     }
 
     const lessons = course.courseId
@@ -29,17 +30,16 @@ const { data, error } = await useAsyncData(
       : [];
 
     return { course, page, lessons };
-  },
-  { watch: [routePath] }
+  }
 );
 
 if (error.value) {
   throw createError(error.value);
 }
 
-if (!data.value) {
-  throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: true });
-}
+// A host can mount this route while its hydration is still completing. Only a
+// completed content query can establish a 404; an idle result is still loading.
+watch(error, value => { if (value) showError(value); });
 
 useSeoMeta({
   title: () => data.value?.page.title,
@@ -49,6 +49,7 @@ useSeoMeta({
 
 <template>
   <UMain>
+    <UProgress v-if="!data" aria-label="Loading course" class="max-w-xl mx-auto my-12" />
     <CourseReader
       v-if="data"
       :course="data.course"

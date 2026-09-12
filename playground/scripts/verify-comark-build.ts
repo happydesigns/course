@@ -7,16 +7,15 @@ import snapshot from "comark-content/sources/snapshot";
 import { textContent } from "comark/utils";
 import type { Node } from "comark";
 import { fileURLToPath } from "node:url";
-import { createCourses } from "../content";
+
 import { createPreviewContent } from "../../packages/nuxt/preview/content";
 
-const courses = createCourses(fileURLToPath(new URL("../content", import.meta.url)));
 const previewContent = createPreviewContent(fileURLToPath(new URL("../../packages/nuxt/preview/content", import.meta.url)));
 
 // Unit tests alone cannot detect a stale prerender cache. Compare the shipped
 // snapshot with fresh parsing, including code metadata and highlighted tokens.
 let count = 0;
-for (const [content, endpoint] of [[courses, "content"], [previewContent, "course-preview"]] as const) {
+for (const [content, endpoint] of [[previewContent, "course-preview"]] as const) {
   await content.init({ partial: false, ignoreCache: true });
   const artifact = JSON.parse(await readFile(new URL("../.output/public/api/" + endpoint + "/snapshot.json", import.meta.url), "utf8"));
   const shipped = comarkContent({ source: snapshot(artifact) });
@@ -39,7 +38,6 @@ if (existsSync(serverPath)) {
     cwd: fileURLToPath(new URL("../.output/server", import.meta.url)),
     windowsHide: true,
     env: { ...process.env, PORT: "0", NITRO_PORT: "0", HOST: "127.0.0.1", NITRO_HOST: "127.0.0.1",
-      NUXT_COURSE_CONTENT_DIR: serverPath + ".missing",
       NUXT_COURSE_PREVIEW_CONTENT_DIR: serverPath + ".missing" },
     stdio: ["ignore", "pipe", "pipe"]
   });
@@ -53,7 +51,7 @@ if (existsSync(serverPath)) {
         if (match) { clearTimeout(timeout); resolve(match[0]); }
       });
     });
-    for (const [content, endpoint] of [[courses, "content"], [previewContent, "course-preview"]] as const) {
+    for (const [content, endpoint] of [[previewContent, "course-preview"]] as const) {
       const response = await fetch(origin + "/api/" + endpoint + "/list", { signal: AbortSignal.timeout(10000) });
       if (!response.ok) throw new Error("Production content needs local Markdown: " + await response.text());
       const entries = await response.json() as unknown[];

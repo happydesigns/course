@@ -15,13 +15,13 @@ export default defineNuxtConfig({
       config.serverAssets.push({ baseName: 'course-preview', dir });
       config.prerender ??= {};
       config.prerender.routes ??= [];
-      config.prerender.routes.push("/api/course-preview/snapshot.json");
+      config.prerender.routes.push("/api/course-preview/snapshot.json", "/courses");
     },
     "nitro:build:before": async (nitro) => {
       // Nitro resolves the build-directory alias before server assets are read.
       const asset = nitro.options.serverAssets.find(item => item.baseName === "course-preview")!;
       await writeSnapshots(previewContent, { dir: asset.dir });
+      nitro.options.prerender.routes.push(...(await previewContent.list()).map(file => file.path));
     }
-  },
-  components: [{ path: fileURLToPath(new URL('./components', import.meta.url)), pathPrefix: false, global: true }]
+  }
 });

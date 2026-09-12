@@ -2,16 +2,16 @@ import { readFile, readdir } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { parseMarkdown as parseMdc } from "@nuxtjs/mdc/runtime";
 import { fileURLToPath } from "node:url";
-import { createCourses } from "../content";
+import { createPreviewContent } from "../../packages/nuxt/preview/content";
 import { extractCourseMarkdownSnapshots } from "../../packages/course/src/markdown";
 import { validateCourseMarkdown } from "../../packages/course/src/markdown";
 import { extractCourseCodeDocument } from "../../packages/nuxt/app/utils/course-code-document";
 import { getCourseCheckpointIds } from "../../packages/nuxt/app/utils/course-content";
 import { resolveCourseCodeSteps } from "../../packages/nuxt/app/utils/course-code";
 
-const courses = createCourses(fileURLToPath(new URL("../content", import.meta.url)));
+const courses = createPreviewContent(fileURLToPath(new URL("../../packages/nuxt/preview/content", import.meta.url)));
 
-const sources = new URL("../content/courses/abap-platform-rap120/", import.meta.url);
+const sources = new URL("../../packages/nuxt/preview/content/courses/abap-platform-rap120/", import.meta.url);
 const filenames = (await readdir(sources)).filter((name) => name.endsWith(".md")).sort();
 
 describe("Comark Content against the existing MDC authoring contract", () => {

@@ -38,11 +38,11 @@ export default defineNuxtConfig({
 });
 ```
 
-The application owns its content source and routes. Define a Comark Content instance with the filesystem source, TOC and Shiki plugins; expose its standard `handler(toWebRequest(event))` in a Nitro API route. The [playground content configuration](playground/content.ts) and [Nuxt snapshot hook](playground/nuxt.config.ts) are the complete reference setup. The hook writes fresh snapshots into Nitro's build directory and bundles them as server assets.
+The application owns its content source and routes. Define a Comark Content instance with the filesystem source, TOC and Shiki plugins; expose its standard `handler(toWebRequest(event))` in a Nitro API route. The [shared content configuration](packages/nuxt/preview/content.ts) and [Nuxt snapshot hook](packages/nuxt/preview/nuxt.config.ts) are the complete reference setup. The hook writes fresh snapshots into Nitro's build directory and bundles them as server assets.
 
 In an application route, `useCourseContent().all()` uses Comark Content's parser-free snapshot runtime and validates frontmatter before returning native `CoursePage` documents. Select the current page, overview and ordered lessons from that result, then pass them to `CourseReader`. The composable accepts a different API base path for applications with another source.
 
-The [playground route](playground/app/pages/courses/%5B...slug%5D.vue) is the complete reference adapter.
+The [shared course route](packages/nuxt/preview/app/pages/courses/%5B...slug%5D.vue) is the complete reference adapter.
 
 ## Authoring
 
@@ -145,18 +145,13 @@ pnpm verify
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for repository boundaries, change expectations, and the validation matrix.
 
-## Shared Academy example
+## Shared Course application
 
-`@happydesigns/course-nuxt/preview` is an optional Nuxt layer for a complete, neutral
-Academy scenario. It owns `CourseAcademyPreview`, its two Markdown source documents,
-the `coursePreview` collection and an optional `idStudio.templates.course` catalog
-entry. The Course playground renders that exact component at `/academy`; a brand
-studio can opt into the same layer. Course has no dependency on id.
-
-The Studio catalog uses the capability name **Course** and stable key `course`.
-Academy names the example website, not a separate capability. Other capabilities
-follow the same convention: their optional `/preview` layer owns the catalog
-entry, page IDs, fixtures and renderer; the consuming Studio opts into the layer.
+`@happydesigns/course-nuxt/preview` is the optional reference application. It owns
+`/courses`, the course and lesson routes beneath it, their shared header, and the
+`coursePreview` Comark Content source. The playground and Brand Studio both render
+these exact pages. There is no separate Academy interface; the old playground
+`/academy` URL redirects to `/courses`.
 
 ```ts
 export default defineNuxtConfig({
@@ -164,16 +159,23 @@ export default defineNuxtConfig({
 })
 ```
 
-Render `<CourseAcademyPreview />` in your own page. This layer does not add routes.
-It offers Home, Course overview and Lesson views and uses the actual CourseReader,
-checkpoint components and Markdown rendering. The component optionally receives a
-brand `document`, `mode` and a controlled `page`, and emits `navigate(pageId)`.
-All theme styling uses semantic Nuxt UI tokens. Progress stays in a per-instance
-memory store and never modifies normal learner storage or another preview frame.
+The existing RAP120 course, AI-chat tutorial and authoring guide live once in
+`packages/nuxt/preview/content/courses`. Their original source attribution and
+course content are preserved. The catalog opens the full CourseReader, including
+lesson navigation, checkpoints, parameters and the synchronized code workspace.
 
-Maintain the example content and UI here once. Do not copy it into brand, id or a
-second playground. The global scene is loaded asynchronously; installing the normal
-Course layer does not activate the preview component or its content source.
-The scenario intentionally has one short lesson with real code and checkpoints;
-there is no parallel minimal rendering to keep in sync. This is a preview, not a
-production course or an automatic capability installer.
+The layer registers `idStudio.templates.course` with `/courses` as its route and
+route boundary. ID's existing route-preview protocol applies the brand and
+synchronizes navigation. Course does not depend on ID. The preview layout reads
+brand identity from app config while retaining the same Course navigation and UI.
+
+Normal `/courses` visits use the existing browser-backed learner storage. Within
+Studio (`idPreview=course`), each frame's persistent layout provides an in-memory
+store for progress, parameters and reader preferences. Navigation between catalog
+and lessons keeps that store; original and draft frames never share learner state
+or modify the normal Course application's progress.
+
+Only the optional `/preview` entry adds routes, sample content and Studio metadata.
+The base Course layer remains route-free and collection-free for applications
+that supply their own routing and courses. Do not copy the reference application
+or create a simplified renderer for a separate host.

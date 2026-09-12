@@ -71,7 +71,7 @@ function cloneCourse(): typeof basicCourse {
 
 describe("validateCourseMarkdown", () => {
   it("accepts the basic Markdown course", async () => {
-    const sourceUrl = new URL("../../../playground/content/courses/how-to-build-an-ai-chat.md", import.meta.url);
+    const sourceUrl = new URL("../../nuxt/preview/content/courses/how-to-build-an-ai-chat.md", import.meta.url);
     const source = await readFile(sourceUrl, "utf8");
     const result = await validateCourseMarkdown(source, { filePath: fileURLToPath(sourceUrl) });
 

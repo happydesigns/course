@@ -38,6 +38,11 @@ export interface CourseProgressData {
   lastVisitedLesson?: string;
 }
 
+/** Catalogs can provide extracted checkpoints without a complete lesson body. */
+export type CourseProgressLesson = Pick<CoursePage, 'path' | 'optional' | 'checkpoints'> & {
+  nodes?: CoursePage['nodes'];
+};
+
 export interface CourseBackLink {
   label: string;
   to: string;

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { courseCatalogEntry } from '../../utils/course-catalog';
+definePageMeta({ layout: 'course-preview', header: false, footer: false });
 interface CoursePostAuthor {
   name: string;
   to?: string;
@@ -18,8 +20,8 @@ interface CoursePost {
   pageType?: "course" | "lesson";
 }
 
-const content = useCourseContent();
-const { data: coursePages } = await useAsyncData("course-catalog", () => content.all());
+const content = useCourseContent("/api/course-preview");
+const { data: coursePages } = await useAsyncData("course-catalog", async () => (await content.all()).map(courseCatalogEntry));
 
 const posts = computed<CoursePost[]>(() => {
   return [...((coursePages.value ?? []) as CoursePost[])]

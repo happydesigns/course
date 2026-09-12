@@ -19,9 +19,9 @@ pnpm install
 | Path | Owns | Must not own |
 | --- | --- | --- |
 | `packages/course` | Generic schemas, Markdown parsing, deterministic validation, CLI, interchange types | Nuxt rendering, product workflows, SAP-specific fields |
-| `packages/nuxt` | Course reader composition, Course-specific components and state, Nuxt Content schema, Course variants | Routes, collection names, product persistence, generic UI primitives |
-| `packages/nuxt/preview` | Optional shared Academy scenario, demo collection, fixtures and catalog metadata | Normal Course runtime defaults, production data or routes |
-| `playground` | Reference routes, application shell and application-owned course fixtures; consumes the shared Academy | Reusable package behavior or copies of the shared Academy |
+| `packages/nuxt` | Course reader composition, Course-specific components and state, Comark frontmatter schema, Course variants | Routes, collection names, product persistence, generic UI primitives |
+| `packages/nuxt/preview` | Shared reference /courses routes, layout, course fixtures, Comark content source and Studio route metadata | Normal Course runtime defaults or production course data |
+| `playground` | Development host for the shared Course reference application | Copies of the shared catalog, reader routes or course fixtures |
 | `docs` | Authoring contract, product boundaries, conversion guidance | Duplicated live Cora policy |
 | `examples` | Small deterministic format examples | Production application logic |
 | `skills` | Source-preserving AI-assisted authoring workflow | Runtime AI behavior |
@@ -35,7 +35,7 @@ Move a component to `happydesigns/ui` only when it is genuinely product-neutral.
 3. Keep Vue components focused. Put reusable state transitions and derived reader data in composables or pure utilities.
 4. Use Nuxt conventions (`app/components`, `app/composables`, `app/utils`) so layer consumers receive normal auto-import behavior.
 5. Prefer Nuxt UI components and semantic utilities such as `text-muted`, `bg-elevated`, and `border-default`. Check the generated `.nuxt/ui/<component>.ts` theme before overriding slots.
-6. Keep routes and `content.config.ts` in the consuming application or playground.
+6. Keep routes and Comark content sources in the consuming application or optional preview layer.
 7. Run the smallest relevant checks while iterating, then run the complete verification command before handing off.
 
 Use conventional commits with a focused scope, for example:
@@ -88,12 +88,12 @@ Nuxt commands run directly through the Nuxt CLI. Stop the dev server before runn
 - Preserve normalized, platform-independent file paths.
 - Update the format documentation when author-facing behavior changes.
 
-### Nuxt Content schema
+### Comark frontmatter schema
 
 - Reuse core Zod fragments instead of copying shared fields.
 - Keep the application-owned collection source and name configurable.
-- Verify frontmatter against both the Content schema and deterministic CLI where applicable.
-- Remember that fenced code is parsed as literal content; Course only adapts explicit `{{ $doc.input.<id> }}` bindings where Nuxt Content does not resolve them itself.
+- Verify frontmatter against both the reader schema and deterministic CLI where applicable.
+- Remember that fenced code is parsed as literal content; Course only adapts explicit `{{ $doc.input.<id> }}` bindings in Comark nodes and highlighted code tokens.
 
 ### Reader behavior
 
