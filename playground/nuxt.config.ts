@@ -34,6 +34,8 @@ export default defineNuxtConfig({
         "vscode-icons:file-type-npm",
         "vscode-icons:file-type-nuxt",
         "vscode-icons:file-type-pnpm",
+        "vscode-icons:file-type-shell",
+        "vscode-icons:file-type-text",
         "vscode-icons:file-type-typescript",
         "vscode-icons:file-type-vue",
         "vscode-icons:file-type-yarn"

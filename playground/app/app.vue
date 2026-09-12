@@ -25,6 +25,7 @@ const links = computed<NavigationMenuItem[]>(() => [{ label: "Academy example", 
     />
 
     <UHeader v-if="route.path !== '/academy'"
+      :menu="{ title: 'Course navigation' }"
       :ui="{
         container: 'max-w-[120rem] px-4 sm:px-6 lg:px-10 xl:px-12'
       }"
