@@ -72,7 +72,7 @@ export function createCourseInputValues(
 
 /**
  * Resolves only explicit Course placeholders. The caller controls which part
- * of the Nuxt Content document is traversed, so frontmatter and structural
+ * of the Comark document is traversed, so frontmatter and structural
  * document fields are never rewritten accidentally.
  */
 export function interpolateCourseInputPlaceholders<T>(
@@ -88,6 +88,11 @@ export function interpolateCourseInputPlaceholders<T>(
   }
 
   if (Array.isArray(value)) {
+    if (value[0] === "binding" && isPlainRecord(value[1])) {
+      const expression = value[1][":value"];
+      const match = typeof expression === "string" ? /^\$doc\.input\.([A-Za-z][A-Za-z0-9_.-]*)$/.exec(expression) : null;
+      if (match) return interpolateCourseInputPlaceholders("{{ " + expression + " }}", values) as T;
+    }
     if (isMinimarkCodeBlock(value)) {
       return interpolateMinimarkCodeBlock(value, values) as T;
     }
@@ -165,7 +170,7 @@ function cloneCourseValue(value: unknown): unknown {
 }
 
 function isMinimarkCodeBlock(value: unknown[]): boolean {
-  return value[0] === "pre" && isPlainRecord(value[1]) && typeof value[1].code === "string";
+  return value[0] === "pre" && isPlainRecord(value[1]);
 }
 
 function isMinimarkNode(value: unknown[]): boolean {

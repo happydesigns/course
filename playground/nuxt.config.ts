@@ -2,6 +2,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-08-10",
   extends: ["../packages/nuxt/preview"],
   css: ["~/assets/css/main.css"],
+  nitro: { prerender: { routes: ["/academy"] } },
   app: {
     pageTransition: {
       name: "course-page"

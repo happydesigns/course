@@ -123,7 +123,7 @@ const contentComponents = {
 };
 const contentData = computed(() => ({ input: courseInputs.resolvedValues.value }));
 const hasPageCodeStage = computed(
-  () => hasCodeStage.value && hasCourseCodeTree(renderedPage.value.body)
+  () => hasCodeStage.value && hasCourseCodeTree(renderedPage.value.nodes)
 );
 const codeTreeStorageKey = computed(() => `course:${props.courseKey}:code-tree-width`);
 const contentPageUi = computed(() => ({
@@ -300,14 +300,16 @@ function scrollToCourseAnchor(target: HTMLElement): void {
           @update:model-value="codeWorkspace.activePath.value = $event"
         />
 
-        <ContentRenderer
-          v-if="renderedPage.body"
-          :key="renderedPage.path"
-          :value="renderedPage"
-          :data="contentData"
-          :components="contentComponents"
-          :class="!isLesson ? 'w-full max-w-none' : undefined"
-        />
+        <slot name="body" :page="renderedPage" :data="contentData" :components="contentComponents">
+          <MarkdownDocument
+            v-if="renderedPage.nodes"
+            :key="renderedPage.path"
+            :value="{ nodes: renderedPage.nodes }"
+            :data="contentData"
+            :components="contentComponents"
+            :class="!isLesson ? 'w-full max-w-none' : undefined"
+          />
+        </slot>
 
         <CourseCurriculum v-if="!isLesson" :lessons="orderedLessons" />
 

@@ -20,14 +20,8 @@ interface CoursePost {
   pageType?: "course" | "lesson";
 }
 
-const { data: coursePages } = await useAsyncData("course-catalog", async () => {
-  const pages = await queryCollection("coursePreview")
-    .select('path', 'title', 'description', 'date', 'category', 'authors', 'courseId', 'pageType', 'optional', 'checkpoints', 'body')
-    .all();
-  // SSR still derives checkpoints from the authoritative lesson body, but the
-  // catalog payload contains only display metadata and progress identifiers.
-  return pages.map(courseCatalogEntry);
-});
+const content = useCourseContent("/api/course-preview");
+const { data: coursePages } = await useAsyncData("course-catalog", async () => (await content.all()).map(courseCatalogEntry));
 
 const posts = computed<CoursePost[]>(() => {
   return [...((coursePages.value ?? []) as CoursePost[])]
@@ -52,7 +46,7 @@ function courseLessons(post: CoursePost) {
 
 useSeoMeta({
   title: "Courses",
-  description: "Markdown courses rendered with Nuxt Content, MDC, Nuxt UI components, and synchronized code panes."
+  description: "Practical courses with step-by-step lessons and synchronized code examples."
 });
 
 function formatDate(date?: string): string {
@@ -72,7 +66,7 @@ function formatDate(date?: string): string {
   <UMain class="relative flex min-h-screen flex-col">
     <UPageHero
       title="Courses"
-      description="Markdown courses rendered with Nuxt Content, MDC, Nuxt UI components, and synchronized code panes."
+      description="Practical courses with step-by-step lessons and synchronized code examples."
       :ui="{ container: 'relative py-10 sm:py-16 lg:py-24' }"
     >
       <div aria-hidden="true" class="absolute inset-0 z-[-1] mx-4 border-x border-default sm:mx-6 lg:mx-8" />

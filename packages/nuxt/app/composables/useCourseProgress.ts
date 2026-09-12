@@ -161,7 +161,7 @@ function requiredProgressSteps(
 }
 
 function checkpointIds(lesson: CourseProgressLesson): string[] {
-  const derived = getCourseCheckpointIds(lesson.body);
+  const derived = getCourseCheckpointIds(lesson.nodes);
   return derived.length > 0 ? derived : lesson.checkpoints ?? [];
 }
 

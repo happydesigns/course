@@ -1,4 +1,4 @@
-import { parseMarkdown } from "@nuxtjs/mdc/runtime";
+import { parseMarkdown } from "comark";
 import { z } from "zod";
 import {
   CourseDateSchema,
@@ -64,11 +64,11 @@ export interface CourseMarkdownValidationOptions {
   inheritedInputs?: readonly CourseInput[];
 }
 
-interface MdcNode {
+interface MarkdownNode {
   type?: string;
   tag?: string;
   props?: Record<string, unknown>;
-  children?: MdcNode[];
+  children?: MarkdownNode[];
   value?: string;
 }
 
@@ -115,9 +115,7 @@ export async function validateCourseMarkdown(
   let parsed: Awaited<ReturnType<typeof parseMarkdown>>;
 
   try {
-    parsed = await parseMarkdown(normalizedSource, undefined, {
-      fileOptions: options.filePath ? { path: options.filePath } : undefined
-    });
+    parsed = await parseMarkdown(normalizedSource, { autoClose: false });
   } catch (error) {
     return {
       success: false,
@@ -134,7 +132,7 @@ export async function validateCourseMarkdown(
     };
   }
 
-  const frontmatter = CourseMarkdownFrontmatterSchema.safeParse(parsed.data);
+  const frontmatter = CourseMarkdownFrontmatterSchema.safeParse(parsed.frontmatter);
 
   if (!frontmatter.success) {
     issues.push(
@@ -153,10 +151,10 @@ export async function validateCourseMarkdown(
         frontmatter.data.pageType === "lesson" && !localInputs && !options.inheritedInputs,
       requireConfiguredUsage: frontmatter.data.pageType !== "course" && Boolean(localInputs)
     });
-    validateCourseCheckpoints(parsed.body, frontmatter.data.checkpoints, issues);
+    validateCourseCheckpoints(parsed.nodes, frontmatter.data.checkpoints, issues);
   }
 
-  const snapshots = extractCourseMarkdownSnapshots(parsed.body, issues);
+  const snapshots = extractCourseMarkdownSnapshots(parsed.nodes, issues);
 
   return {
     success: issues.length === 0,
@@ -232,7 +230,7 @@ function validateCourseCheckpoints(
   const rendered = new Set<string>();
   const root = asNode(body);
 
-  const walk = (node: MdcNode): void => {
+  const walk = (node: MarkdownNode): void => {
     if (isElement(node) && node.tag === CHECKPOINT_TAG) {
       const id = stringProp(node.props?.id);
 
@@ -294,9 +292,9 @@ export function extractCourseMarkdownSnapshots(
   let currentTitle = "Course files";
   let codeTreeIndex = 0;
 
-  const walk = (node: MdcNode): void => {
+  const walk = (node: MarkdownNode): void => {
     if (isElement(node) && node.tag && HEADING_TAGS.has(node.tag)) {
-      currentTitle = flattenNodeText(node);
+      currentTitle = flattenNodeText(node).trim();
     }
 
     if (isElement(node) && node.tag === CODE_TREE_TAG) {
@@ -327,14 +325,14 @@ export function extractCourseMarkdownSnapshots(
 }
 
 function collectCodeFiles(
-  node: MdcNode,
+  node: MarkdownNode,
   codeTreeIndex: number,
   issues: CourseMarkdownIssue[]
 ): CourseMarkdownFile[] {
   const files: CourseMarkdownFile[] = [];
   let preIndex = 0;
 
-  const walk = (child: MdcNode): void => {
+  const walk = (child: MarkdownNode): void => {
     if (isElement(child) && child.tag === "pre") {
       const file = codeFileFromPre(child, codeTreeIndex, preIndex, issues);
       preIndex += 1;
@@ -363,7 +361,7 @@ function collectCodeFiles(
 }
 
 function codeFileFromPre(
-  node: MdcNode,
+  node: MarkdownNode,
   codeTreeIndex: number,
   preIndex: number,
   issues: CourseMarkdownIssue[]
@@ -406,20 +404,29 @@ function hasDelimitedFrontmatter(source: string): boolean {
   return source.startsWith("---\n") && source.indexOf("\n---\n", 4) !== -1;
 }
 
-function flattenNodeText(node: MdcNode): string {
+function flattenNodeText(node: MarkdownNode): string {
   if (typeof node.value === "string") {
     return node.value;
   }
 
-  return (node.children ?? []).map((child) => flattenNodeText(child)).join("").trim();
+  return (node.children ?? []).map((child) => flattenNodeText(child)).join("");
 }
 
-function isElement(node: MdcNode): boolean {
+function isElement(node: MarkdownNode): boolean {
   return node.type === "element";
 }
 
-function asNode(value: unknown): MdcNode | undefined {
-  return isRecord(value) ? (value as MdcNode) : undefined;
+function asNode(value: unknown): MarkdownNode | undefined {
+  if (typeof value === "string") return { type: "text", value };
+  if (Array.isArray(value)) {
+    const element = typeof value[0] === "string" && isRecord(value[1]);
+    return {
+      type: element ? "element" : "root",
+      ...(element ? { tag: value[0], props: value[1] } : {}),
+      children: (element ? value.slice(2) : value).map(asNode).filter((node): node is MarkdownNode => Boolean(node))
+    };
+  }
+  return isRecord(value) ? (value as MarkdownNode) : undefined;
 }
 
 function stringProp(value: unknown): string | undefined {

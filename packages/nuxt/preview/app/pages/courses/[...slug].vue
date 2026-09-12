@@ -1,17 +1,14 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'course-preview',
-  header: false,
-  footer: false,
-  key: route => route.path.replace(/\/+$/, '') || '/'
-});
+definePageMeta({ layout: 'course-preview', header: false, footer: false, key: route => route.path.replace(/\/+$/, '') || '/' });
+const content = useCourseContent('/api/course-preview');
 const route = useRoute();
 const routePath = normalizeCourseRoutePath(route.path);
 
 const { data, error } = await useAsyncData(
   `course-page:${routePath}`,
   async () => {
-    const page = await queryCollection("coursePreview").path(routePath).first();
+    const pages = await content.all();
+    const page = pages.find(item => item.path === routePath);
 
     if (!page) {
       throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: true });
@@ -21,7 +18,7 @@ const { data, error } = await useAsyncData(
       ? page.path.split("/").slice(0, 3).join("/")
       : page.path;
     const course = page.pageType === "lesson"
-      ? await queryCollection("coursePreview").path(rootPath).first()
+      ? pages.find(item => item.path === rootPath)
       : page;
 
     if (!course) {
@@ -29,11 +26,7 @@ const { data, error } = await useAsyncData(
     }
 
     const lessons = course.courseId
-      ? await queryCollection("coursePreview")
-          .where("courseId", "=", course.courseId)
-          .where("pageType", "=", "lesson")
-          .order("order", "ASC")
-          .all()
+      ? pages.filter(item => item.courseId === course.courseId && item.pageType === "lesson").sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       : [];
 
     return { course, page, lessons };

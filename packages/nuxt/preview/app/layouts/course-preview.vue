@@ -7,7 +7,8 @@ const config = useAppConfig();
 
 // This layout persists across catalog/lesson navigation. Studio frames each
 // receive their own store; the normal /courses application keeps browser storage.
-if (route.query.idPreview === 'course') {
+const isPreview = useNuxtApp().$coursePreviewMode || route.query.idPreview === 'course';
+if (isPreview) {
   const memory = new Map<string, string>();
   provideCourseStorage({
     getItem: key => memory.get(key) ?? null,

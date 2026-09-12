@@ -8,6 +8,6 @@ const resolveCourseVariantSchema = createVariantSchemaResolver(
 );
 
 /**
- * Source-agnostic schema for consumer-owned Nuxt Content page collections.
+ * Source-agnostic schema for consumer-owned Comark page collections.
  */
 export const courseCollectionSchema = resolveCourseVariantSchema(["course"]);

@@ -8,17 +8,10 @@ import {
 
 function page(overrides: Partial<CoursePage>): CoursePage {
   return {
-    id: "course.md",
-    stem: "course",
-    extension: "md",
     path: "/courses/demo",
     title: "Demo {{ $doc.input.suffix }}",
     description: "Learn {{ $doc.input.suffix }}",
-    body: {
-      type: "minimark",
-      value: [],
-      toc: { title: "", searchDepth: 2, depth: 2, links: [] }
-    },
+    nodes: [], meta: { toc: { title: "", searchDepth: 2, depth: 2, links: [] } },
     ...overrides
   } as CoursePage;
 }
@@ -41,15 +34,13 @@ describe("course reader model", () => {
   const course = page({ pageType: "course", courseId: "demo" });
   const lessons = [
     page({
-      id: "second.md",
-      path: "/courses/demo/second",
+        path: "/courses/demo/second",
       pageType: "lesson",
       order: 2,
       title: "Second"
     }),
     page({
-      id: "first.md",
-      path: "/courses/demo/first",
+        path: "/courses/demo/first",
       pageType: "lesson",
       order: 1,
       title: "First"
@@ -102,22 +93,16 @@ describe("course reader model", () => {
   });
 
   it("keeps history page bodies unchanged for workspace interpolation", () => {
-    const historyBody = {
-      type: "minimark",
-      value: [["pre", { filename: "project/{{ $doc.input.suffix }}.ts" }, "code"]],
-      toc: { title: "", searchDepth: 2, depth: 2, links: [] }
-    } as CoursePage["body"];
+    const historyBody = [["pre", { filename: "project/{{ $doc.input.suffix }}.ts" }, "code"]] as CoursePage["nodes"];
     const historyLesson = page({
-      id: "history.md",
-      path: "/courses/demo/history",
+        path: "/courses/demo/history",
       pageType: "lesson",
       order: 1,
       title: "History",
-      body: historyBody
+      nodes: historyBody
     });
     const currentLesson = page({
-      id: "current.md",
-      path: "/courses/demo/current",
+        path: "/courses/demo/current",
       pageType: "lesson",
       order: 2,
       title: "Current"
@@ -130,8 +115,8 @@ describe("course reader model", () => {
       breadcrumbRoot: { label: "Courses", to: "/courses" }
     });
 
-    expect(model.historyPages.value[0]?.body).toBe(historyBody);
-    expect(model.historyPages.value[0]?.body?.value).toContainEqual([
+    expect(model.historyPages.value[0]?.nodes).toBe(historyBody);
+    expect(model.historyPages.value[0]?.nodes).toContainEqual([
       "pre",
       { filename: "project/{{ $doc.input.suffix }}.ts" },
       "code"
@@ -142,14 +127,10 @@ describe("course reader model", () => {
     const lesson = page({
       path: "/courses/demo/checkpoints",
       pageType: "lesson",
-      body: {
-        type: "minimark",
-        value: [
+      nodes: [
           ["course-checkpoint", { id: "first" }, "First"],
           ["course-checkpoint", { id: "second" }, "Second"]
-        ],
-        toc: { title: "", searchDepth: 2, depth: 2, links: [] }
-      }
+        ]
     });
     const model = useCourseReaderModel({
       course,
@@ -167,9 +148,8 @@ describe("course reader model", () => {
     const lesson = page({
       path: "/courses/demo/outline",
       pageType: "lesson",
-      body: {
-        type: "minimark",
-        value: [],
+      nodes: [],
+      meta: {
         toc: {
           title: "",
           searchDepth: 2,
