@@ -1,8 +1,8 @@
 export default defineAppConfig({
   idStudio: {
     templates: {
-      academy: {
-        label: 'Academy',
+      course: {
+        label: 'Course',
         description: 'A learning space with a real course reader, lessons and checkpoints.',
         component: 'CourseAcademyPreview',
         owner: '@happydesigns/course-nuxt',

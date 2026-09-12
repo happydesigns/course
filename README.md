@@ -202,9 +202,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for repository boundaries, change expecta
 
 `@happydesigns/course-nuxt/preview` is an optional Nuxt layer for a complete, neutral
 Academy scenario. It owns `CourseAcademyPreview`, its two Markdown source documents,
-the `coursePreview` collection and an optional `idStudio.templates.academy` catalog
+the `coursePreview` collection and an optional `idStudio.templates.course` catalog
 entry. The Course playground renders that exact component at `/academy`; a brand
 studio can opt into the same layer. Course has no dependency on id.
+
+The Studio catalog uses the capability name **Course** and stable key `course`.
+Academy names the example website, not a separate capability. Other capabilities
+follow the same convention: their optional `/preview` layer owns the catalog
+entry, page IDs, fixtures and renderer; the consuming Studio opts into the layer.
 
 ```ts
 export default defineNuxtConfig({
