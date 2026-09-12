@@ -19,6 +19,8 @@ The Nitro endpoint `/api/comark-course` parses the source on the server. Prerend
 
 The parser comparison checks every RAP document's title, checkpoint IDs, code-step ordering, filenames, languages, and file contents against MDC. Comark omits the final fence newline, so that single trailing newline is normalized in the comparison; whitespace inside code remains significant.
 
+Every playground build also compares the emitted API snapshot with freshly parsed sources, including token and theme metadata. This detects stale prerender output that parser unit tests cannot catch. The endpoint deliberately avoids a persistent parsed-document cache across builds.
+
 ## Scope of a later migration
 
 This pilot does not migrate collection queries, Studio, the core validator, or the full Nuxt UI integration. Before replacing the default engine, expand parity coverage to the remaining courses and custom prose components, settle the final-newline contract, and decide how collections and Studio will be provided. Avoid keeping this explicit prose map as a second production component registry.
