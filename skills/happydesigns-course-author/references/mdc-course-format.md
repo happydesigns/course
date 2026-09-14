@@ -8,11 +8,14 @@ Required:
 
 - `title`: Course title.
 - `description`: Short outcome-focused summary.
-- `version`: Course content version.
+
+Optional:
+
+- `version`: Course content version, when provided by the source.
 
 Recommended:
 
-- `date`: ISO date or date-time.
+- `date`: ISO calendar date (`YYYY-MM-DD`).
 - `category`: Broad grouping such as `Authoring Guide`.
 - `authors`: List of author objects with `name`, optional `to`, optional `avatar.src`.
 - `inputs`: List of learner-provided text inputs whose values replace configured tokens in rendered prose, code blocks, and code-tree file paths.
@@ -39,6 +42,50 @@ navigation: true
 ```
 
 Do not add hidden authoring metadata unless the app consumes and displays it.
+
+## Multi-page courses and progress
+
+Use a directory with an overview (`0.index.md`) and ordered lesson files. The shared preview reads these from `packages/nuxt/preview/content/courses/<slug>/`.
+
+Overview frontmatter:
+
+```yaml
+title: Build the Starter App
+description: Create and verify a working app.
+courseId: starter-app
+pageType: course
+```
+
+Lesson frontmatter:
+
+```yaml
+title: Create the First Route
+description: Add a route and verify its output.
+courseId: starter-app
+pageType: lesson
+order: 1
+estimatedMinutes: 10
+```
+
+Keep `courseId` stable across the overview and all lessons. Mark an optional lesson with `optional: true`. A single Markdown course may omit these structure fields.
+
+Use a checkpoint where the learner can verify an outcome:
+
+```md
+::course-checkpoint{id="first-route-working" title="First route works"}
+The browser shows the expected heading at the new route.
+::
+```
+
+The reader derives checkpoint order from the content tree; do not duplicate these IDs in frontmatter. Preserve existing IDs when revising prose. Continue Course links target anchors such as `#checkpoint-first-route-working` and depend on these stable IDs.
+
+Course-wide parameters belong on the overview. Lessons inherit them; use explicit bindings such as `{{ $doc.input.projectName }}` for configured input IDs, or the declared `replace` tokens for legacy imported placeholders.
+
+## Comark and highlighting
+
+Comark parses these `.md` files with component syntax; the file format does not require Nuxt Content. The shared parser is `packages/nuxt/preview/content.ts`, using the official TOC and Shiki plugins. Use supported Shiki language IDs. Add a required language there when needed; do not create a Nuxt Content highlight configuration or edit generated snapshots.
+
+Server snapshots, compact catalog JSON, and per-course JSON are generated from these sources. Validate the source with `pnpm --filter @happydesigns/course course validate <path>` (the path is relative to `packages/course` when using this command). Run `pnpm verify` for repository examples; browser navigation is covered separately by `pnpm test:e2e` after a static build under `/course/`.
 
 ## Learner Inputs
 
@@ -131,6 +178,6 @@ Do not put review notes in frontmatter metadata.
 Example prompt:
 
 ```text
-Use $happydesigns-course-author to convert this repository into `playground/content/courses/<semantic-slug>.md`.
+Use $happydesigns-course-author to convert this repository into `packages/nuxt/preview/content/courses/<semantic-slug>.md`.
 Preserve the source sequence, do not invent missing steps, and use rendered needsReview notes only when uncertainty affects learner action.
 ```
