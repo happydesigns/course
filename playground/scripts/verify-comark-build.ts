@@ -57,6 +57,19 @@ if (existsSync(serverPath)) {
       const entries = await response.json() as unknown[];
       if (entries.length !== (await content.list()).length) throw new Error("Production snapshot is incomplete: " + endpoint);
     }
+    const catalog = await fetch(origin + "/api/course-preview/catalog.json").then(response => {
+      if (!response.ok) throw new Error("Production catalog is unavailable without sources");
+      return response.json();
+    }) as { path: string; nodes?: unknown }[];
+    if (catalog.length !== count || catalog.some(entry => entry.nodes)) throw new Error("Production catalog is incomplete or contains bodies");
+    for (const slug of new Set(catalog.map(entry => entry.path.split("/")[2]))) {
+      const pages = await fetch(origin + "/api/course-preview/courses/" + slug + "/data.json").then(response => {
+        if (!response.ok) throw new Error("Production course is unavailable without sources: " + slug);
+        return response.json();
+      }) as { path: string }[];
+      const expected = catalog.filter(entry => entry.path === "/courses/" + slug || entry.path.startsWith("/courses/" + slug + "/"));
+      if (!isDeepStrictEqual(pages.map(page => page.path).sort(), expected.map(page => page.path).sort())) throw new Error("Production course selection is incomplete: " + slug);
+    }
     console.log("Production APIs work without local Markdown sources.");
   } finally {
     server.kill();

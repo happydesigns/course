@@ -1,13 +1,9 @@
-import { createVariantSchemaResolver } from "@happydesigns/nuxt-variants/schemas";
+import { z } from "zod";
 import { courseVariantSchemas } from "./traits";
-import { courseVariantRegistry } from "./variants";
 
-const resolveCourseVariantSchema = createVariantSchemaResolver(
-  courseVariantRegistry,
-  courseVariantSchemas
-);
-
-/**
- * Source-agnostic schema for consumer-owned Comark page collections.
- */
-export const courseCollectionSchema = resolveCourseVariantSchema(["course"]);
+/** Source-agnostic metadata shared by validation and the reader's inferred type. */
+export const courseCollectionSchema = z.object({
+  ...courseVariantSchemas.courseMetadata.shape,
+  ...courseVariantSchemas.courseInputs.shape,
+  ...courseVariantSchemas.courseStructure.shape
+});

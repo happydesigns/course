@@ -1,13 +1,15 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'course-preview', header: false, footer: false, key: route => route.path.replace(/\/+$/, '') || '/' });
-const content = useCourseContent('/api/course-preview');
+import type { CoursePage } from '../../../../app/types/course';
+const requestFetch = useRequestFetch();
 const route = useRoute();
 const routePath = normalizeCourseRoutePath(route.path);
 
 const { data, error } = await useAsyncData(
   `course-page:${routePath}`,
   async () => {
-    const pages = await content.all();
+    const slug = routePath.split("/")[2];
+    const pages = await requestFetch<CoursePage[]>(`/api/course-preview/courses/${encodeURIComponent(slug!)}/data.json`);
     const page = pages.find(item => item.path === routePath);
 
     if (!page) {
