@@ -3,7 +3,7 @@ packages:
   - "packages/*"
   - "examples/*"
 overrides:
-  '@happydesigns/ui': 0.19.3
+  '@happydesigns/ui': 0.20.0
   '@ungap/structured-clone': 1.3.3
   oxc-parser: 0.141.0
   unplugin: 3.3.0
@@ -16,6 +16,6 @@ allowBuilds:
   vue-demi: true
 minimumReleaseAgeExclude:
   - '@happydesigns/nuxt-variants@0.2.0'
-  - '@happydesigns/ui@0.19.3'
+  - '@happydesigns/ui@0.20.0'
   - happy-dom@20.14.5
   - comark-content@0.4.0
