@@ -13,3 +13,11 @@ Thumbs.db
 .env.*
 !.env.example
 devserver.*.log
+
+# Local Course development and verification logs
+/.course-dev.log
+/.course-dev-error.log
+/.verify-catalog.log
+
+/playwright-report/
+/test-results/
