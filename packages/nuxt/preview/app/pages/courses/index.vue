@@ -1,30 +1,13 @@
 <script setup lang="ts">
-import { courseCatalogEntry } from '../../utils/course-catalog';
+import type { courseCatalogEntry } from '../../utils/course-catalog';
 definePageMeta({ layout: 'course-preview', header: false, footer: false });
-interface CoursePostAuthor {
-  name: string;
-  to?: string;
-  avatar?: {
-    src?: string;
-  };
-}
+type CoursePost = ReturnType<typeof courseCatalogEntry>;
 
-interface CoursePost {
-  path: string;
-  title: string;
-  description: string;
-  date?: string;
-  category?: string;
-  authors?: CoursePostAuthor[];
-  courseId?: string;
-  pageType?: "course" | "lesson";
-}
-
-const content = useCourseContent("/api/course-preview");
-const { data: coursePages } = await useAsyncData("course-catalog", async () => (await content.all()).map(courseCatalogEntry));
+const requestFetch = useRequestFetch();
+const { data: coursePages } = await useAsyncData("course-catalog", () => requestFetch<ReturnType<typeof courseCatalogEntry>[]>("/api/course-preview/catalog.json"));
 
 const posts = computed<CoursePost[]>(() => {
-  return [...((coursePages.value ?? []) as CoursePost[])]
+  return [...(coursePages.value ?? [])]
     .filter((page) => page.pageType !== "lesson")
     .sort((left, right) => {
     const leftDate = left.date ? new Date(left.date).getTime() : 0;

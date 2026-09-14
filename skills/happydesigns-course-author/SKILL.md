@@ -11,6 +11,14 @@ Create deterministic, learner-facing `.md` course sources from existing source m
 
 Before writing or revising a course, read `references/mdc-course-format.md`. Use it as the syntax contract for frontmatter, MDC blocks, fenced file metadata, and review markers.
 
+## Runtime and ownership
+
+The shared reference content lives in `packages/nuxt/preview/content/courses`; both the playground and Studio preview consume it. Consumer applications may own separate sources. Edit Markdown sources, never generated snapshots or `.nuxt` output.
+
+Comark parses the Markdown and its component syntax; highlighting uses `comark/plugins/shiki` in `packages/nuxt/preview/content.ts`. Keep parsing, code-tree snapshots, and metadata compatible with the installed versions. The reader does not require AI services.
+
+Use `packages/course/src` schemas for CLI contracts and `packages/nuxt/schemas/traits.ts` for reader metadata. Single-page courses may omit `courseId`; the path then identifies local reader state. Existing IDs should remain stable when moving files.
+
 ## Workflow
 
 1. Read the repository instructions first, especially `AGENTS.md` if present.
@@ -28,12 +36,12 @@ Before writing or revising a course, read `references/mdc-course-format.md`. Use
 
 ## Output Rules
 
-- Default to `playground/content/courses/<slug>.md` in this repository unless the user names another target.
+- Default to `packages/nuxt/preview/content/courses/<slug>.md` in this repository unless the user names another target.
 - Write a direct course, not a conversion report. The course body must not mention happydesigns, the reader, validators, shipped packages, runtime policy, conversion mechanics, or authoring metadata.
 - Keep prose concise and tutorial-like, similar to Nuxt UI blog articles: outcome first, then sections with concrete actions and file snapshots.
 - Compress course logistics, repeated navigation, screenshot references, repository chrome, event-specific notes, and redundant summaries.
 - Do not compress course learnings: preserve concepts, decisions, required setup, prompts that drive generated output, code changes, verification steps, warnings that affect learner action, and the reason a learner makes each meaningful change.
-- Make the frontmatter lean. Use only displayable course fields such as `title`, `description`, `version`, `date`, `category`, `authors`, and `navigation` unless the app demonstrably consumes another field.
+- Match the existing course schema. Multi-page courses use a shared, stable `courseId`, a `pageType: course` overview, and `pageType: lesson` pages with `order`. Preserve existing checkpoint IDs and course IDs: saved learner progress depends on them. Do not invent additional metadata.
 - Use frontmatter `inputs` when the source course has repeated learner-specific placeholders such as package suffixes, resource prefixes, or project names. Configure inputs with stable `id`, visible `label`, `replace`, and optional `defaultValue`; do not hard-code one-off replacement behavior in prose.
 - Make `description` learner-facing and outcome-focused. Do not describe the conversion process.
 - Use `.md` as the file extension even when the body contains MDC syntax.
@@ -49,11 +57,11 @@ Before writing or revising a course, read `references/mdc-course-format.md`. Use
 ## Code Tree Rules
 
 - Preserve the project/package structure learners see. For generated application objects, use the generated package or project name as the root folder rather than generic folders such as `objects`.
-- When a generated package contains many artifact types, use one shallow semantic folder level under the package root instead of a completely flat package or a full IDE category tree. Use concise folders such as `cds`, `metadata`, `behavior`, `access`, `tables`, `services`, and `classes`, and only include folders that contain course-relevant files.
+- Follow the source project structure. Do not apply SAP-specific folder conventions to unrelated technologies.
 - Keep stable file paths across the course when the same artifact is generated and later adjusted.
 - Split large unrelated files into separate `::code-tree-intersection` blocks so the active file changes at the correct scroll point. The current code tree activates the last file in a block by default, so do not put two large files in one block if the first one should be shown first.
 - Use real file extensions when possible so Nuxt UI can infer standard icons. Do not add custom icon metadata unless the reader explicitly supports it.
-- Use Shiki language IDs in fences. If the playground has a highlight language allow-list and the course uses a bundled Shiki language, add that language to the Nuxt Content highlight config.
+- Use Shiki language IDs in fences. If the playground has a highlight language allow-list and the course uses a bundled Shiki language, configure it in `packages/nuxt/preview/content.ts` using the Comark Shiki plugin. Do not add Nuxt Content configuration.
 
 ## Prompt Rules
 
@@ -66,12 +74,12 @@ Before writing or revising a course, read `references/mdc-course-format.md`. Use
 
 Before finishing, check:
 
-- Required frontmatter is present: `title`, `description`, `version`.
+- Frontmatter matches the applicable schema; `title` and `description` are required. Preserve a source version when available.
 - No hidden metadata was added unless the app consumes it.
 - The slug is semantic and not a placeholder such as `my-course`.
 - The course reads as a direct learner tutorial, not as a conversion report.
 - Course logistics may be compressed, but no learning objective, concept, prompt, code change, or verification step from the source path was silently dropped.
-- The file has at least one `::code-tree-intersection` block.
+- Code-tree blocks are included only where file snapshots help teach the source material.
 - Every fenced file in a code-tree block has `[path]` metadata.
 - Every path is normalized and relative.
 - Generator prompts, generated snapshots, manual edits, and verification steps follow the source sequence.

@@ -1,36 +1,17 @@
 import type { Toc } from "comark/plugins/toc";
 import type { MarkdownDocument } from "comark";
+import type { z } from "zod";
+import type { courseCollectionSchema } from "../../schemas/collections";
 import type { CourseInput as CoreCourseInput } from "@happydesigns/course";
 
-export interface CourseAuthor {
-  name: string;
-  to?: string;
-  avatar?: {
-    src?: string;
-    alt?: string;
-  };
-}
+export type CourseAuthor = NonNullable<CoursePage["authors"]>[number];
 
 export type CourseInput = CoreCourseInput;
 
-export interface CoursePage extends Pick<MarkdownDocument, "nodes"> {
+export type CoursePage = z.infer<typeof courseCollectionSchema> & Pick<MarkdownDocument, "nodes"> & {
   meta: { toc?: Toc; [key: string]: unknown };
   path: string;
-  title: string;
-  description: string;
-  version?: string;
-  date?: string;
-  category?: string;
-  authors?: CourseAuthor[];
-  inputs?: CourseInput[];
-  courseId?: string;
-  pageType?: "course" | "lesson";
-  order?: number;
-  optional?: boolean;
-  estimatedMinutes?: number;
-  checkpoints?: string[];
-  metadata?: Record<string, unknown>;
-}
+};
 
 export interface CourseProgressData {
   completedLessons: string[];

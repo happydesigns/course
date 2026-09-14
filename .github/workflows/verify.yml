@@ -34,3 +34,6 @@ jobs:
         env:
           NITRO_PRESET: github_pages
           NUXT_APP_BASE_URL: /course/
+
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

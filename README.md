@@ -40,9 +40,11 @@ export default defineNuxtConfig({
 
 The application owns its content source and routes. Define a Comark Content instance with the filesystem source, TOC and Shiki plugins; expose its standard `handler(toWebRequest(event))` in a Nitro API route. The [shared content configuration](packages/nuxt/preview/content.ts) and [Nuxt snapshot hook](packages/nuxt/preview/nuxt.config.ts) are the complete reference setup. The hook writes fresh snapshots into Nitro's build directory and bundles them as server assets.
 
-In an application route, `useCourseContent().all()` uses Comark Content's parser-free snapshot runtime and validates frontmatter before returning native `CoursePage` documents. Select the current page, overview and ordered lessons from that result, then pass them to `CourseReader`. The composable accepts a different API base path for applications with another source.
+The shared preview fetches `/api/course-preview/catalog.json` for metadata and checkpoints, and `/api/course-preview/courses/<slug>/data.json` for one course and its lessons. Both are prerendered for static hosting. The generic `useCourseContent().all()` snapshot helper remains available for consumers that need all documents. Pass validated `CoursePage` documents to `CourseReader`; its metadata type is inferred from the shared schema.
 
 The [shared course route](packages/nuxt/preview/app/pages/courses/%5B...slug%5D.vue) is the complete reference adapter.
+
+The preview uses Nuxt page transitions and native anchor scrolling. Reader state prefers a stable `courseId` (for example `abap-platform-rap120`); single-page courses without one fall back to their path (for example `/courses/using-this-tool`). Renaming a path changes that fallback key, so preserve existing course IDs.
 
 ## Authoring
 

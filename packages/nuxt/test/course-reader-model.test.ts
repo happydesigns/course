@@ -17,20 +17,6 @@ function page(overrides: Partial<CoursePage>): CoursePage {
 }
 
 describe("course reader model", () => {
-  it("chooses directional transitions only for sequential course navigation", () => {
-    const surround = [
-      { path: "/courses/demo/previous", title: "Previous" },
-      { path: "/courses/demo/next", title: "Next" }
-    ];
-
-    expect(getCoursePageTransitionName("/courses/demo/next", surround))
-      .toBe("course-page-forward");
-    expect(getCoursePageTransitionName("/courses/demo/previous", surround))
-      .toBe("course-page-backward");
-    expect(getCoursePageTransitionName("/courses", surround))
-      .toBe("course-page");
-  });
-
   const course = page({ pageType: "course", courseId: "demo" });
   const lessons = [
     page({

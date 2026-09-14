@@ -1,7 +1,17 @@
+import type { MarkdownDocument } from "comark";
 import { describe, expect, it } from "vitest";
+import { toCoursePage } from "../app/utils/course-page";
 import { courseCollectionSchema } from "../schemas/collections";
 
 describe("course collection schema", () => {
+  it("preserves schema metadata and native Comark nodes in the reader adapter", () => {
+    const nodes: MarkdownDocument["nodes"] = [["p", {}, "Hello"]];
+    const page = toCoursePage({ path: "/courses/demo", data: { title: "Demo", description: "Course", image: "/cover.png" }, nodes, meta: {} });
+    expect(page.image).toBe("/cover.png");
+    expect(page.nodes).toBe(nodes);
+    expect(() => toCoursePage({ path: "/courses/invalid", data: { title: "" }, nodes, meta: {} })).toThrow();
+  });
+
   it("reuses the core input contract", () => {
     const valid = courseCollectionSchema.safeParse({
       title: "Course",

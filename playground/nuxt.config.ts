@@ -3,11 +3,6 @@ export default defineNuxtConfig({
   extends: ["../packages/nuxt/preview"],
   css: ["~/assets/css/main.css"],
   nitro: { prerender: { routes: ["/academy"] } },
-  app: {
-    pageTransition: {
-      name: "course-page"
-    }
-  },
   devtools: { enabled: false },
   typescript: {
     strict: true

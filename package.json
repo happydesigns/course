@@ -13,9 +13,11 @@
     "build": "pnpm -r build",
     "verify": "pnpm test && pnpm typecheck && pnpm build && pnpm validate:examples",
     "validate:examples": "pnpm --filter @happydesigns/course course validate ../nuxt/preview/content/courses/abap-platform-rap120 && pnpm --filter @happydesigns/course course validate ../nuxt/preview/content/courses/how-to-build-an-ai-chat.md && pnpm --filter @happydesigns/course course validate ../nuxt/preview/content/courses/using-this-tool.md",
-    "dev": "pnpm --filter @happydesigns/course-playground dev"
+    "dev": "pnpm --filter @happydesigns/course-playground dev",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.2",
     "tsx": "^4.23.13",
     "typescript": "^6.0.3",

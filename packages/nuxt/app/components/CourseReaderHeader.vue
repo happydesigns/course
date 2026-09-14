@@ -25,7 +25,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  navigateAnchor: [event: MouseEvent];
   updateInput: [input: CourseInput, value: string | number];
 }>();
 
@@ -137,7 +136,6 @@ function formatDate(date?: string): string {
     <CoursePageOutline
       v-if="pageAnchorLinks.length"
       :links="pageAnchorLinks"
-      @navigate="emit('navigateAnchor', $event)"
     />
 
     <CourseParameters

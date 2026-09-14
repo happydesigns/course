@@ -18,26 +18,6 @@ export interface CoursePageAnchor {
   step: number;
 }
 
-export type CoursePageTransitionName =
-  | "course-page"
-  | "course-page-backward"
-  | "course-page-forward";
-
-export function getCoursePageTransitionName(
-  targetPath: string,
-  surround: readonly (CourseSurroundLink | null)[]
-): CoursePageTransitionName {
-  if (surround[1]?.path === targetPath) {
-    return "course-page-forward";
-  }
-
-  if (surround[0]?.path === targetPath) {
-    return "course-page-backward";
-  }
-
-  return "course-page";
-}
-
 export function useCourseReaderModel(options: {
   course: MaybeRefOrGetter<CoursePage>;
   page: MaybeRefOrGetter<CoursePage | undefined>;
