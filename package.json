@@ -24,6 +24,6 @@
     "vitest": "^5.0.0"
   },
   "dependencies": {
-    "@happydesigns/ui": "0.19.3"
+    "@happydesigns/ui": "0.20.0"
   }
 }

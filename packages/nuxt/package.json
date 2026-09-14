@@ -33,7 +33,7 @@
     "@comark/nuxt": "0.6.2",
     "@happydesigns/course": "workspace:^",
     "@happydesigns/nuxt-variants": "^0.2.0",
-    "@happydesigns/ui": "0.19.3",
+    "@happydesigns/ui": "0.20.0",
     "@iconify-json/lucide": "^1.2.131",
     "@nuxt/ui": "^4.11.1",
     "comark": "0.6.2",
