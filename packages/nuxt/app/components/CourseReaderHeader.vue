@@ -143,7 +143,7 @@ function formatDate(date?: string): string {
       :key="page.path"
       :inputs="inputs"
       :values="inputValues"
-      :default-open="isLesson"
+      :default-open="!isLesson"
       :class="!isLesson && course.authors?.length ? 'mt-8' : 'mt-4'"
       @update="(input, value) => emit('updateInput', input, value)"
     />
