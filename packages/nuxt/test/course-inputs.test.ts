@@ -88,3 +88,17 @@ describe("course input placeholders", () => {
     expect(JSON.stringify(nodes)).toContain("{{");
   });
 });
+
+describe("validated parameter values", () => {
+  it("keeps invalid drafts out of prose, code and file substitutions", () => {
+    const inputs = [{ id: "number", label: "Number", defaultValue: "##", pattern: "[0-9]{2}" }];
+    expect(createCourseInputValues(inputs, { number: "x7" })).toEqual({ number: "##" });
+    expect(createCourseInputValues(inputs, { number: "07" })).toEqual({ number: "07" });
+    expect(createCourseInputValues(inputs, { number: "" })).toEqual({ number: "##" });
+  });
+  it("validates shared values against the receiving course's options", () => {
+    const inputs = [{ id: "ide", label: "IDE", options: ["Eclipse"], defaultValue: "Eclipse" }];
+    expect(createCourseInputValues(inputs, { ide: "VS Code" })).toEqual({ ide: "Eclipse" });
+    expect(createCourseInputValues([{ ...inputs[0]!, allowCustom: true }], { ide: "VS Code" })).toEqual({ ide: "VS Code" });
+  });
+});

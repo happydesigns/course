@@ -2,6 +2,7 @@ import { isDeepStrictEqual } from "node:util";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { createServer } from "node:net";
 import { comarkContent } from "comark-content/runtime";
 import snapshot from "comark-content/sources/snapshot";
 import { textContent } from "comark/utils";
@@ -34,18 +35,34 @@ console.log("Comark build matches " + count + " current source documents.");
 // Start the actual server with missing source paths to verify deployment isolation.
 const serverPath = fileURLToPath(new URL("../.output/server/index.mjs", import.meta.url));
 if (existsSync(serverPath)) {
+  // Nitro treats port 0 as its default (3000). Reserve a real free port so
+  // this production check can run alongside a development server.
+  const port = await new Promise<number>((resolve, reject) => {
+    const probe = createServer();
+    probe.once("error", reject);
+    probe.listen(0, "127.0.0.1", () => {
+      const address = probe.address();
+      if (!address || typeof address === "string") {
+        probe.close(() => reject(new Error("Could not allocate a verification port.")));
+        return;
+      }
+      probe.close(error => error ? reject(error) : resolve(address.port));
+    });
+  });
   const server = spawn(process.execPath, [serverPath], {
     cwd: fileURLToPath(new URL("../.output/server", import.meta.url)),
     windowsHide: true,
-    env: { ...process.env, PORT: "0", NITRO_PORT: "0", HOST: "127.0.0.1", NITRO_HOST: "127.0.0.1",
+    env: { ...process.env, PORT: String(port), NITRO_PORT: String(port), HOST: "127.0.0.1", NITRO_HOST: "127.0.0.1",
       NUXT_COURSE_PREVIEW_CONTENT_DIR: serverPath + ".missing" },
     stdio: ["ignore", "pipe", "pipe"]
   });
+  let stderr = "";
+  server.stderr.on("data", chunk => { stderr += String(chunk); });
   try {
     const origin = await new Promise<string>((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error("Production server did not start.")), 20000);
       server.once("error", error => { clearTimeout(timeout); reject(error); });
-      server.once("exit", code => { clearTimeout(timeout); reject(new Error("Production server exited: " + code)); });
+      server.once("exit", code => { clearTimeout(timeout); reject(new Error("Production server exited: " + code + "\n" + stderr)); });
       server.stdout.on("data", chunk => {
         const match = String(chunk).match(/http:\/\/127\.0\.0\.1:\d+/);
         if (match) { clearTimeout(timeout); resolve(match[0]); }

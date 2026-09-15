@@ -1,3 +1,4 @@
+import { createCourseInputValueSchema } from "@happydesigns/course";
 import type { CourseInput } from "../types/course";
 
 const COURSE_INPUT_PLACEHOLDER_PATTERN =
@@ -62,7 +63,7 @@ export function createCourseInputValues(
       const value = values[input.id];
       return [
         input.id,
-        value !== undefined && value.trim().length > 0
+        value !== undefined && value.trim().length > 0 && createCourseInputValueSchema(input).safeParse(value).success
           ? value
           : input.defaultValue ?? ""
       ];

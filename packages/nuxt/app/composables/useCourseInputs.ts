@@ -1,6 +1,8 @@
 import type { ComputedRef, MaybeRefOrGetter, Ref } from "vue";
 import type { CourseInput, CoursePage } from "../types/course";
 import { computed, onMounted, ref, toValue, watch } from "vue";
+import { courseInputStorageKey, createCourseInputValueSchema } from "@happydesigns/course";
+import { useCourseInputStore } from "./useCourseInputState";
 import { createCourseInputValues } from "../utils/course-inputs";
 import { useCourseStorage } from "./useCourseStorage";
 
@@ -19,22 +21,23 @@ export function useCourseInputs(options: {
   enabled: MaybeRefOrGetter<boolean>;
 }): CourseInputsController {
   const storage = useCourseStorage();
-  const values = ref<Record<string, string>>({});
+  const store = useCourseInputStore();
   const ready = ref(false);
   const inputs = computed(() => toValue(options.enabled) ? (toValue(options.course).inputs ?? []) : []);
+  const values = computed(() => Object.fromEntries(inputs.value.map((input) => [
+    input.id, ready.value ? store.value[storageKey(input)] ?? "" : ""
+  ])));
   const resolvedValues = computed(() => createCourseInputValues(inputs.value, values.value));
 
   function storageKey(input: CourseInput): string {
-    return `course:${toValue(options.courseKey)}:input:${input.id}`;
+    return courseInputStorageKey(toValue(options.courseKey), input);
   }
 
   function restore(): void {
-    values.value = Object.fromEntries(
-      inputs.value.map((input) => [
-        input.id,
-        storage.getItem(storageKey(input)) ?? ""
-      ])
-    );
+    for (const input of inputs.value) {
+      const key = storageKey(input);
+      if (!Object.hasOwn(store.value, key)) store.value[key] = storage.getItem(key) ?? "";
+    }
     ready.value = true;
   }
 
@@ -43,13 +46,15 @@ export function useCourseInputs(options: {
   }
 
   function setInputValue(input: CourseInput, value: string | number): void {
+    if (!ready.value) return;
     const normalizedValue = String(value);
+    if (input.options && !input.allowCustom && !createCourseInputValueSchema(input).safeParse(normalizedValue).success) return;
 
     if (values.value[input.id] === normalizedValue) {
       return;
     }
 
-    values.value = { ...values.value, [input.id]: normalizedValue };
+    store.value[storageKey(input)] = normalizedValue;
     storage.setItem(storageKey(input), normalizedValue);
   }
 

@@ -2,6 +2,8 @@
 import type { CourseBackLink, CoursePage } from "../types/course";
 import { computed } from "vue";
 import CodeTreeIntersection from "./CodeTreeIntersection.vue";
+import CourseVariant from "./CourseVariant.vue";
+import { provideCourseInputValues } from "../composables/useCourseInputState";
 import CourseCheckpoint from "./CourseCheckpoint.vue";
 import { useCourseCodeWorkspace } from "../composables/useCourseCodeWorkspace";
 import { useCourseInputs } from "../composables/useCourseInputs";
@@ -115,7 +117,9 @@ const codeWorkspace = useCourseCodeWorkspace({
   inputValues: courseInputs.resolvedValues,
   inputsReady: courseInputs.ready
 });
+provideCourseInputValues(courseInputs.resolvedValues);
 const contentComponents = {
+  "course-variant": CourseVariant,
   "code-tree-intersection": CodeTreeIntersection,
   "course-checkpoint": CourseCheckpoint
 };

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CourseInputSchema } from "./inputs.js";
 
 const MetadataSchema = z.record(z.string(), z.unknown());
 
@@ -22,18 +23,7 @@ export const CourseDateSchema = z.string().refine(
   "Course date must be a valid calendar date in YYYY-MM-DD format."
 );
 
-export const CourseInputSchema = z
-  .object({
-    id: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]*$/),
-    label: z.string().min(1),
-    description: z.string().optional(),
-    placeholder: z.string().optional(),
-    defaultValue: z.string().optional(),
-    minLength: z.number().int().nonnegative().optional(),
-    maxLength: z.number().int().positive().optional(),
-    pattern: z.string().optional()
-  })
-  .strict();
+export { CourseInputSchema } from "./inputs.js";
 
 export const AssetRefSchema = z
   .object({

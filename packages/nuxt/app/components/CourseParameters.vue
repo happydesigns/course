@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CourseInput } from "../types/course";
+import { courseInputOptions, createCourseInputValueSchema } from "@happydesigns/course";
 import { computed, ref } from "vue";
 
 const props = defineProps<{
@@ -15,9 +16,23 @@ const emit = defineEmits<{
 const open = ref(props.defaultOpen ?? false);
 const summary = computed(() =>
   props.inputs
-    .map((input) => `${input.label}: ${props.values[input.id]?.trim() || input.defaultValue || ""}`)
+    .map((input) => `${input.label}: ${courseInputOptions(input).find((item) => item.value === fieldValue(input))?.label ?? (fieldValue(input) || input.defaultValue || "")}`)
     .join(" · ")
 );
+function fieldValue(input: CourseInput): string {
+  const value = props.values[input.id] ?? "";
+  if (input.options && !input.allowCustom) {
+    return createCourseInputValueSchema(input).safeParse(value).success ? value : input.defaultValue ?? "";
+  }
+  return value;
+}
+
+function fieldError(input: CourseInput): string | undefined {
+  const value = props.values[input.id];
+  if (!value || (input.options && !input.allowCustom)) return undefined;
+  const result = createCourseInputValueSchema(input).safeParse(value);
+  return result.success ? undefined : result.error.issues[0]?.message;
+}
 </script>
 
 <template>
@@ -40,10 +55,36 @@ const summary = computed(() =>
             v-for="input in inputs"
             :key="input.id"
             :label="input.label"
-            :description="input.description"
+            :help="input.description"
+            :error="fieldError(input)"
             size="md"
           >
+            <USelect
+              v-if="input.options && !input.allowCustom"
+              :aria-label="input.label"
+              :items="courseInputOptions(input)"
+              :model-value="fieldValue(input)"
+              :placeholder="input.placeholder"
+              class="w-full"
+              @update:model-value="(value) => emit('update', input, value)"
+            />
+            <UInputMenu
+              v-else-if="input.options"
+              mode="autocomplete"
+              :aria-label="input.label"
+              :items="courseInputOptions(input)"
+              value-key="value"
+              :model-value="fieldValue(input)"
+              :placeholder="input.placeholder"
+              :minlength="input.minLength"
+              :maxlength="input.maxLength"
+              :pattern="input.pattern"
+              autocomplete="off"
+              class="w-full"
+              @update:model-value="(value) => emit('update', input, value)"
+            />
             <UInput
+              v-else
               :aria-label="input.label"
               :model-value="values[input.id] ?? ''"
               :placeholder="input.placeholder"

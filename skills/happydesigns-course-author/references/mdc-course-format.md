@@ -18,7 +18,7 @@ Recommended:
 - `date`: ISO calendar date (`YYYY-MM-DD`).
 - `category`: Broad grouping such as `Authoring Guide`.
 - `authors`: List of author objects with `name`, optional `to`, optional `avatar.src`.
-- `inputs`: List of learner-provided text inputs whose values replace configured tokens in rendered prose, code blocks, and code-tree file paths.
+- `inputs`: List of learner-provided text inputs whose values resolve explicit named bindings in rendered prose, code blocks, and code-tree file paths.
 - `navigation`: Whether the course appears in navigation.
 
 Example:
@@ -36,7 +36,6 @@ inputs:
   - id: projectName
     label: Project name
     defaultValue: my-app
-    replace: __PROJECT_NAME__
 navigation: true
 ---
 ```
@@ -79,7 +78,7 @@ The browser shows the expected heading at the new route.
 
 The reader derives checkpoint order from the content tree; do not duplicate these IDs in frontmatter. Preserve existing IDs when revising prose. Continue Course links target anchors such as `#checkpoint-first-route-working` and depend on these stable IDs.
 
-Course-wide parameters belong on the overview. Lessons inherit them; use explicit bindings such as `{{ $doc.input.projectName }}` for configured input IDs, or the declared `replace` tokens for legacy imported placeholders.
+Course-wide parameters belong on the overview. Lessons inherit them; use explicit bindings such as `{{ $doc.input.projectName }}` for configured input IDs.
 
 ## Comark and highlighting
 
@@ -95,7 +94,6 @@ Each input supports:
 
 - `id`: Stable identifier, starting with a letter and containing letters, numbers, `_`, `.`, or `-`.
 - `label`: Visible field label.
-- `replace`: String token or list of string tokens to replace.
 - `defaultValue`: Optional value used before the learner enters one.
 - `placeholder`, `description`, `minLength`, `maxLength`, `pattern`: Optional input hints and HTML constraints.
 
@@ -107,11 +105,77 @@ inputs:
     label: Group ID
     description: "Replaces ### in generated object names."
     placeholder: ABC
-    replace: "###"
+    defaultValue: "###"
     maxLength: 3
 ```
 
-Input values persist across reloads per course and input id.
+### Text, selection and suggestions
+
+Definitions remain serializable YAML/JSON. `CourseInputSchema` validates them with Zod;
+`createCourseInputValueSchema(input)` exposes the corresponding Zod string/enum validator.
+Existing text inputs continue to work unchanged.
+
+```yaml
+inputs:
+  - id: projectName
+    label: Project name
+    defaultValue: my-app
+  - id: ide
+    label: Development environment
+    sharedId: workshop-2026.ide
+    defaultValue: vscode
+    options:
+      - value: vscode
+        label: VS Code
+      - value: eclipse
+        label: Eclipse
+  - id: shell
+    label: Terminal
+    options: [Bash, PowerShell]
+    allowCustom: true
+```
+
+Without `options`, the reader uses Nuxt UI `Input`. With `options`, it uses `Select` and
+accepts only listed values. `allowCustom: true` uses `InputMenu mode="autocomplete"`:
+the learner can select a suggestion or type any string. Suggestions can have labels; selecting one inserts its stored value. `minLength`, `maxLength`, and `pattern` validate text and suggestions;
+invalid drafts display an error and do not substitute into course content. Text defaults
+may remain authoring placeholders such as `###`. Fixed-selection defaults must be listed.
+
+`id` is the local binding name (`{{ $doc.input.ide }}`). By default, values persist per
+course and input ID. Optional `sharedId` gives a value a stable identity across courses
+on the same site and storage provider, even when their local IDs differ. Use the same
+definition and shared ID in each participating overview. Different events should use
+different IDs. Sharing does not cross browser profiles or websites. Changing a shared
+ID starts a new value; existing per-course storage keys are unchanged.
+
+Shared values update mounted readers immediately. Values restore after hydration and
+are checked against each receiving course's definition. An obsolete selection falls
+back to the course's default. A custom `CourseStorage` provider isolates both live and
+persisted values. Storage failures do not block reading; values remain in memory.
+
+### Alternative instructions
+
+```md
+::course-variant{parameter="ide" value="vscode" label="In VS Code"}
+Open the command palette and select the command described in this step.
+::
+
+::course-variant{parameter="ide" value="eclipse" label="In Eclipse"}
+Select the corresponding action from the project context menu.
+::
+```
+
+`course-variant` renders only when the resolved parameter equals `value`. No application
+component or executable condition is needed. Labels are optional. Bindings and variant
+conditions both count as parameter usage during validation; unknown IDs and invalid
+fixed values are rejected.
+
+Variants adapt instructions, not the curriculum: keep headings, checkpoints and
+`code-tree-intersection` outside them. The validator enforces this so the outline,
+resume links, progress and cumulative code workspace stay consistent when switching.
+Ordinary prose, lists, images and standalone code fences can be conditional.
+
+
 
 ## Compression Boundary
 

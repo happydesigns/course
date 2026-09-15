@@ -146,10 +146,13 @@ export async function validateCourseMarkdown(
   } else {
     const localInputs = frontmatter.data.inputs;
     const effectiveInputs = localInputs ?? options.inheritedInputs ?? [];
+    const variantInputs = validateCourseVariants(parsed.nodes, effectiveInputs, issues,
+      frontmatter.data.pageType === "lesson" && !localInputs && !options.inheritedInputs);
     validateCourseInputPlaceholders(normalizedSource, effectiveInputs, issues, {
       allowUnknown:
         frontmatter.data.pageType === "lesson" && !localInputs && !options.inheritedInputs,
-      requireConfiguredUsage: frontmatter.data.pageType !== "course" && Boolean(localInputs)
+      requireConfiguredUsage: frontmatter.data.pageType !== "course" && Boolean(localInputs),
+      referencedInputs: variantInputs
     });
     validateCourseCheckpoints(parsed.nodes, frontmatter.data.checkpoints, issues);
   }
@@ -168,7 +171,7 @@ function validateCourseInputPlaceholders(
   source: string,
   inputs: readonly CourseInput[],
   issues: CourseMarkdownIssue[],
-  options: { allowUnknown: boolean; requireConfiguredUsage: boolean }
+  options: { allowUnknown: boolean; requireConfiguredUsage: boolean; referencedInputs: Set<string> }
 ): void {
   const configuredIds = new Set<string>();
 
@@ -185,7 +188,7 @@ function validateCourseInputPlaceholders(
   });
 
   const referencedIds = new Set(
-    Array.from(source.matchAll(COURSE_INPUT_PLACEHOLDER_PATTERN), (match) => match[1] as string)
+    [...options.referencedInputs, ...Array.from(source.matchAll(COURSE_INPUT_PLACEHOLDER_PATTERN), (match) => match[1] as string)]
   );
 
   for (const inputId of referencedIds) {
@@ -207,6 +210,35 @@ function validateCourseInputPlaceholders(
       });
     }
   });
+}
+
+function validateCourseVariants(
+  body: unknown,
+  inputs: readonly CourseInput[],
+  issues: CourseMarkdownIssue[],
+  allowUnknown: boolean
+): Set<string> {
+  const referenced = new Set<string>();
+  const walk = (node: MarkdownNode, inVariant = false): void => {
+    if (node.tag === "course-variant") {
+      const parameter = stringProp(node.props?.parameter);
+      const value = stringProp(node.props?.value);
+      const input = inputs.find((entry) => entry.id === parameter);
+      if (parameter) referenced.add(parameter);
+      if (!parameter || !value || (!input && !allowUnknown)) {
+        issues.push({ code: "course-input", path: ["body", "course-variant"], message: "course-variant requires a declared parameter and a non-empty value." });
+      } else if (input?.options && !input.allowCustom && !input.options.some((item) => (typeof item === "string" ? item : item.value) === value)) {
+        issues.push({ code: "course-input", path: ["body", "course-variant", parameter], message: `Unknown variant value "${value}" for input "${parameter}".` });
+      }
+      inVariant = true;
+    } else if (inVariant && (node.tag === CODE_TREE_TAG || node.tag === CHECKPOINT_TAG || /^h[1-6]$/.test(node.tag ?? ""))) {
+      issues.push({ code: "course-input", path: ["body", "course-variant", node.tag!], message: "Keep headings, checkpoints and synchronized code outside course-variant; variants change instructions, not the shared course structure." });
+    }
+    for (const child of node.children ?? []) walk(child, inVariant);
+  };
+  const root = asNode(body);
+  if (root) walk(root);
+  return referenced;
 }
 
 function validateCourseCheckpoints(

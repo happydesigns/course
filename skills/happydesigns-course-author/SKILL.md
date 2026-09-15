@@ -42,7 +42,7 @@ Use `packages/course/src` schemas for CLI contracts and `packages/nuxt/schemas/t
 - Compress course logistics, repeated navigation, screenshot references, repository chrome, event-specific notes, and redundant summaries.
 - Do not compress course learnings: preserve concepts, decisions, required setup, prompts that drive generated output, code changes, verification steps, warnings that affect learner action, and the reason a learner makes each meaningful change.
 - Match the existing course schema. Multi-page courses use a shared, stable `courseId`, a `pageType: course` overview, and `pageType: lesson` pages with `order`. Preserve existing checkpoint IDs and course IDs: saved learner progress depends on them. Do not invent additional metadata.
-- Use frontmatter `inputs` when the source course has repeated learner-specific placeholders such as package suffixes, resource prefixes, or project names. Configure inputs with stable `id`, visible `label`, `replace`, and optional `defaultValue`; do not hard-code one-off replacement behavior in prose.
+- Use frontmatter `inputs` when the source course has repeated learner-specific placeholders such as package suffixes, resource prefixes, or project names. Configure inputs with stable `id`, visible `label`, and optional `defaultValue`; reference values with explicit `{{ $doc.input.<id> }}` bindings; do not hard-code one-off replacement behavior in prose.
 - Make `description` learner-facing and outcome-focused. Do not describe the conversion process.
 - Use `.md` as the file extension even when the body contains MDC syntax.
 - Use forward-slash relative file paths in code fence metadata.

@@ -1,3 +1,5 @@
+export { courseInputOptions, createCourseInputValueSchema, courseInputStorageKey } from "./inputs.js";
+
 export {
   AssetRefSchema,
   CodeChangeSchema,

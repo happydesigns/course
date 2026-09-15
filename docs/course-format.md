@@ -108,7 +108,7 @@ define behavior for ZR_TRAVEL{{ $doc.input.groupId }}
 
 The supported Course binding form is
 `{{ $doc.input.<id> }}` syntax. Every binding must reference a declared input,
-every declared input must be used, and input IDs must be unique. The Course
+every locally declared input on a standalone page must be used (overviews may declare inputs for their lessons), and input IDs must be unique. The Course
 reader resolves native Comark binding nodes as well as fenced code and filename metadata,
 where CommonMark preserves it as literal text.
 
@@ -125,6 +125,72 @@ export const appName = "Course starter";
 ````
 
 Each fenced code block inside `code-tree-intersection` must include normalized relative file metadata in square brackets, such as `[src/main.ts]`.
+
+### Text, selection and suggestions
+
+Definitions remain serializable YAML/JSON. `CourseInputSchema` validates them with Zod;
+`createCourseInputValueSchema(input)` exposes the corresponding Zod string/enum validator.
+Existing text inputs continue to work unchanged.
+
+```yaml
+inputs:
+  - id: projectName
+    label: Project name
+    defaultValue: my-app
+  - id: ide
+    label: Development environment
+    sharedId: workshop-2026.ide
+    defaultValue: vscode
+    options:
+      - value: vscode
+        label: VS Code
+      - value: eclipse
+        label: Eclipse
+  - id: shell
+    label: Terminal
+    options: [Bash, PowerShell]
+    allowCustom: true
+```
+
+Without `options`, the reader uses Nuxt UI `Input`. With `options`, it uses `Select` and
+accepts only listed values. `allowCustom: true` uses `InputMenu mode="autocomplete"`:
+the learner can select a suggestion or type any string. Suggestions can have labels; selecting one inserts its stored value. `minLength`, `maxLength`, and `pattern` validate text and suggestions;
+invalid drafts display an error and do not substitute into course content. Text defaults
+may remain authoring placeholders such as `###`. Fixed-selection defaults must be listed.
+
+`id` is the local binding name (`{{ $doc.input.ide }}`). By default, values persist per
+course and input ID. Optional `sharedId` gives a value a stable identity across courses
+on the same site and storage provider, even when their local IDs differ. Use the same
+definition and shared ID in each participating overview. Different events should use
+different IDs. Sharing does not cross browser profiles or websites. Changing a shared
+ID starts a new value; existing per-course storage keys are unchanged.
+
+Shared values update mounted readers immediately. Values restore after hydration and
+are checked against each receiving course's definition. An obsolete selection falls
+back to the course's default. A custom `CourseStorage` provider isolates both live and
+persisted values. Storage failures do not block reading; values remain in memory.
+
+### Alternative instructions
+
+```md
+::course-variant{parameter="ide" value="vscode" label="In VS Code"}
+Open the command palette and select the command described in this step.
+::
+
+::course-variant{parameter="ide" value="eclipse" label="In Eclipse"}
+Select the corresponding action from the project context menu.
+::
+```
+
+`course-variant` renders only when the resolved parameter equals `value`. No application
+component or executable condition is needed. Labels are optional. Bindings and variant
+conditions both count as parameter usage during validation; unknown IDs and invalid
+fixed values are rejected.
+
+Variants adapt instructions, not the curriculum: keep headings, checkpoints and
+`code-tree-intersection` outside them. The validator enforces this so the outline,
+resume links, progress and cumulative code workspace stay consistent when switching.
+Ordinary prose, lists, images and standalone code fences can be conditional.
 
 ## Review Markers
 
