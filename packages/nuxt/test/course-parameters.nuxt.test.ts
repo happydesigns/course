@@ -38,6 +38,32 @@ async function readers(stored: Record<string, string> = {}) {
 }
 
 describe("native parameters in Nuxt", () => {
+  it("uses defaults for empty-field placeholders and summaries, then displays entered values", async () => {
+    const wrapper = await mountSuspended(CourseParameters, {
+      props: {
+        inputs: [inputs[0]!, { id: "package", label: "Package", defaultValue: "ZYOUR_PACKAGE" }],
+        values: {}
+      }
+    });
+    wrappers.push(wrapper);
+    const toggle = wrapper.get('button[aria-expanded]');
+    expect(toggle.text()).toContain("Editor: Eclipse");
+    expect(toggle.text()).toContain("Package: ZYOUR_PACKAGE");
+    expect(toggle.text()).not.toContain("ZEXAMPLE");
+    await toggle.trigger("click");
+    const field = wrapper.get('input[aria-label="Package"]');
+    expect((field.element as HTMLInputElement).value).toBe("");
+    expect(field.attributes("placeholder")).toBe("ZYOUR_PACKAGE");
+    await wrapper.setProps({ values: { package: "ZMY_PACKAGE" } });
+    await toggle.trigger("click");
+    expect(toggle.text()).toContain("Package: ZMY_PACKAGE");
+    await wrapper.setProps({ inputs: [inputs[0]!, { id: "package", label: "Package", defaultValue: "ZYOUR_PACKAGE", placeholder: "ZEXAMPLE" }] });
+    await toggle.trigger("click");
+    expect(wrapper.get('input[aria-label="Package"]').attributes("placeholder")).toBe("ZEXAMPLE");
+    await toggle.trigger("click");
+    await wrapper.setProps({ values: { package: "" } });
+    expect(toggle.text()).toContain("Package: ZYOUR_PACKAGE");
+  });
   it("shares opted-in inputs live but keeps local values and route changes separate", async () => {
     const { state, current, stored } = await readers();
     state.route!.setInputValue(inputs[0]!, "vscode");

@@ -157,6 +157,8 @@ accepts only listed values. `allowCustom: true` uses `InputMenu mode="autocomple
 the learner can select a suggestion or type any string. Suggestions can have labels; selecting one inserts its stored value. `minLength`, `maxLength`, and `pattern` validate text and suggestions;
 invalid drafts display an error and do not substitute into course content. Text defaults
 may remain authoring placeholders such as `###`. Fixed-selection defaults must be listed.
+Empty fields use `defaultValue` as their placeholder unless an explicit `placeholder` is set.
+The collapsed summary uses the current value or its default; a custom placeholder is only an input hint.
 
 `id` is the local binding name (`{{ $doc.input.ide }}`). By default, values persist per
 course and input ID. Optional `sharedId` gives a value a stable identity across courses

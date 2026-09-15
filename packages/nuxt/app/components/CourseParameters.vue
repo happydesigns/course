@@ -16,7 +16,7 @@ const emit = defineEmits<{
 const open = ref(props.defaultOpen ?? false);
 const summary = computed(() =>
   props.inputs
-    .map((input) => `${input.label}: ${courseInputOptions(input).find((item) => item.value === fieldValue(input))?.label ?? (fieldValue(input) || input.defaultValue || "")}`)
+    .map((input) => `${input.label}: ${courseInputOptions(input).find((item) => item.value === fieldValue(input))?.label ?? (fieldValue(input) || input.defaultValue || "—")}`)
     .join(" · ")
 );
 function fieldValue(input: CourseInput): string {
@@ -64,7 +64,7 @@ function fieldError(input: CourseInput): string | undefined {
               :aria-label="input.label"
               :items="courseInputOptions(input)"
               :model-value="fieldValue(input)"
-              :placeholder="input.placeholder"
+              :placeholder="input.placeholder ?? input.defaultValue"
               class="w-full"
               @update:model-value="(value) => emit('update', input, value)"
             />
@@ -75,7 +75,7 @@ function fieldError(input: CourseInput): string | undefined {
               :items="courseInputOptions(input)"
               value-key="value"
               :model-value="fieldValue(input)"
-              :placeholder="input.placeholder"
+              :placeholder="input.placeholder ?? input.defaultValue"
               :minlength="input.minLength"
               :maxlength="input.maxLength"
               :pattern="input.pattern"
@@ -87,7 +87,7 @@ function fieldError(input: CourseInput): string | undefined {
               v-else
               :aria-label="input.label"
               :model-value="values[input.id] ?? ''"
-              :placeholder="input.placeholder"
+              :placeholder="input.placeholder ?? input.defaultValue"
               :minlength="input.minLength"
               :maxlength="input.maxLength"
               :pattern="input.pattern"
