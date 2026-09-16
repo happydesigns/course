@@ -28,7 +28,7 @@ Runtime AI is out of scope. AI tools may assist authors during conversion, but p
 Install the reader and extend its layer:
 
 ```bash
-pnpm add @happydesigns/course-nuxt comark-content@0.4.0 comark@0.6.2 shiki@4.3.1
+pnpm add @happydesigns/course @happydesigns/course-nuxt comark-content@0.4.0 comark@0.6.2 shiki@4.3.1
 ```
 
 ```ts

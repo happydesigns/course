@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "@comark/nuxt": "0.6.2",
-    "@happydesigns/course": "workspace:^",
     "@happydesigns/nuxt-variants": "^0.2.0",
     "@happydesigns/ui": "0.20.0",
     "@iconify-json/lucide": "^1.2.131",
@@ -42,6 +41,7 @@
     "zod": "^4.6.2"
   },
   "devDependencies": {
+    "@happydesigns/course": "workspace:^",
     "@nuxt/test-utils": "4.3.2",
     "@types/node": "^22.20.2",
     "@vue/test-utils": "2.4.6",
@@ -53,6 +53,7 @@
     "vue-tsc": "3.3.11"
   },
   "peerDependencies": {
+    "@happydesigns/course": "^0.1.0",
     "nuxt": "^4.5.0"
   }
 }
