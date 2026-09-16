@@ -1,11 +1,11 @@
-import type { ShikiTransformer } from "shiki";
-
 /** Keep template punctuation out of the language grammar while preserving offsets.
  * Intended for Course parameters inside identifiers, literals and numeric values.
  * Restore the original template before rendering so interpolation/copy stay exact.
+ * @returns {import("shiki").ShikiTransformer}
  */
-export function courseInputHighlighting(): ShikiTransformer {
-  const sources = new WeakMap<object, string>();
+export function courseInputHighlighting() {
+  /** @type {WeakMap<object, string>} */
+  const sources = new WeakMap();
   return {
     name: "course-input-placeholders",
     preprocess(code) {
