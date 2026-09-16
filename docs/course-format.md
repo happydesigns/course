@@ -137,6 +137,14 @@ inputs:
   - id: projectName
     label: Project name
     defaultValue: my-app
+  - id: packageName
+    label: Development package
+    normalization:
+      trim: true
+      case: uppercase
+    minLength: 2
+    maxLength: 30
+    pattern: "[A-Z0-9_/$]+"
   - id: ide
     label: Development environment
     sharedId: workshop-2026.ide
@@ -159,6 +167,12 @@ invalid drafts display an error and do not substitute into course content. Text 
 may remain authoring placeholders such as `###`. Fixed-selection defaults must be listed.
 Empty fields use `defaultValue` as their placeholder unless an explicit `placeholder` is set.
 The collapsed summary uses the current value or its default; a custom placeholder is only an input hint.
+
+Optional `normalization` transforms learner input before validation, persistence, and content
+substitution. `trim: true` removes surrounding whitespace; `case` accepts `uppercase` or
+`lowercase`. Authored defaults, fixed values, and option values must already use their normalized
+form. Previously persisted values are normalized when restored, so adding normalization also
+migrates existing browser state without separate data handling.
 
 `id` is the local binding name (`{{ $doc.input.ide }}`). By default, values persist per
 course and input ID. Optional `sharedId` gives a value a stable identity across courses

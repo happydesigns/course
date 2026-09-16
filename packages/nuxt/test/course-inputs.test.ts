@@ -99,6 +99,17 @@ describe("course input placeholders", () => {
 });
 
 describe("validated parameter values", () => {
+  it("normalizes valid values before interpolation", () => {
+    const inputs = [{
+      id: "package",
+      label: "Package",
+      defaultValue: "ZDEFAULT",
+      normalization: { trim: true, case: "uppercase" as const },
+      pattern: "[A-Z0-9_/]+"
+    }];
+    expect(createCourseInputValues(inputs, { package: "  /company/package  " })).toEqual({ package: "/COMPANY/PACKAGE" });
+    expect(createCourseInputValues(inputs, { package: "invalid-name" })).toEqual({ package: "ZDEFAULT" });
+  });
   it("keeps invalid drafts out of prose, code and file substitutions", () => {
     const inputs = [{ id: "number", label: "Number", defaultValue: "##", pattern: "[0-9]{2}" }];
     expect(createCourseInputValues(inputs, { number: "x7" })).toEqual({ number: "##" });

@@ -1,7 +1,7 @@
 export { CourseNextCoursesSchema, refineCourseRelations, resolveNextCourses } from "./next-courses.js";
 export type { CourseRelations } from "./next-courses.js";
 
-export { courseInputOptions, createCourseInputValueSchema, courseInputStorageKey } from "./inputs.js";
+export { courseInputOptions, createCourseInputValueSchema, courseInputStorageKey, normalizeCourseInputValue } from "./inputs.js";
 
 export {
   AssetRefSchema,

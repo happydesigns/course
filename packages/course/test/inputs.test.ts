@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CourseInputSchema, courseInputStorageKey, createCourseInputValueSchema } from "../src/inputs.js";
+import { CourseInputSchema, courseInputStorageKey, createCourseInputValueSchema, normalizeCourseInputValue } from "../src/inputs.js";
 import { validateCourseMarkdown } from "../src/markdown.js";
 
 const ide = { id: "ide", label: "Editor", options: ["Eclipse", "VS Code"], defaultValue: "Eclipse" };
@@ -24,6 +24,24 @@ describe("course parameters", () => {
     expect(CourseInputSchema.safeParse(ide).success).toBe(true);
     expect(createCourseInputValueSchema(ide).safeParse("Vim").success).toBe(false);
     expect(createCourseInputValueSchema({ ...ide, allowCustom: true }).safeParse("Vim").success).toBe(true);
+  });
+  it("normalizes text before applying its constraints", () => {
+    const input = CourseInputSchema.parse({
+      id: "package",
+      label: "Package",
+      normalization: { trim: true, case: "uppercase" },
+      pattern: "[A-Z0-9_/]+"
+    });
+    expect(normalizeCourseInputValue(input, "  /company/package  ")).toBe("/COMPANY/PACKAGE");
+    expect(createCourseInputValueSchema(input).parse("  /company/package  ")).toBe("/COMPANY/PACKAGE");
+    expect(createCourseInputValueSchema(input).safeParse("package-name").success).toBe(false);
+  });
+  it("requires authored values to already use their canonical form", () => {
+    const normalization = { trim: true, case: "uppercase" } as const;
+    expect(CourseInputSchema.safeParse({ id: "package", label: "Package", normalization, defaultValue: "ZPACKAGE" }).success).toBe(true);
+    expect(CourseInputSchema.safeParse({ id: "package", label: "Package", normalization, defaultValue: "zpackage" }).success).toBe(false);
+    expect(CourseInputSchema.safeParse({ id: "package", label: "Package", normalization, fixedValue: " ZPACKAGE" }).success).toBe(false);
+    expect(CourseInputSchema.safeParse({ id: "package", label: "Package", normalization, options: ["zpackage"] }).success).toBe(false);
   });
   it.each([
     { options: [] },

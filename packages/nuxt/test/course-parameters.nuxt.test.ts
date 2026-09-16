@@ -1,5 +1,5 @@
 import type { CoursePage } from "../app/types/course";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref } from "vue";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import { useCourseInputs } from "../app/composables/useCourseInputs";
@@ -143,6 +143,35 @@ describe("native parameters in Nuxt", () => {
     expect(state.route!.resolvedValues.value.name).toBe("my-course");
     expect(stored["course-input:shared:test.editor"]).toBe("vscode");
     expect(stored["course:a:input:name"]).toBe("my-course");
+  });
+  it("normalizes entered and persisted values before displaying or storing them", async () => {
+    const input = {
+      id: "package",
+      label: "Package",
+      sharedId: "test.package",
+      defaultValue: "ZDEFAULT",
+      normalization: { trim: true, case: "uppercase" as const },
+      pattern: "[A-Z0-9_/]+"
+    };
+    const key = "course-input:shared:test.package";
+    const stored: Record<string, string> = { [key]: "  /company/package  " };
+    let controller!: ReturnType<typeof useCourseInputs>;
+    const Reader = defineComponent({ setup() {
+      controller = useCourseInputs({ course: { inputs: [input] } as CoursePage, courseKey: "normalization", enabled: true });
+      return () => h(CourseParameters, { inputs: [input], values: controller.values.value, defaultOpen: true, onUpdate: controller.setInputValue });
+    } });
+    const wrapper = await mountSuspended(defineComponent({ setup() {
+      provideCourseStorage({ getItem: storageKey => stored[storageKey] ?? null, setItem: (storageKey, value) => { stored[storageKey] = value; } });
+      return () => h(Reader);
+    } }));
+    wrappers.push(wrapper);
+    await vi.waitFor(() => expect(controller.ready.value).toBe(true));
+    expect(controller.inputValue(input)).toBe("/COMPANY/PACKAGE");
+    expect(stored[key]).toBe("/COMPANY/PACKAGE");
+    expect(wrapper.get('input[aria-label="Package"]').attributes("autocapitalize")).toBe("characters");
+    controller.setInputValue(input, "  znew_package  ");
+    expect(controller.inputValue(input)).toBe("ZNEW_PACKAGE");
+    expect(stored[key]).toBe("ZNEW_PACKAGE");
   });
   it("restores shared values, filters instructions, and isolates storage providers", async () => {
     const first = await readers({ "course-input:shared:test.editor": "vscode" });

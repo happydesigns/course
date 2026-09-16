@@ -5,6 +5,12 @@ const option = z.union([
   z.string().trim().min(1),
   z.object({ value: z.string().trim().min(1), label: z.string().min(1) }).strict()
 ]);
+const normalization = z.object({
+  trim: z.boolean().optional(),
+  case: z.enum(["uppercase", "lowercase"]).optional()
+}).strict().refine((value) => value.trim !== undefined || value.case !== undefined, {
+  message: "Normalization must configure trim or case."
+});
 
 /** Serializable authoring contract: Markdown and JSON use the same definition. */
 export const CourseInputSchema = z.object({
@@ -19,6 +25,7 @@ export const CourseInputSchema = z.object({
   allowCustom: z.boolean().optional(),
   minLength: z.number().int().nonnegative().optional(),
   maxLength: z.number().int().positive().optional(),
+  normalization: normalization.optional(),
   pattern: z.string().refine(isValidPattern, "Invalid regular expression.").optional()
 }).strict().superRefine((input, ctx) => {
   const values = courseInputOptions(input).map((item) => item.value);
@@ -37,6 +44,21 @@ export const CourseInputSchema = z.object({
   if (input.options && !input.allowCustom && input.defaultValue !== undefined && !values.includes(input.defaultValue)) {
     ctx.addIssue({ code: "custom", path: ["defaultValue"], message: "Default value must be one of the options." });
   }
+  const authoredValues = [
+    ["defaultValue", input.defaultValue],
+    ["fixedValue", input.fixedValue]
+  ] as const;
+  for (const [path, value] of authoredValues) {
+    if (value !== undefined && normalizeCourseInputValue(input, value) !== value) {
+      ctx.addIssue({ code: "custom", path: [path], message: "Value must already satisfy the configured normalization." });
+    }
+  }
+  input.options?.forEach((item, index) => {
+    const value = typeof item === "string" ? item : item.value;
+    if (normalizeCourseInputValue(input, value) !== value) {
+      ctx.addIssue({ code: "custom", path: ["options", index], message: "Option value must already satisfy the configured normalization." });
+    }
+  });
   // Text defaults may deliberately be placeholders (for example ###).
   if (input.pattern === undefined || isValidPattern(input.pattern)) {
     const schema = createCourseInputValueSchema(input);
@@ -65,6 +87,10 @@ type InputDefinition = {
   allowCustom?: boolean;
   minLength?: number;
   maxLength?: number;
+  normalization?: {
+    trim?: boolean;
+    case?: "uppercase" | "lowercase";
+  };
   pattern?: string;
 };
 
@@ -72,9 +98,22 @@ export function courseInputOptions(input: InputDefinition): Array<{ value: strin
   return (input.options ?? []).map((item) => typeof item === "string" ? { value: item, label: item } : item);
 }
 
+function createCourseInputNormalizationSchema(input: InputDefinition) {
+  let text = z.string();
+  if (input.normalization?.trim) text = text.trim();
+  if (input.normalization?.case === "uppercase") text = text.toUpperCase();
+  if (input.normalization?.case === "lowercase") text = text.toLowerCase();
+  return text;
+}
+
+/** Normalizes authored and persisted values before validation or interpolation. */
+export function normalizeCourseInputValue(input: InputDefinition, value: string): string {
+  return createCourseInputNormalizationSchema(input).parse(value);
+}
+
 /** Value validation is shared by renderers and consumers, without UI dependencies. */
 export function createCourseInputValueSchema(input: InputDefinition) {
-  let text = z.string();
+  let text = createCourseInputNormalizationSchema(input);
   if (input.minLength !== undefined) text = text.min(input.minLength);
   if (input.maxLength !== undefined) text = text.max(input.maxLength);
   if (input.pattern !== undefined) text = text.regex(new RegExp(`^(?:${input.pattern})$`));
