@@ -7,7 +7,7 @@ afterEach(() => wrappers.splice(0).forEach(wrapper => wrapper.unmount()));
 
 it("renders accessible successor links with host labels and hides an empty section", async () => {
   const wrapper = await mountSuspended(CourseNextCourses, { props: {
-    courses: [], title: "So geht’s weiter", linkLabel: "Zum Kurs"
+    courses: [], title: "So geht’s weiter", courseLabel: "Nächster Kurs", linkLabel: "Zum Kurs"
   } });
   wrappers.push(wrapper);
   expect(wrapper.find('section').exists()).toBe(false);
@@ -17,6 +17,7 @@ it("renders accessible successor links with host labels and hides an empty secti
   ] });
   expect(wrapper.get('section').attributes('aria-label')).toBe('So geht’s weiter');
   expect(wrapper.findAll('a').map(link => link.attributes('href'))).toEqual(['/first', '/second']);
+  expect(wrapper.text()).toContain('Nächster Kurs');
   expect(wrapper.text()).toContain('Learn the basics');
   expect(wrapper.text()).toContain('Zum Kurs');
   await wrapper.setProps({ courses: [{ path: '/first', title: 'Updated title', description: 'Updated description' }] });

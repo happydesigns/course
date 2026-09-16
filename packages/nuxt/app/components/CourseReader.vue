@@ -32,6 +32,7 @@ interface CourseProgressConfig {
 interface CourseNavigationConfig {
   breadcrumbs?: CourseBackLink;
   nextCoursesTitle?: string;
+  nextCourseLabel?: string;
   nextCourseLinkLabel?: string;
 }
 
@@ -217,6 +218,7 @@ const contentPageUi = computed(() => ({
           v-if="isCourseExit"
           :courses="nextCourses"
           :title="navigationConfig.nextCoursesTitle"
+          :course-label="navigationConfig.nextCourseLabel"
           :link-label="navigationConfig.nextCourseLinkLabel"
         />
       </UPageBody>
