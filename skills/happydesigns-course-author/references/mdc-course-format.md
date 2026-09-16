@@ -245,3 +245,29 @@ Example prompt:
 Use $happydesigns-course-author to convert this repository into `packages/nuxt/preview/content/courses/<semantic-slug>.md`.
 Preserve the source sequence, do not invent missing steps, and use rendered needsReview notes only when uncertainty affects learner action.
 ```
+
+## Next courses
+
+Define optional successors on the course overview using stable course IDs:
+
+```yaml
+courseId: getting-started
+nextCourses:
+  - first-project
+  - another-project
+```
+
+Order is explicit; it is not inferred from catalog ordering. Each ID must resolve to
+one course (not a lesson). Duplicate IDs, self references, and unknown targets are errors.
+The Markdown validator checks the local definition; catalog references are checked
+when the host calls `resolveNextCourses(course, catalog)` from `@happydesigns/course`.
+Pass the result to `<CourseReader :next-courses="nextCourses" />`. Catalog entries need
+`courseId`, `path`, `title`, and `description`; include `pageType` if lessons are present.
+The preview integrates this automatically. Hosts should resolve every overview during
+content validation or build to catch missing targets before deployment.
+
+Cards appear below the overview, at the last required lesson, and at the final lesson.
+They never require completed checkpoints and do not replace lesson navigation. No
+successors means no section. Titles and descriptions come from the target courses.
+Customize `courseNavigation.nextCoursesTitle` and `nextCourseLinkLabel` through the
+existing variant configuration to localize the section and its link label.

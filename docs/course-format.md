@@ -167,7 +167,7 @@ definition and shared ID in each participating overview. Different events should
 different IDs. Sharing does not cross browser profiles or websites. Changing a shared
 ID starts a new value; existing per-course storage keys are unchanged.
 
-Shared values update mounted readers immediately. Values restore after hydration and
+Shared values update mounted readers immediately. With browser storage, changes and deletions also synchronize across open tabs on the same origin. Values restore after hydration and
 are checked against each receiving course's definition. An obsolete selection falls
 back to the course's default. A custom `CourseStorage` provider isolates both live and
 persisted values. Storage failures do not block reading; values remain in memory.
@@ -287,3 +287,29 @@ Optional fields:
 ## File Paths
 
 Course file paths must be normalized relative paths with forward slashes. Do not use absolute paths, drive letters, backslashes, empty segments, `.`, or `..`.
+
+## Next courses
+
+Define optional successors on the course overview using stable course IDs:
+
+```yaml
+courseId: getting-started
+nextCourses:
+  - first-project
+  - another-project
+```
+
+Order is explicit; it is not inferred from catalog ordering. Each ID must resolve to
+one course (not a lesson). Duplicate IDs, self references, and unknown targets are errors.
+The Markdown validator checks the local definition; catalog references are checked
+when the host calls `resolveNextCourses(course, catalog)` from `@happydesigns/course`.
+Pass the result to `<CourseReader :next-courses="nextCourses" />`. Catalog entries need
+`courseId`, `path`, `title`, and `description`; include `pageType` if lessons are present.
+The preview integrates this automatically. Hosts should resolve every overview during
+content validation or build to catch missing targets before deployment.
+
+Cards appear below the overview, at the last required lesson, and at the final lesson.
+They never require completed checkpoints and do not replace lesson navigation. No
+successors means no section. Titles and descriptions come from the target courses.
+Customize `courseNavigation.nextCoursesTitle` and `nextCourseLinkLabel` through the
+existing variant configuration to localize the section and its link label.
