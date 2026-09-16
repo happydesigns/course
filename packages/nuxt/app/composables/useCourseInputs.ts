@@ -25,7 +25,7 @@ export function useCourseInputs(options: {
   const ready = ref(false);
   const inputs = computed(() => toValue(options.enabled) ? (toValue(options.course).inputs ?? []) : []);
   const values = computed(() => Object.fromEntries(inputs.value.map((input) => [
-    input.id, ready.value ? store.value[storageKey(input)] ?? "" : ""
+    input.id, input.fixedValue ?? (ready.value ? store.value[storageKey(input)] ?? "" : "")
   ])));
   const resolvedValues = computed(() => createCourseInputValues(inputs.value, values.value));
 
@@ -35,6 +35,7 @@ export function useCourseInputs(options: {
 
   function restore(): void {
     for (const input of inputs.value) {
+      if (input.fixedValue !== undefined) continue;
       const key = storageKey(input);
       if (!Object.hasOwn(store.value, key)) store.value[key] = storage.getItem(key) ?? "";
     }
@@ -46,7 +47,7 @@ export function useCourseInputs(options: {
   }
 
   function setInputValue(input: CourseInput, value: string | number): void {
-    if (!ready.value) return;
+    if (!ready.value || input.fixedValue !== undefined) return;
     const normalizedValue = String(value);
     if (input.options && !input.allowCustom && !createCourseInputValueSchema(input).safeParse(normalizedValue).success) return;
 

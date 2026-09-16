@@ -5,6 +5,15 @@ import {
 } from "../app/utils/course-inputs";
 
 describe("course input placeholders", () => {
+  it("resolves fixed values before stored values, including an empty fixed value", () => {
+    const values = createCourseInputValues([
+      { id: "editor", label: "Editor", fixedValue: "eclipse" },
+      { id: "suffix", label: "Suffix", fixedValue: "" }
+    ], { editor: "vscode", suffix: "old" });
+    expect(values).toEqual({ editor: "eclipse", suffix: "" });
+    expect(interpolateCourseInputPlaceholders("Use {{ $doc.input.editor }}{{ $doc.input.suffix }}", values)).toBe("Use eclipse");
+  });
+
   it("uses explicit values before defaults", () => {
     expect(
       createCourseInputValues(

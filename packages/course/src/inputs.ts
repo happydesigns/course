@@ -13,6 +13,7 @@ export const CourseInputSchema = z.object({
   description: z.string().optional(),
   placeholder: z.string().optional(),
   defaultValue: z.string().optional(),
+  fixedValue: z.string().optional(),
   sharedId: identifier.optional(),
   options: z.array(option).min(1).optional(),
   allowCustom: z.boolean().optional(),
@@ -21,6 +22,9 @@ export const CourseInputSchema = z.object({
   pattern: z.string().refine(isValidPattern, "Invalid regular expression.").optional()
 }).strict().superRefine((input, ctx) => {
   const values = courseInputOptions(input).map((item) => item.value);
+  if (input.fixedValue !== undefined && input.defaultValue !== undefined) {
+    ctx.addIssue({ code: "custom", path: ["fixedValue"], message: "Use either fixedValue or defaultValue, not both." });
+  }
   if (new Set(values).size !== values.length) {
     ctx.addIssue({ code: "custom", path: ["options"], message: "Option values must be unique." });
   }
@@ -36,6 +40,9 @@ export const CourseInputSchema = z.object({
   // Text defaults may deliberately be placeholders (for example ###).
   if (input.pattern === undefined || isValidPattern(input.pattern)) {
     const schema = createCourseInputValueSchema(input);
+    if (input.fixedValue !== undefined && !schema.safeParse(input.fixedValue).success) {
+      ctx.addIssue({ code: "custom", path: ["fixedValue"], message: "Fixed value must satisfy the input constraints." });
+    }
     values.forEach((value, index) => {
       if (!schema.safeParse(value).success) {
         ctx.addIssue({ code: "custom", path: ["options", index], message: "Option does not satisfy the input constraints." });

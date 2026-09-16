@@ -63,7 +63,7 @@ export function createCourseInputValues(
       const value = values[input.id];
       return [
         input.id,
-        value !== undefined && value.trim().length > 0 && createCourseInputValueSchema(input).safeParse(value).success
+        input.fixedValue !== undefined ? input.fixedValue : value !== undefined && value.trim().length > 0 && createCourseInputValueSchema(input).safeParse(value).success
           ? value
           : input.defaultValue ?? ""
       ];

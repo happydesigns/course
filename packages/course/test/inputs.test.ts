@@ -5,6 +5,15 @@ import { validateCourseMarkdown } from "../src/markdown.js";
 const ide = { id: "ide", label: "Editor", options: ["Eclipse", "VS Code"], defaultValue: "Eclipse" };
 
 describe("course parameters", () => {
+  it("validates fixed values without removing alternative variant options", () => {
+    const fixed = { ...ide, defaultValue: undefined, fixedValue: "Eclipse" };
+    expect(CourseInputSchema.safeParse(fixed).success).toBe(true);
+    expect(CourseInputSchema.safeParse({ ...fixed, fixedValue: "unknown" }).success).toBe(false);
+    expect(CourseInputSchema.safeParse({ ...fixed, defaultValue: "Eclipse" }).success).toBe(false);
+    expect(CourseInputSchema.safeParse({ id: "client", label: "Client", fixedValue: "100", pattern: "[0-9]{3}" }).success).toBe(true);
+    expect(CourseInputSchema.safeParse({ id: "client", label: "Client", fixedValue: "x", pattern: "[0-9]{3}" }).success).toBe(false);
+  });
+
   it("preserves legacy text definitions and placeholder defaults", () => {
     const input = CourseInputSchema.parse({ id: "group", label: "Group", defaultValue: "###", pattern: "[0-9]{3}" });
     const valueSchema = createCourseInputValueSchema(input);

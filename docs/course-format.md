@@ -313,3 +313,34 @@ They never require completed checkpoints and do not replace lesson navigation. N
 successors means no section. Titles and descriptions come from the target courses.
 Customize `courseNavigation.nextCoursesTitle` and `nextCourseLinkLabel` through the
 existing variant configuration to localize the section and its link label.
+
+### Fixed course parameters
+
+Use `fixedValue` instead of `defaultValue` for author-controlled values:
+
+```yaml
+inputs:
+  - id: environment
+    label: Environment
+    fixedValue: training
+  - id: editor
+    label: Editor
+    fixedValue: vscode
+    options:
+      - value: vscode
+        label: VS Code
+      - value: eclipse
+        label: Eclipse
+```
+
+Fixed values use the same `{{ $doc.input.environment }}` placeholders and
+`course-variant` conditions as editable parameters. They appear as information,
+without input controls. With only fixed parameters there is no parameter toggle.
+Stored preferences and update attempts cannot override them, and fixed values
+are not written to learner storage. Existing preferences remain available if
+the parameter becomes editable again.
+
+A fixed value must satisfy the configured options and constraints.
+`fixedValue` and `defaultValue` cannot be combined. Keep alternative options and
+variant content to support future course configurations. Fixed values are public
+course content, not a place for secrets or an authorization mechanism.

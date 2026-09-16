@@ -38,6 +38,47 @@ async function readers(stored: Record<string, string> = {}) {
 }
 
 describe("native parameters in Nuxt", () => {
+  it("renders fixed values as information and ignores storage and update attempts", async () => {
+    const fixed = { ...inputs[0]!, defaultValue: undefined, fixedValue: "eclipse" };
+    const stored: Record<string, string> = { "course-input:shared:test.editor": "vscode" };
+    const definitions = ref([fixed]);
+    let controller!: ReturnType<typeof useCourseInputs>;
+    const wrapper = await mountSuspended(defineComponent({ setup() {
+      provideCourseStorage({ getItem: key => stored[key] ?? null, setItem: (key, value) => { stored[key] = value; } });
+      controller = useCourseInputs({ course: () => ({ inputs: definitions.value }) as CoursePage, courseKey: "fixed-test", enabled: true });
+      provideCourseInputValues(controller.resolvedValues);
+      return () => h("div", [
+        h(CourseParameters, { inputs: definitions.value, values: controller.values.value, defaultOpen: true }),
+        h(CourseVariant, { parameter: "ide", value: "eclipse" }, () => "Eclipse instructions"),
+        h(CourseVariant, { parameter: "ide", value: "vscode" }, () => "VS Code instructions")
+      ]);
+    } }));
+    wrappers.push(wrapper);
+    expect(wrapper.get("dl").text()).toContain("Eclipse");
+    expect(wrapper.find("input").exists()).toBe(false);
+    expect(wrapper.find('[role="combobox"]').exists()).toBe(false);
+    expect(wrapper.find('button[aria-expanded]').exists()).toBe(false);
+    expect(wrapper.text()).toContain("Eclipse instructions");
+    expect(wrapper.text()).not.toContain("VS Code instructions");
+    controller.setInputValue(fixed, "vscode");
+    expect(controller.resolvedValues.value.ide).toBe("eclipse");
+    expect(stored["course-input:shared:test.editor"]).toBe("vscode");
+    definitions.value = [{ ...fixed, fixedValue: "vscode" }];
+    await nextTick();
+    expect(controller.resolvedValues.value.ide).toBe("vscode");
+  });
+  it("shows fixed information alongside editable fields", async () => {
+    const wrapper = await mountSuspended(CourseParameters, { props: {
+      inputs: [{ id: "system", label: "System", fixedValue: "Training" }, inputs[1]!],
+      values: {}, defaultOpen: true
+    } });
+    wrappers.push(wrapper);
+    expect(wrapper.get("dl").text()).toContain("Training");
+    expect(wrapper.get('input[aria-label="Name"]').exists()).toBe(true);
+    expect(wrapper.find('input[aria-label="System"]').exists()).toBe(false);
+    expect(wrapper.get('button[aria-expanded]').text()).toContain("(1)");
+  });
+
   it("updates mounted browser readers when another tab changes or clears shared inputs", async () => {
     const input = { id: "name", label: "Name", sharedId: "test.browser-sync", defaultValue: "example" };
     const key = "course-input:shared:test.browser-sync";
