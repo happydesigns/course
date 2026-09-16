@@ -40,14 +40,14 @@ function fieldError(input: CourseInput): string | undefined {
 
 <template>
   <div class="space-y-3">
-    <dl v-if="fixedInputs.length" class="flex flex-wrap gap-x-6 gap-y-2 rounded-lg bg-elevated/30 px-4 py-3">
+    <dl v-if="fixedInputs.length" class="flex flex-wrap gap-x-6 gap-y-2 rounded-lg bg-elevated/40 px-4 py-3">
       <div v-for="input in fixedInputs" :key="input.id" :data-course-fixed="input.id">
         <dt class="text-xs text-muted">{{ input.label }}</dt>
         <dd class="text-sm font-medium text-highlighted">{{ courseInputOptions(input).find(item => item.value === input.fixedValue)?.label ?? input.fixedValue }}</dd>
         <dd v-if="input.description" class="text-xs text-muted">{{ input.description }}</dd>
       </div>
     </dl>
-    <UCollapsible v-if="editableInputs.length" v-model:open="open" class="rounded-lg bg-elevated/30 p-2">
+    <UCollapsible v-if="editableInputs.length" v-model:open="open" class="rounded-lg bg-elevated/40 p-2">
       <UButton
         :label="open ? `Course parameters (${editableInputs.length})` : `Course parameters · ${summary}`"
         icon="i-lucide-sliders-horizontal"
