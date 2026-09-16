@@ -10,7 +10,7 @@ defineProps<{
 <template>
   <section
     aria-labelledby="course-page-outline-title"
-    class="mt-6 rounded-lg bg-elevated/40 p-4"
+    class="mt-6 rounded-lg bg-elevated/30 p-4"
   >
     <div class="flex items-center justify-between gap-4">
       <h2
