@@ -1,5 +1,6 @@
 import {
   CourseDateSchema,
+  CourseNextCoursesSchema,
   CourseInputSchema,
   CourseVersionSchema
 } from "@happydesigns/course";
@@ -32,6 +33,7 @@ export const courseVariantSchemas = {
   }),
   courseStructure: z.object({
     courseId: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+    nextCourses: CourseNextCoursesSchema.optional(),
     pageType: z.enum(["course", "lesson"]).optional(),
     order: z.number().int().nonnegative().optional(),
     optional: z.boolean().optional(),

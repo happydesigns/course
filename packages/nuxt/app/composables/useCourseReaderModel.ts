@@ -37,6 +37,12 @@ export function useCourseReaderModel(options: {
     orderedLessons.value.findIndex((lesson) => lesson.path === currentPage.value.path)
   );
   const isLesson = computed(() => currentPage.value.pageType === "lesson");
+  const isCourseExit = computed(() => !isLesson.value || (
+    currentLessonIndex.value >= 0 && (
+      currentLessonIndex.value === orderedLessons.value.length - 1
+      || currentPage.value.path === orderedLessons.value.findLast(lesson => !lesson.optional)?.path
+    )
+  ));
   const codeDocument = computed(() => extractCourseCodeDocument(currentPage.value.nodes));
   const codeSteps = computed(() => codeDocument.value.steps);
   const renderedPage = computed<CoursePage>(() => ({
@@ -114,6 +120,7 @@ export function useCourseReaderModel(options: {
     orderedLessons,
     currentLessonIndex,
     isLesson,
+    isCourseExit,
     renderedPage,
     historyPages,
     codeSteps,

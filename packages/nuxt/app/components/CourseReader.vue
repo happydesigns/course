@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CourseBackLink, CoursePage } from "../types/course";
+import type { CourseBackLink, CourseLink, CoursePage } from "../types/course";
 import { computed } from "vue";
 import CodeTreeIntersection from "./CodeTreeIntersection.vue";
 import CourseVariant from "./CourseVariant.vue";
@@ -31,6 +31,8 @@ interface CourseProgressConfig {
 
 interface CourseNavigationConfig {
   breadcrumbs?: CourseBackLink;
+  nextCoursesTitle?: string;
+  nextCourseLinkLabel?: string;
 }
 
 const props = withDefaults(
@@ -38,11 +40,13 @@ const props = withDefaults(
     course: CoursePage;
     page?: CoursePage;
     lessons?: CoursePage[];
+    nextCourses?: CourseLink[];
     courseKey?: string;
     back?: CourseBackLink;
   }>(),
   {
-    lessons: () => []
+    lessons: () => [],
+    nextCourses: () => []
   }
 );
 
@@ -88,6 +92,7 @@ const {
   orderedLessons,
   currentLessonIndex,
   isLesson,
+  isCourseExit,
   renderedPage,
   codeHistory,
   codeSteps,
@@ -208,6 +213,12 @@ const contentPageUi = computed(() => ({
           <USeparator class="my-8" />
           <UContentSurround :surround="contentSurround" />
         </template>
+        <CourseNextCourses
+          v-if="isCourseExit"
+          :courses="nextCourses"
+          :title="navigationConfig.nextCoursesTitle"
+          :link-label="navigationConfig.nextCourseLinkLabel"
+        />
       </UPageBody>
 
       <template v-if="hasPageCodeStage" #right>

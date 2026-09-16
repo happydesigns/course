@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'course-preview', header: false, footer: false, key: route => route.path.replace(/\/+$/, '') || '/' });
+import { resolveNextCourses } from "@happydesigns/course";
 import type { CoursePage } from '../../../../app/types/course';
 const requestFetch = useRequestFetch();
 const route = useRoute();
@@ -31,7 +32,10 @@ const { data, error } = await useAsyncData(
       ? pages.filter(item => item.courseId === course.courseId && item.pageType === "lesson").sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       : [];
 
-    return { course, page, lessons };
+    const catalog = course.nextCourses?.length
+      ? await requestFetch<CoursePage[]>("/api/course-preview/catalog.json")
+      : [];
+    return { course, page, lessons, nextCourses: resolveNextCourses(course, catalog) };
   }
 );
 
@@ -57,6 +61,7 @@ useSeoMeta({
       :course="data.course"
       :page="data.page"
       :lessons="data.lessons"
+      :next-courses="data.nextCourses"
       :course-key="data.course.courseId ?? data.course.path"
       :back="{
         icon: 'i-lucide-square-library',

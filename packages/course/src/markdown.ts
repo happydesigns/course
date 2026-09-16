@@ -1,3 +1,4 @@
+import { CourseNextCoursesSchema, refineCourseRelations } from "./next-courses.js";
 import { parseMarkdown } from "comark";
 import { z } from "zod";
 import {
@@ -44,6 +45,7 @@ export interface CourseMarkdownMetadata {
   navigation?: boolean;
   inputs?: CourseInput[];
   courseId?: string;
+  nextCourses?: string[];
   pageType?: "course" | "lesson";
   order?: number;
   optional?: boolean;
@@ -82,6 +84,7 @@ const CourseMarkdownFrontmatterSchema = z
     navigation: z.boolean().optional(),
     inputs: z.array(CourseInputSchema).optional(),
     courseId: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
+    nextCourses: CourseNextCoursesSchema.optional(),
     pageType: z.enum(["course", "lesson"]).optional(),
     order: z.number().int().nonnegative().optional(),
     optional: z.boolean().optional(),
@@ -89,7 +92,7 @@ const CourseMarkdownFrontmatterSchema = z
     checkpoints: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).optional(),
     metadata: z.record(z.string(), z.unknown()).optional()
   })
-  .passthrough();
+  .passthrough().superRefine(refineCourseRelations);
 
 const CODE_TREE_TAG = "code-tree-intersection";
 const CHECKPOINT_TAG = "course-checkpoint";

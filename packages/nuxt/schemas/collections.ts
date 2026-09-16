@@ -1,3 +1,4 @@
+import { refineCourseRelations } from "@happydesigns/course";
 import { z } from "zod";
 import { courseVariantSchemas } from "./traits";
 
@@ -6,4 +7,4 @@ export const courseCollectionSchema = z.object({
   ...courseVariantSchemas.courseMetadata.shape,
   ...courseVariantSchemas.courseInputs.shape,
   ...courseVariantSchemas.courseStructure.shape
-});
+}).superRefine(refineCourseRelations);

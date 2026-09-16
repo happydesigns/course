@@ -24,6 +24,8 @@ export type CourseProgressLesson = Pick<CoursePage, 'path' | 'optional' | 'check
   nodes?: CoursePage['nodes'];
 };
 
+export type CourseLink = Pick<CoursePage, "path" | "title" | "description">;
+
 export interface CourseBackLink {
   label: string;
   to: string;
