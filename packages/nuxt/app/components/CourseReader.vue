@@ -141,7 +141,7 @@ const contentPageUi = computed(() => ({
   center: hasPageCodeStage.value
     ? "min-w-0 px-4 sm:px-6 lg:col-span-5 lg:px-10 xl:px-12 2xl:col-span-1"
     : "mx-auto w-full max-w-5xl min-w-0 px-4 sm:px-6 lg:col-span-10 lg:px-8",
-  right: "lg:col-span-5 lg:min-h-0 2xl:col-span-1"
+  right: "lg:col-span-5 lg:min-h-0 lg:border-l-0 lg:pl-0 2xl:col-span-1"
 }));
 </script>
 

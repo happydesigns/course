@@ -181,3 +181,12 @@ Only the optional `/preview` entry adds routes, sample content and Studio metada
 The base Course layer remains route-free and collection-free for applications
 that supply their own routing and courses. Do not copy the reference application
 or create a simplified renderer for a separate host.
+
+### Highlighting parameterized code
+
+When supplying your own content pipeline, pass `courseInputHighlighting()` from
+`@happydesigns/course-nuxt/highlighting` to Comark's Shiki `transformers` option.
+The preview already does this. It keeps Course placeholder punctuation out of the
+language grammar and restores the template text before learner values are inserted.
+Use parameters for identifiers, literal contents or numeric values, not arbitrary
+code fragments; language-changing fragments require highlighting after substitution.

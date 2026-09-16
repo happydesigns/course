@@ -10,6 +10,7 @@
   "main": "./nuxt.config.ts",
   "exports": {
     ".": "./nuxt.config.ts",
+    "./highlighting": "./highlighting.ts",
     "./schemas": "./schemas/index.ts",
     "./storage": "./app/composables/useCourseStorage.ts",
     "./types": "./app/types/course.ts",
@@ -18,6 +19,7 @@
   "files": [
     "app",
     "schemas",
+    "highlighting.ts",
     "nuxt.config.ts",
     "preview"
   ],
