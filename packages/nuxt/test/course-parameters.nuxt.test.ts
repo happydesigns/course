@@ -38,6 +38,30 @@ async function readers(stored: Record<string, string> = {}) {
 }
 
 describe("native parameters in Nuxt", () => {
+  it("updates mounted browser readers when another tab changes or clears shared inputs", async () => {
+    const input = { id: "name", label: "Name", sharedId: "test.browser-sync", defaultValue: "example" };
+    const key = "course-input:shared:test.browser-sync";
+    let controller!: ReturnType<typeof useCourseInputs>;
+    const wrapper = await mountSuspended(defineComponent({ setup() {
+      controller = useCourseInputs({ course: { inputs: [input] } as CoursePage, courseKey: "browser-sync", enabled: true });
+      return () => h("p", controller.resolvedValues.value.name);
+    } }));
+    wrappers.push(wrapper);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: "from-another-course", storageArea: window.localStorage }));
+    await nextTick();
+    expect(wrapper.text()).toBe("from-another-course");
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: "ignore-session-storage", storageArea: window.sessionStorage }));
+    await nextTick();
+    expect(wrapper.text()).toBe("from-another-course");
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: null, storageArea: window.localStorage }));
+    await nextTick();
+    expect(wrapper.text()).toBe("example");
+    controller.setInputValue(input, "local-value");
+    window.dispatchEvent(new StorageEvent("storage", { key: null, storageArea: window.localStorage }));
+    await nextTick();
+    expect(wrapper.text()).toBe("example");
+    window.localStorage.removeItem(key);
+  });
   it("uses defaults for empty-field placeholders and summaries, then displays entered values", async () => {
     const wrapper = await mountSuspended(CourseParameters, {
       props: {
