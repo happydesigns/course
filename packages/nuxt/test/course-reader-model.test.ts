@@ -33,7 +33,7 @@ describe("course reader model", () => {
     })
   ];
 
-  it("orders lessons, interpolates metadata, and builds overview navigation", () => {
+  it("orders lessons and interpolates overview metadata without redundant navigation", () => {
     const model = useCourseReaderModel({
       course,
       page: undefined,
@@ -47,10 +47,7 @@ describe("course reader model", () => {
     expect(model.breadcrumbItems.value).toEqual([
       { label: "Courses", to: "/courses", icon: undefined }
     ]);
-    expect(model.surround.value).toEqual([
-      null,
-      { title: "First", description: "Learn JNF", path: "/courses/demo/first" }
-    ]);
+    expect(model.surround.value).toEqual([]);
   });
 
   it("reacts to lesson navigation and links the first lesson back to the overview", () => {

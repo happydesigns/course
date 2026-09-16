@@ -88,12 +88,8 @@ export function useCourseReaderModel(options: {
     }))
   );
   const surround = computed<[CourseSurroundLink | null, CourseSurroundLink | null] | []>(() => {
-    const firstLesson = orderedLessons.value[0];
-
     if (!isLesson.value) {
-      return firstLesson
-        ? [null, toSurroundLink(firstLesson, options.inputValues.value)]
-        : [];
+      return [];
     }
 
     if (currentLessonIndex.value < 0) {
