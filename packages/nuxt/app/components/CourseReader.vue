@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CourseBackLink, CourseLink, CoursePage } from "../types/course";
 import { computed } from "vue";
 import CodeTreeIntersection from "./CodeTreeIntersection.vue";
@@ -10,6 +11,8 @@ import { useCourseInputs } from "../composables/useCourseInputs";
 import { useCourseProgressController } from "../composables/useCourseProgressController";
 import { useCourseReaderModel } from "../composables/useCourseReaderModel";
 import { hasCourseCodeTree } from "../utils/course-content";
+
+const label = useCourseLabels();
 
 interface CourseMetadataConfig {
   dateLocale?: string;
@@ -107,7 +110,8 @@ const {
   page: () => props.page,
   lessons: () => props.lessons,
   inputValues: courseInputs.resolvedValues,
-  breadcrumbRoot
+  breadcrumbRoot,
+  overviewLabel: () => label("overview")
 });
 const progress = useCourseProgressController({
   course: () => props.course,
@@ -196,8 +200,8 @@ const contentPageUi = computed(() => ({
         >
           <UButton
             :label="progress.isLessonComplete(currentPage.path)
-              ? 'Step completed'
-              : 'Mark step complete'"
+              ? label('stepDone')
+              : label('markDone')"
             :icon="progress.isLessonComplete(currentPage.path)
               ? 'i-lucide-circle-check'
               : 'i-lucide-check'"

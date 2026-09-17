@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CoursePage } from "../types/course";
 import { computed } from "vue";
 import { useCourseProgress } from "../composables/useCourseProgress";
+
+const label = useCourseLabels();
 
 const props = defineProps<{
   lessons: CoursePage[];
@@ -23,10 +26,10 @@ const courseActionPath = computed(() =>
 );
 const courseActionLabel = computed(() => {
   if (requiredCount.value > 0 && completedRequiredCount.value >= requiredCount.value) {
-    return "Review course";
+    return label("review");
   }
 
-  return completedRequiredCount.value > 0 ? "Continue course" : "Start course";
+  return completedRequiredCount.value > 0 ? label("resume") : label("start");
 });
 
 function formatDuration(minutes: number): string {
@@ -37,7 +40,7 @@ function formatDuration(minutes: number): string {
     return `${remainder} min`;
   }
 
-  return remainder > 0 ? `${hours} hr ${remainder} min` : `${hours} hr`;
+  return remainder > 0 ? `${hours} ${label("hours")} ${remainder} min` : `${hours} ${label("hours")}`;
 }
 
 </script>
@@ -45,18 +48,17 @@ function formatDuration(minutes: number): string {
 <template>
   <section v-if="orderedLessons.length" class="not-prose mt-12 border-t border-default pt-8">
     <div>
-      <h2 class="text-2xl font-bold text-highlighted">Course content</h2>
-      <p class="mt-1 text-sm text-muted">Work through the required steps in order or open any lesson directly.</p>
+      <h2 class="text-2xl font-bold text-highlighted">{{ label('content') }}</h2>
+      <p class="mt-1 text-sm text-muted">{{ label('instructions') }}</p>
     </div>
 
     <div class="mt-5 grid gap-5 rounded-lg bg-elevated/30 p-4 lg:grid-cols-[minmax(18rem,1.5fr)_minmax(22rem,1fr)_auto] lg:items-center">
       <div>
         <div class="flex items-center justify-between gap-4">
           <p class="text-sm font-semibold text-highlighted">
-            Your progress
+            {{ label('progress') }}
             <span class="ms-2 font-normal text-muted">
-              {{ progress?.completedRequiredStepCount.value ?? 0 }} of
-              {{ progress?.requiredStepCount.value ?? requiredCount }} steps completed
+              {{ label('completed', { done: progress?.completedRequiredStepCount.value ?? 0, total: progress?.requiredStepCount.value ?? requiredCount }) }}
             </span>
           </p>
           <span class="text-sm font-medium text-highlighted">{{ progress?.percent.value ?? 0 }}%</span>
@@ -66,7 +68,7 @@ function formatDuration(minutes: number): string {
           :max="100"
           size="sm"
           class="mt-2"
-          aria-label="Required course progress"
+          :aria-label="label('requiredProgress')"
         />
       </div>
 
@@ -74,20 +76,20 @@ function formatDuration(minutes: number): string {
         <div class="flex min-w-max items-center gap-3">
           <UIcon name="i-lucide-list-checks" class="size-5 shrink-0 text-muted" aria-hidden="true" />
           <div>
-            <dt class="text-xs text-muted">Course structure</dt>
+            <dt class="text-xs text-muted">{{ label('structure') }}</dt>
             <dd class="mt-0.5 flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-highlighted">
-              <span>{{ requiredCount }} required</span>
+              <span>{{ requiredCount }} {{ label('required') }}</span>
               <span v-if="optionalCount" class="font-normal text-dimmed" aria-hidden="true">&middot;</span>
-              <span v-if="optionalCount">{{ optionalCount }} optional</span>
+              <span v-if="optionalCount">{{ optionalCount }} {{ label('optional') }}</span>
             </dd>
           </div>
         </div>
         <div class="flex items-center gap-3">
           <UIcon name="i-lucide-clock-3" class="size-5 shrink-0 text-muted" aria-hidden="true" />
           <div>
-            <dt class="text-xs text-muted">Estimated duration</dt>
+            <dt class="text-xs text-muted">{{ label('duration') }}</dt>
             <dd class="mt-0.5 text-sm font-semibold text-highlighted">
-              {{ totalMinutes ? formatDuration(totalMinutes) : "Not specified" }}
+              {{ totalMinutes ? formatDuration(totalMinutes) : label("unspecified") }}
             </dd>
           </div>
         </div>
@@ -129,13 +131,13 @@ function formatDuration(minutes: number): string {
             <div class="flex flex-wrap items-center gap-2">
               <span class="font-medium text-highlighted group-hover:text-primary">{{ lesson.title }}</span>
               <UBadge v-if="lesson.optional" label="Optional" color="neutral" variant="subtle" size="sm" />
-              <span v-if="progress?.isLessonComplete(lesson.path)" class="sr-only">Completed</span>
+              <span v-if="progress?.isLessonComplete(lesson.path)" class="sr-only">{{ label('done') }}</span>
             </div>
             <p class="mt-1 text-sm text-muted">{{ lesson.description }}</p>
           </div>
           <p v-if="lesson.estimatedMinutes" class="mt-2 flex shrink-0 items-center gap-1.5 text-xs text-dimmed sm:mt-0">
             <UIcon name="i-lucide-clock-3" class="size-3.5" aria-hidden="true" />
-            Estimated {{ lesson.estimatedMinutes }} min
+            {{ label('estimated') }} {{ lesson.estimatedMinutes }} min
           </p>
         </div>
         <UIcon name="i-lucide-chevron-right" class="size-4 shrink-0 self-center text-dimmed group-hover:text-muted" />

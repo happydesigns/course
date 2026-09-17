@@ -24,6 +24,7 @@ export function useCourseReaderModel(options: {
   lessons: MaybeRefOrGetter<CoursePage[]>;
   inputValues: ComputedRef<Readonly<Record<string, string>>>;
   breadcrumbRoot: MaybeRefOrGetter<CourseBackLink | undefined>;
+  overviewLabel?: MaybeRefOrGetter<string>;
 }) {
   const currentPage = computed(() => withDerivedCheckpoints(
     toValue(options.page) ?? toValue(options.course)
@@ -105,7 +106,7 @@ export function useCourseReaderModel(options: {
     return [
       previousLesson
         ? toSurroundLink(previousLesson, options.inputValues.value)
-        : toSurroundLink(toValue(options.course), options.inputValues.value, "Course overview"),
+        : toSurroundLink(toValue(options.course), options.inputValues.value, toValue(options.overviewLabel) ?? "Course overview"),
       nextLesson ? toSurroundLink(nextLesson, options.inputValues.value) : null
     ];
   });

@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CourseInput } from "../types/course";
 import { courseInputOptions, createCourseInputValueSchema } from "@happydesigns/course";
 import { computed, ref } from "vue";
+
+const label = useCourseLabels();
 
 const props = defineProps<{
   inputs: CourseInput[];
@@ -49,7 +52,7 @@ function fieldError(input: CourseInput): string | undefined {
     </dl>
     <UCollapsible v-if="editableInputs.length" v-model:open="open" class="rounded-lg bg-elevated/40 p-2">
       <UButton
-        :label="open ? `Course parameters (${editableInputs.length})` : `Course parameters · ${summary}`"
+        :label="open ? `${label('parameters')} (${editableInputs.length})` : `${label('parameters')} · ${summary}`"
         icon="i-lucide-sliders-horizontal"
         :trailing-icon="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
         color="neutral"
@@ -60,7 +63,7 @@ function fieldError(input: CourseInput): string | undefined {
 
       <template #content>
         <fieldset class="px-2 pt-4 pb-2">
-          <legend class="sr-only">Course parameters</legend>
+          <legend class="sr-only">{{ label('parameters') }}</legend>
           <div class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
             <UFormField
               v-for="input in editableInputs"

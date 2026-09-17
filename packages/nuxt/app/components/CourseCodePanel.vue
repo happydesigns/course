@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CSSProperties } from "vue";
 import type { CourseCodeItem } from "../types/course-code";
 import { computed, h, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import CourseCodeFile from "./CourseCodeFile.vue";
 import { useCourseStorage } from "../composables/useCourseStorage";
+
+const label = useCourseLabels();
 
 interface CourseCodePanelConfig {
   minTreeWidth: number;
@@ -210,7 +213,7 @@ onBeforeUnmount(() => {
     <div
       v-if="!mobile"
       role="separator"
-      aria-label="Resize file tree"
+      :aria-label="label('resize')"
       aria-orientation="vertical"
       :aria-valuemin="config.minTreeWidth"
       :aria-valuemax="config.maxTreeWidth"

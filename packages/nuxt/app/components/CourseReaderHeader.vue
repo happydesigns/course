@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CourseInput, CoursePage } from "../types/course";
 import type { CoursePageAnchor } from "../composables/useCourseReaderModel";
 import { onBeforeUnmount, onMounted, ref } from "vue";
+
+const label = useCourseLabels();
 
 interface BreadcrumbItem {
   label: string;
@@ -57,7 +60,7 @@ onBeforeUnmount(() => {
 
 function formatDate(date?: string): string {
   if (!date) {
-    return props.draftLabel ?? "Draft";
+    return props.draftLabel ?? label("draft");
   }
 
   const parsedDate = new Date(`${date}T00:00:00`);
@@ -101,9 +104,9 @@ function formatDate(date?: string): string {
 
   <div v-else class="mt-4 flex flex-wrap items-center gap-2">
     <span v-if="course.date" class="text-sm text-muted font-normal">
-      Updated <time :datetime="course.date">{{ formatDate(course.date) }}</time>
+      {{ label('updated') }} <time :datetime="course.date">{{ formatDate(course.date) }}</time>
     </span>
-    <span v-else class="text-sm text-muted font-normal">{{ draftLabel ?? "Draft" }}</span>
+    <span v-else class="text-sm text-muted font-normal">{{ draftLabel ?? label("draft") }}</span>
     <UBadge v-if="course.version" color="neutral" variant="subtle" :label="`v${course.version}`" />
   </div>
 

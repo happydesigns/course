@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CoursePageAnchor } from "../composables/useCourseReaderModel";
+
+const label = useCourseLabels();
 
 defineProps<{
   links: CoursePageAnchor[];
@@ -18,9 +21,9 @@ defineProps<{
         class="flex items-center gap-2 text-sm font-semibold text-highlighted"
       >
         <UIcon name="i-lucide-list" class="size-4 text-muted" />
-        On this step
+        {{ label('onStep') }}
       </h2>
-      <span class="text-xs text-muted">{{ links.length }} sections</span>
+      <span class="text-xs text-muted">{{ links.length }} {{ label('sections') }}</span>
     </div>
 
     <UPageAnchors

@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CoursePage } from "../types/course";
 import { computed, ref } from "vue";
+
+const label = useCourseLabels();
 
 const props = defineProps<{
   course: CoursePage;
@@ -12,10 +15,10 @@ const mobileOpen = ref(false);
 const desktopOpen = ref(false);
 
 const positionLabel = computed(
-  () => `Step ${props.currentLessonIndex + 1} of ${props.lessons.length}`
+  () => label("position", { current: props.currentLessonIndex + 1, total: props.lessons.length })
 );
 const outlineAriaLabel = computed(() =>
-  `Course outline, step ${props.currentLessonIndex + 1} of ${props.lessons.length}`
+  `${label("outline")}, ${positionLabel.value}`
 );
 
 function toggleOutline(): void {
@@ -52,7 +55,7 @@ function close(): void {
         content: 'w-96 max-w-[calc(100vw-5rem)] bg-default/80 p-0 shadow-2xl ring-accented backdrop-blur-xl backdrop-saturate-150'
       }"
     >
-      <UTooltip text="Course outline" :kbds="['meta', 'shift', 'l']">
+      <UTooltip :text="label('outline')" :kbds="['meta', 'shift', 'l']">
         <UButton
           :label="positionLabel"
           icon="i-lucide-list-tree"
@@ -75,7 +78,7 @@ function close(): void {
     </UPopover>
   </span>
 
-  <UTooltip text="Course outline" :kbds="['meta', 'shift', 'l']" class="lg:hidden">
+  <UTooltip :text="label('outline')" :kbds="['meta', 'shift', 'l']" class="lg:hidden">
     <UButton
       :label="positionLabel"
       icon="i-lucide-list-tree"

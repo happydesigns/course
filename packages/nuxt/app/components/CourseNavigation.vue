@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useCourseLabels } from "../composables/useCourseLabels";
 import type { CoursePage } from "../types/course";
 import { computed } from "vue";
 import { useCourseProgress } from "../composables/useCourseProgress";
+
+const label = useCourseLabels();
 
 interface TocLink {
   id: string;
@@ -26,7 +29,7 @@ const orderedLessons = computed(() =>
 );
 const navigation = computed(() => [
   {
-    title: "Overview",
+    title: label("overview"),
     path: props.course.path,
     icon: "i-lucide-layout-dashboard",
     overview: true,
@@ -51,8 +54,7 @@ const navigation = computed(() => [
     <div>
       <div class="mb-2 flex items-center justify-between gap-3 text-xs text-muted">
         <span>
-          {{ progress?.completedRequiredStepCount.value ?? 0 }} of
-          {{ progress?.requiredStepCount.value ?? 0 }} required steps
+          {{ label('requiredSteps', { done: progress?.completedRequiredStepCount.value ?? 0, total: progress?.requiredStepCount.value ?? 0 }) }}
         </span>
         <span>{{ progress?.percent.value ?? 0 }}%</span>
       </div>
@@ -99,7 +101,7 @@ const navigation = computed(() => [
 
     <template v-if="tocLinks?.length">
       <USeparator />
-      <UContentToc :title="tocTitle ?? 'On this step'" :links="tocLinks" highlight color="neutral" />
+      <UContentToc :title="tocTitle ?? label('onStep')" :links="tocLinks" highlight color="neutral" />
     </template>
   </div>
 </template>
