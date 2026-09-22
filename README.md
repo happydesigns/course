@@ -72,6 +72,12 @@ Validate authored content with the core CLI:
 pnpm --filter @happydesigns/course course validate path/to/course
 ```
 
+## Optional brand preview
+
+The existing playground can be embedded in ID Studio without copying the course reader or examples. Set `ID_PREVIEW_MODULE` to the installed `@happydesigns/id/preview` entrypoint (or an absolute local module path), and `ID_STUDIO_ORIGIN` to the exact Studio origin. It registers the `course` preview under `/courses`. Set `ID_PREVIEW_BUILD=1` only for a dedicated published preview build. Normal builds omit the bridge.
+
+For native-brand verification, `ID_BRAND_LAYER` adds an optional generated Nuxt layer and `ID_BRAND_CSS` replaces the playground CSS entry with one importing the existing entry followed by brand styles. `ID_BRAND_UI` points to the original brand UI configuration as JSON so temporary edits replace brand defaults while keeping app overrides. A native consumer build needs only the layer and CSS variables; ID is not a runtime dependency. These options affect the playground, not the Course package.
+
 ## Configuration
 
 Course capabilities are configured through `@happydesigns/nuxt-variants`. The layer provides defaults, while applications may override presentation behavior in `app.config.ts`:
