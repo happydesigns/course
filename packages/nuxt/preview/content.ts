@@ -1,7 +1,7 @@
 import { comarkContent } from "comark-content";
 import fs from "comark-content/sources/fs";
 import { withSnapshot } from "comark-content/sources/snapshot";
-import { courseInputHighlighting } from "../highlighting";
+import { courseInputHighlighting } from "@happydesigns/course-nuxt/highlighting";
 import shiki from "comark/plugins/shiki";
 import toc from "comark/plugins/toc";
 import abap from "shiki/langs/abap.mjs";
