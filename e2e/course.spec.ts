@@ -65,3 +65,37 @@ test('outline links use native hash navigation on the same page', async ({ page 
   await expect(page).toHaveURL(/#connect-adt-to-the-abap-system$/);
   await expect(page.locator('#connect-adt-to-the-abap-system')).toBeInViewport();
 });
+
+test('project files follow the visible step and preserve parameter values in the code panel', async ({ page }, testInfo) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(course + '/generate-application');
+  await page.getByRole('button', { name: /^Course parameters/ }).click();
+  await page.getByRole('textbox', { name: 'Group ID', exact: true }).fill('XYZ');
+
+  const firstStep = page.locator('[data-course-code-step]').first();
+  await firstStep.evaluate(element => window.scrollBy(0, element.getBoundingClientRect().top - 220));
+
+  const mobile = testInfo.project.name === 'mobile';
+  const panel = mobile
+    ? page.getByRole('dialog', { name: 'Project files', exact: true })
+    : page.getByRole('navigation', { name: 'Project files', exact: true });
+  await expect(panel).toBeVisible();
+  if (mobile) await panel.getByRole('button', { name: 'Project files', exact: true }).click();
+
+  const tree = panel.locator('.course-code-tree-list');
+  const firstFile = tree.getByText('1.generate-travel-service.md', { exact: true });
+  await expect(firstFile).toBeVisible();
+  await expect(tree.getByText('2.add-travel-fields.md', { exact: true })).toHaveCount(0);
+  await expect(tree.getByText(/ZRAP120_AI/)).toHaveCount(0);
+
+  if (mobile) {
+    const expectedTop = page.viewportSize()!.height * 0.45;
+    await expect.poll(async () => Math.abs((await panel.boundingBox())!.y - expectedTop)).toBeLessThan(2);
+    await firstFile.click();
+    await expect.poll(async () => Math.abs((await panel.boundingBox())!.y - expectedTop)).toBeLessThan(2);
+  }
+  await expect(panel.locator('pre')).toContainText('suffix "XYZ"');
+  await expect(panel.locator('pre')).not.toContainText('$doc.input');
+  expect(errors).toEqual([]);
+});

@@ -20,15 +20,15 @@ Runtime AI is out of scope. AI tools may assist authors during conversion, but p
 - Node.js 22.19+, 24.11+, or 26+ (Node.js 24 LTS recommended)
 - pnpm 11
 - Nuxt 4.5+
-- Nuxt UI 4.11.1+
-- Comark 0.6.2 and Comark Content 0.4
+- Nuxt UI 4.12+
+- Comark 0.7.0 and Comark Content 0.4.1
 
 ## Nuxt quick start
 
 Install the reader and extend its layer:
 
 ```bash
-pnpm add @happydesigns/course @happydesigns/course-nuxt comark-content@0.4.0 comark@0.6.2 shiki@4.3.1
+pnpm add @happydesigns/course @happydesigns/course-nuxt comark-content@0.4.1 comark@0.7.0 shiki@4.5.0
 ```
 
 ```ts

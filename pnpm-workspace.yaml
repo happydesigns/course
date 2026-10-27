@@ -3,19 +3,13 @@ packages:
   - "packages/*"
   - "examples/*"
 overrides:
-  '@happydesigns/ui': 0.20.0
-  '@ungap/structured-clone': 1.3.3
-  oxc-parser: 0.141.0
-  unplugin: 3.3.0
-  vue-component-meta: 3.3.8
+  '@happydesigns/ui': 0.20.1
+  # Align Content's component metadata tool with the optional peers required by unctx 3.
+  'nuxt-component-meta@0.18.0>oxc-parser': 0.141.0
+  'nuxt-component-meta@0.18.0>unplugin': 3.5.0
 allowBuilds:
   '@parcel/watcher': true
   better-sqlite3: true
   esbuild: true
   sharp: true
   vue-demi: true
-minimumReleaseAgeExclude:
-  - '@happydesigns/nuxt-variants@0.2.0'
-  - '@happydesigns/ui@0.20.0'
-  - happy-dom@20.14.5
-  - comark-content@0.4.0
